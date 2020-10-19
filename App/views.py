@@ -4,8 +4,8 @@ from django.http import HttpResponse
 def home(request):
 	return render(request, 'App/home.html')
 
-def account_info(request):
-	return render(request, 'AccountInfo.html')
+def account(request):
+	return render(request, 'Users/profile.html')
 
 def dashboard(request):
 	return render(request, 'dashboard.html')
