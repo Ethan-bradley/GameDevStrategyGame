@@ -11,5 +11,8 @@ urlpatterns = [
     path('dashboard', views.dashboard, name='app-dashboard'),
     path('help', views.help, name='app-help'),
     path('login', views.login, name='app-login'),
+    path('new_game', views.new_game, name='app-new_game'),
+    path('joinGame', views.joinGame, name='joinGame'),
+    path('lobby', views.lobby, name='app-lobby'),
 ] + static(settings.STATIC_URL,document_root = settings.STATIC_ROOT)
 
