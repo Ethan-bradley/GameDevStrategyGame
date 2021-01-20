@@ -6,7 +6,7 @@
             <div class="article-metadata">
               <a class="mr-2" href="#">{{ game.host }}</a>
             </div>
-            <h2><a class="article-title" href="{% url 'joinGame' %}">{{ game.name }}</a></h2>
+            <h2><a class="article-title" href="{% url 'joinGame' g=game %}">{{ game.name }}</a></h2>
             <!--p class="article-content">{{ post.content }}</p-->
           </div>
         </article>

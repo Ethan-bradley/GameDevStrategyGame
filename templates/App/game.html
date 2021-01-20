@@ -2,15 +2,32 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <div class="content-section">
-        <form method="POST">
-            {% csrf_token %}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4"></legend>
-                {{ form|crispy }}
-            </fieldset>
-            <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Create Game</button>
-            </div>
-        </form>
+    <div class="media-body">
+          <h2 class="account-heading">Data</h2>
+          <p class="text-secondary">Total Government Money: {{ GovMoney }}</p>
+          <p class="ExchangeRates">Currency Reserves: {{ CurrencyReserves }}</p>
+           <img class="thumbnail-img" src="{{ graph.url }}">
     </div>
+    <form method="POST">
+        {% csrf_token %}
+        <legend class="border-bottom mb-4">Tariffs</legend>
+        <fieldset class="form-group">
+            {{ indForms.management_form }}
+            {% for form in indForms %}
+                <legend class="border-bottom mb-4">{{ titles|get_item:forloop.counter }}</legend>
+                {{ form |crispy }}
+            {% endfor %}
+
+            <legend class="border-bottom mb-4">Government Spending and Central Bank</legend>
+            <p class="text-secondary">Ensure that Welfare, Education, and Military add up to 1.</p>
+                {{ govForm |crispy }}
+            <p class="text-secondary">Each value is a percentage in decimal form.</p>
+            <legend class="border-bottom mb-4">Ready for next turn?</legend>
+            {{ readyForm |crispy }}
+        </fieldset>
+        <div class="form-group">
+            <button class="btn btn-outline-info" type="submit">Submit Spending and Tax Plan</button>
+        </div>
+    </form>
+</div>
 {% endblock content %}

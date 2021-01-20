@@ -12,7 +12,14 @@ urlpatterns = [
     path('help', views.help, name='app-help'),
     path('login', views.login, name='app-login'),
     path('new_game', views.new_game, name='app-new_game'),
-    path('joinGame', views.joinGame, name='joinGame'),
+    path('game/<str:g>/<str:player>/', views.game, name='app-game'),
+    path('joinGame/<str:g>/', views.joinGame, name='joinGame'),
     path('lobby', views.lobby, name='app-lobby'),
+    path('map/<str:g>/<str:p>/<str:l>/<str:lprev>', views.map, name='map'),
+    path('map/<str:g>/<str:p>', views.map, name='app-map'),
+    path('graphs/<str:g>/<str:p>', views.graph, name='app-graph'),
+    path('policies/<str:g>/<str:p>', views.policies, name='app-policies'),
 ] + static(settings.STATIC_URL,document_root = settings.STATIC_ROOT)
 
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

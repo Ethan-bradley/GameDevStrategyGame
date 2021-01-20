@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<div id="hexmap-1">
+<code>
+{
+	"layout":"odd-r",
+	"hexes": {
+		"A":{"n":"Hex a","q":0,"r":0},
+		"B":{"n":"Hex b","q":0,"r":1},
+		"C":{"n":"Hex c","q":1,"r":0},
+		"D":{"n":"Hex d","q":1,"r":1},
+		"E":{"n":"Hex e","q":2,"r":0},
+		"F":{"n":"Hex f","q":2,"r":1},
+		"G":{"n":"Hex g","q":0,"r":2},
+		"H":{"n":"Hex h","q":1,"r":2},
+		"I":{"n":"Hex i","q":2,"r":2}
+	}
+}
+</code>
+</div>
+
+<!-- Javascript -->
+<!--script>
+S(document).ready(function(){
+
+	// Create an object attached to a DOM element with the ID "hexmap-1"
+	var hexmap = S.hexmap('hexmap-1');
+
+	// Position the hexes and scale them to the container
+	hexmap.positionHexes().resize();
+
+});
+</script-->
+
+<script type="text/javascript">
+	function redirect(num) {
+		temp = 'null'
+		//if num != null:
+		//	temp = num
+		url = {% url 'map' g=game p=player l=temp %};
+		window.location = url;
+	}
+</script>
+
+</html>

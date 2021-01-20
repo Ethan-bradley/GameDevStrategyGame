@@ -1,11 +1,41 @@
 from django import forms
-from .models import Game, Tariff, Economic, IndTariff
+from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy
 from django.forms import ModelForm
 
 class NewGameForm(ModelForm):
     class Meta:
         model = Game
         fields = ['name']
+
+class JoinGameForm(ModelForm):
+    class Meta:
+        model = Player
+        fields = ['name','country']
+
+class NextTurn(ModelForm):
+    class Meta:
+        model = Player
+        fields = ['ready']
+
+class ResetTurn(ModelForm):
+    class Meta:
+        model = Player
+        fields = []
+
+class AddIndTariffForm(ModelForm):
+    class Meta:
+        model = IndTariff
+        fields = []
+
+class AddTariffForm(ModelForm):
+    class Meta:
+        model = Tariff
+        fields = []
+
+"""class WaitGameForm(ModelForm):
+    class Meta:
+        model = Player
+        fields = ['ready']"""
 
 class IndTariffForm(ModelForm):
 	class Meta:
@@ -16,3 +46,45 @@ class EconomyForm(ModelForm):
     class Meta:
         model = Economic
         fields = ['factory_num', 'welfare']
+
+class HexFormTemp(ModelForm):
+    class Meta:
+        model = Hexes
+        fields = ['game', 'controller']
+
+class HexForm(ModelForm):
+    class Meta:
+        model = Hexes
+        fields = []
+
+class ArmyForm(ModelForm):
+    class Meta:
+        model = Army
+        fields = ['name','size','location','naval']
+
+class GovernmentSpendingForm(ModelForm):
+    class Meta:
+        model = Player
+        fields = ['IncomeTax','CorporateTax','Welfare','Education','Military','Bonds','MoneyPrinting']
+    def clean(self):
+        super(GovernmentSpendingForm, self).clean()
+        it = self.cleaned_data.get('IncomeTax')
+        ct = self.cleaned_data.get('CorporateTax')
+        w = self.cleaned_data.get('Welfare')
+        e = self.cleaned_data.get('Education')
+        m = self.cleaned_data.get('Military')
+        total = w + e + m
+        if total > 1:
+            self._errors['IncomeTax'] = self.error_class(['Spending must add up to 1.'])
+        return self.cleaned_data
+
+class PolicyForm(ModelForm):
+    class Meta:
+        model = Policy
+        fields = ['applied']
+
+class PolicyCreateForm(ModelForm):
+    class Meta:
+        model = Policy
+        fields = []
+
