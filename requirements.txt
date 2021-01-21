@@ -6,3 +6,4 @@ whitenoise
 pypi
 django-picklefield
 scipy
+django-crispy-forms
