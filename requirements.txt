@@ -2,7 +2,6 @@ django
 gunicorn
 django-heroku
 flask
-whitenoise
 pypi
 django-picklefield
 scipy
