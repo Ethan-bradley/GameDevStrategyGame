@@ -143,6 +143,23 @@ class Policy(models.Model):
 	WageEffect = models.FloatField(default=0)
 	PopEffect = models.FloatField(default=0)
 
+class Pops(models.Model):
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	EducationLevel = models.IntegerField(default=0)
+	Income = models.FloatField(default=0)
+	Occupation = models.CharField(max_length=50, default='Unemployed')
+	Population_size = models.IntegerField(default=0)
+	trust = models.IntegerField(default=100)
+	Faction = models.ForeignKey("Faction", on_delete=models.CASCADE, default="")
 
+class Faction(models.Model):
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	name = models.CharField(max_length=50, default='NoName')
+	controller = models.ForeignKey("Player", on_delete=models.CASCADE, default="")
 
+class PolicySupport(models.Model):
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	controller = models.ForeignKey("Player", on_delete=models.CASCADE, default="")
+	Faction = models.ForeignKey("Faction", on_delete=models.CASCADE, default="")
+	PolicyAssociated = models.ForeignKey("Policy", on_delete=models.CASCADE, default="")
 	

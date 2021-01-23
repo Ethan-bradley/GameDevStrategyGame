@@ -51,6 +51,7 @@ def new_game(request):
             f = form.save(commit=False)
             f.host = request.user
             f.GameEngine = GameEngine(4, ['UK','Germany','France','Spain'])
+            f.curr_num_players = 1
             f.save()
             #Saves game name in temporary variable
             g = f.name
@@ -93,6 +94,9 @@ def new_game(request):
             temp.GameEngine.start_capital(temp)
             messages.success(request, f'New Game created!')
             return redirect('app-game', g=temp.name, player=curr_player.name)
+        else:
+            messages.success(request, f'Choose another name. An existing game already has this name.')
+            return redirect('app-new_game')
     else:
         form = NewGameForm(instance=request.user)
         player_form = JoinGameForm(instance=request.user)
@@ -121,7 +125,6 @@ def joinGame(request, g):
             f.host = False 
             f.user = request.user
             f.game = temp
-            f.curr_num_players = 1
             f.save()
             curr_player = Player.objects.filter(name=f.name, game=temp)[0]
             #Creates Policies
@@ -417,12 +420,27 @@ def policies(request, g, p):
         PFS.append(PolicyFormArray[counter - 1](queryset=Policy.objects.filter(policy_group=pg), prefix='Policy'+str(counter)))
         count = 1
         counter += 1
-        
 
     context = {
         'group_titles':group_titles,
         'titles':titles,
         'policyForms':PFS,
+        'game':gtemp,
+        'player':ptemp
+    }
+    return render(request, 'App/policies.html', context)
+
+def Politics(request, g, p):
+    gtemp = g
+    ptemp = p
+    g = Game.objects.filter(name=g)[0]
+    p = Player.objects.filter(name=p)[0]
+    policy_list = PolicyGroup.objects.filter(game=g, player=p)
+    form = CreateFactionForm()
+
+    context = {
+        'group_titles':group_titles,
+        'titles':titles,
         'game':gtemp,
         'player':ptemp
     }

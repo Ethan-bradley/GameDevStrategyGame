@@ -4,6 +4,7 @@ from .GameEconModel import Country
 from .TradeModel import Trade
 from django.core.files import File
 from .HexList import HexList
+from .ArmyCombat import ArmyCombat
 from django.db.models.fields import *
 
 
@@ -15,6 +16,7 @@ class GameEngine():
 			self.EconEngines.append(Country())
 			self.EconEngines[i].run_turn(20)
 		self.TradeEngine = Trade(self.EconEngines,self.nameList)
+		self.ArmyCombat = ArmyCombat()
 
 	def start_capital(self, g):
 		all_players = Player.objects.filter(game=g)
@@ -35,6 +37,7 @@ class GameEngine():
 		all_armies = Army.objects.filter(game=g)
 		for a in all_armies:
 			a.moved = False
+		self.ArmyCombat.doCombat(g)
 		#Running engine
 		for e in self.EconEngines:
 			e.run_turn(1)

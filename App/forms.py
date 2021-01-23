@@ -1,5 +1,5 @@
 from django import forms
-from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy
+from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction
 from django.forms import ModelForm
 
 class NewGameForm(ModelForm):
@@ -7,10 +7,34 @@ class NewGameForm(ModelForm):
         model = Game
         fields = ['name']
 
+    def clean(self):
+        super(NewGameForm, self).clean()
+        n = self.cleaned_data.get('name')
+        game_list = Game.objects.all()
+        for g in game_list:
+            if g.name == n:
+                self._errors['name'] = self.error_class(['Choose another name. A game already has this name.'])
+        return self.cleaned_data
+
 class JoinGameForm(ModelForm):
+    """def __init__(game, *args, **kwargs):
+        self.g = game
+        super(JoinGameForm, self).__init__(*args, **kwargs)"""
+
     class Meta:
         model = Player
-        fields = ['name','country']
+        fields = ['name','country', 'color']
+
+    """def clean(self):
+        super(GovernmentSpendingForm, self).clean()
+        n = self.cleaned_data.get('name')
+        player_list = Player.objects.filter(game=self.g)
+        for p in player_list:
+            if p.name == n:
+                self._errors['name'] = self.error_class(['Choose another name. A player in this game already has this name.'])
+            if p.country.name == c.name:
+                self._errors['country'] = self.error_class(['Choose another country. A player in this game has already claimed this country.'])
+        return self.cleaned_data"""
 
 class NextTurn(ModelForm):
     class Meta:
@@ -87,4 +111,9 @@ class PolicyCreateForm(ModelForm):
     class Meta:
         model = Policy
         fields = []
+
+class CreateFactionForm(ModelForm):
+    class Meta:
+        model = Faction
+        fields = ['name']
 
