@@ -1,1 +1,1 @@
-web: gunicorn SafeGig.wsgi
+web: gunicorn WOM.wsgi

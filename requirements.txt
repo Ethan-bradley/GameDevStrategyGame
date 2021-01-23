@@ -2,8 +2,9 @@ django
 gunicorn
 django-heroku
 flask
-whitenoise
 pypi
 django-picklefield
 scipy
 django-crispy-forms
+django-storages
+boto3
