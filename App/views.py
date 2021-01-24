@@ -247,7 +247,7 @@ def game(request, g, player):
         'CurrencyReserves':g.GameEngine.printCurrencyReserves(),
         'graph':player.GoodsPerCapita
     }
-    return render(request, 'App/Game.html', context)
+    return render(request, 'App/game.html', context)
 
 #loads the army map
 @login_required
