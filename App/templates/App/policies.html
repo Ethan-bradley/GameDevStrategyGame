@@ -1,0 +1,31 @@
+{% extends "App/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+    <div class="media-body">
+          <h2 class="account-heading">Data</h2>
+          <p class="text-secondary">Total Government Money: {{ GovMoney }}</p>
+          <p class="ExchangeRates">Currency Reserves: {{ CurrencyReserves }}</p>
+           <img class="thumbnail-img" src="{{ graph.url }}">
+    </div>
+    <form method="POST">
+        {% csrf_token %}
+        <h2 class="account-heading">Policies</h2>
+        <fieldset class="form-group">
+            {% for formset in policyForms %}
+                {% with rowloopcounter=forloop.counter %}
+                <legend class="border-bottom mb-4">{{ group_titles|get_item:forloop.counter }}</legend>
+                {{ formset.management_form }}
+                {% for form in formset %}
+                    <legend class="text-secondary">{{ titles|get_item:rowloopcounter|get_item:forloop.counter }}</legend>
+                    {{ form |crispy }}
+                {% endfor %}
+                {% endwith %}
+            {% endfor %}
+        </fieldset>
+        <div class="form-group">
+            <button class="btn btn-outline-info" type="submit">Submit Policy Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

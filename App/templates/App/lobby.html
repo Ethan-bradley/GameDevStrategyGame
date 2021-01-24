@@ -1,0 +1,14 @@
+{% extends "App/base.html" %}
+{% block content %}
+    {% for game in games %}
+        <article class="media content-section">
+          <div class="media-body">
+            <div class="article-metadata">
+              <a class="mr-2" href="#">{{ game.host }}</a>
+            </div>
+            <h2><a class="article-title" href="{% url 'joinGame' g=game %}">{{ game.name }}</a></h2>
+            <!--p class="article-content">{{ post.content }}</p-->
+          </div>
+        </article>
+    {% endfor %}
+{% endblock content %}

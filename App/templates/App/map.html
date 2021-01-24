@@ -1,0 +1,105 @@
+{% extends "App/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div id="message-6">Click or hover on a hex</div>
+<div id="hexmap-4">
+<code>
+{
+	"layout":"odd-r",
+	"hexes": {
+		{{hexmap}}
+	}
+}
+</code>
+</div>
+<!-- "A":{"n":"Spain","q":0,"r":0},
+		"B":{"n":"France","q":0,"r":1},
+		"C":{"n":"Balearic Sea","q":1,"r":0},
+		"D":{"n":"Switzerland","q":1,"r":1},
+		"E":{"n":"Italy","q":2,"r":0},
+		"F":{"n":"Austria","q":2,"r":1},
+		"G":{"n":"UK","q":0,"r":2},
+		"H":{"n":"North Sea","q":1,"r":2},
+		"I":{"n":"Germany","q":2,"r":2} -->
+
+
+<div class="content-section">
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Army</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit" id="ArmyCreate">Build Army</button>
+            </div>
+        </form>
+    </div>
+
+<style type="text/css">
+	/* Attach styles to hover and focus events */
+	#message-6 {
+		position: relative;
+		display: inline-block;
+		left: 50%;
+		transform: translate3D(-50%,0,0);
+		background: black;
+		color: white;
+		padding: 0.25em 0.5em;
+		float: left;
+		z-index: 10;
+	}
+	.ex6 .hex {
+		cursor: pointer;
+	}
+	.ex6 .hex:hover .hexinner, 
+	.ex6 .hex:focus .hexinner {
+		background: black!important;
+		color: white;
+	}
+</style>
+
+{% endblock content %}
+
+{% block extra_js %}
+<!--Javascript-->
+<script type="text/javascript">
+S(document).ready(function(){
+	var info = {{info|safe}};
+
+	var hexmap = S.hexmap('hexmap-4',{
+		'formatLabel': function(id,hex){
+			// "id" = unique ID of the hex
+			// "hex" = object containing the properties of the specific hex
+			return hex.n + "\n "+info[hex.r*5+hex.q][3];
+		}
+	});
+
+	hexmap.positionHexes().resize();
+
+	hexmap.setColour(function(hex){
+		// The "hex" variable contains the properties of the specific hex
+		// The "this" variable references the hexmap object itself
+		//var colours = [['#f7c229','#f7c229','#bb0e3b'],['#0000ff','#ffffff','#0000ff'],['#0da60f','#0da60f','#bb0e3b']]
+		var colours = {{ColorMap|safe}};
+		// We will choose a colour which is the sum of the q and r coordinate
+		return {'background-color':colours[hex.r][hex.q],'color':'black'};
+	});
+	
+	hexmap.on('mouseover',function(e){
+
+		S('#message-6').html('Population: '+info[e.i][0]+' Capital: '+info[e.i][1]+' Player: '+info[e.i][2]+' Army Size: '+info[e.i][4])
+
+	}).on('click',function(e){
+		S('#message-6').html('You have clicked hex '+e.i+' ('+e.hex.id+')')
+		url = "{% url 'app-map' g=game p=player %}";
+		//var pagebutton= document.getElementById("ArmyCreate");
+		//pagebutton.click();
+		window.location.href = url + "/" + e.i + "/" + {{prevNum}};
+	});
+
+});
+
+</script>
+{% endblock extra_js %}
+
