@@ -430,6 +430,7 @@ def policies(request, g, p):
     }
     return render(request, 'App/policies.html', context)
 
+#Returns the politics page
 def Politics(request, g, p):
     gtemp = g
     ptemp = p
