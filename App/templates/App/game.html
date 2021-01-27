@@ -4,9 +4,13 @@
 <div class="content-section">
     <div class="media-body">
           <h2 class="account-heading">Data</h2>
-          <p class="text-secondary">Total Government Money: {{ GovMoney }}</p>
           <p class="ExchangeRates">Currency Reserves: {{ CurrencyReserves }}</p>
            <img class="thumbnail-img" src="{{ graph.url }}">
+           <h2 class="account-heading">Government Budget</h2>
+           <img class="thumbnail-img" src="{{ govBudget.url }}">
+           <p class="text-secondary">Total Government Money: {{ GovMoney }}</p>
+           <p class="text-secondary">Total Government Debt: {{ GovDebt }}</p>
+           <p class="text-secondary">Total Government Savings: {{ GovSavings }}</p>
     </div>
     <form method="POST">
         {% csrf_token %}

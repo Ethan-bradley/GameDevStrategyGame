@@ -28,6 +28,7 @@ class Country():
     self.GoodsBalance = []
     #Tracking Variables
     self.Bonds = 0
+    self.BondWithdrawl = 0
     self.MoneyPrinting = 200
     self.money = np.array([10,10,10,15,10,10,0,0,10,self.MoneyPrinting])
     self.names = ['Households','Savings','Consumption','Investment','Corporations','Government','Imports','Exports','GDP','CentralBank']
@@ -213,7 +214,6 @@ class Country():
       self.Household_Savings += self.SavingsRate*self.money[0]
       self.Government_Savings += (1-self.GovWelfare-self.GovGoods)*self.money[5]
       self.Government_Savings *= (1+self.interest_rate)
-
       #Population adding:
       self.Population = self.Population*self.Population_growth
 
@@ -258,7 +258,7 @@ class Country():
 
       #Interest Rates:
       self.investment_good_price = self.money[3]/self.goods[1]
-      self.interest_rate = -0.7*np.exp(((self.Population*self.ScienceRate - self.capital)*-1)/(self.money[1]/self.investment_good_price))+0.7
+      self.interest_rate = -0.7*np.exp(((self.Population*self.ScienceRate - self.capital)*-1)/((self.money[1] - self.BondWithdrawl)/self.investment_good_price))+0.7
       self.interest = self.interest_rate*self.Corporate_Cummalative_Loans
       self.Corporate_Cummalative_Loans += (self.interest_rate*self.money[1]*self.CorporateDebtRate - self.interest)
       self.PersonalWithdrawls = (self.interest_rate*(self.Household_Savings/(self.Household_Savings+self.Corporate_Savings)))/2
@@ -266,6 +266,9 @@ class Country():
       print("Interest_Rate: "+str(self.interest_rate))
       print("Interest: "+str(self.interest))
       self.investment_good_price = self.money[3]/self.goods[1]
+      self.Bonds *= self.interest_rate
+      self.money[5] += self.BondWithdrawl
+      self.money[1] -= self.BondWithdrawl
       #print("InterestRate2: "+str(-0.7*np.exp(((Population*ScienceRate - capital)*-1)/(money[1]/investment_good_price))+0.7))
       #Update Invest
       self.TotalInvest += self.money[3]
@@ -498,6 +501,71 @@ class Country():
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'Employment')
     a.append(file_path+player_name+'Employment')
+    plt.clf()
+
+    labels = ['Welfare','Education','Military']
+    sizes = [self.GovWelfare,self.EducationSpend*self.GovGoods,(1-self.EducationSpend)*self.GovGoods]
+    fig1, ax1 = plt.subplots()
+    ax1.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+    ax1.axis('equal')
+    plt.savefig(file_path+player_name+'GovBudget')
+    a.append(file_path+player_name+'GovBudget')
+    plt.clf()
+
+    plt.title('Trade Balance')
+    plt.plot(self.GoodsBalance[15:])
+    plt.ylabel('Trade Balance')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'tradeBalance')
+    a.append(file_path+player_name+'tradeBalance')
+    plt.clf()
+
+    plt.title('GDPPerCapita')
+    plt.plot(self.GDPPerCapita[15:])
+    plt.ylabel('GDPperCapita')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'GDPPerCapita')
+    a.append(file_path+player_name+'GDPPerCapita')
+    plt.clf()
+
+    plt.title('Interest Rate')
+    plt.plot(self.InterestRate[15:])
+    plt.ylabel('Interest Rate')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'InterestRate')
+    a.append(file_path+player_name+'InterestRate')
+    plt.clf()
+
+    plt.title('Capital')
+    plt.plot(self.CapitalArr[15:])
+    plt.ylabel('Capital')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'Capital')
+    a.append(file_path+player_name+'Capital')
+    plt.clf()
+
+    plt.title('GoodsProduction')
+    plt.plot(self.GoodsTotal[15:])
+    plt.ylabel('Goods')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'GoodsProduction')
+    a.append(file_path+player_name+'GoodsProduction')
+    plt.clf()
+
+    plt.plot(self.GDP[15:])
+    plt.title('GDP')
+    plt.ylabel('GDP')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'GDP')
+    a.append(file_path+player_name+'GDP')
+    plt.clf()
+
+    plt.title('GDPGrowth')
+    plt.plot(self.GDPGrowth[15:])
+    plt.ylabel('GDPGrowth')
+    plt.xlabel('GDPGrowth')
+    plt.savefig(file_path+player_name+'GDPGrowth')
+    a.append(file_path+player_name+'GDPGrowth')
     plt.clf()
 
     plt.close()

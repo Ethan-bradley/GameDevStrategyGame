@@ -84,6 +84,7 @@ class GameEngine():
 			country.GovGoods = p.Education + p.Military
 			country.EducationSpend = p.Education/(p.Education + p.Military)
 			country.MoneyPrinting = p.MoneyPrinting
+			country.BondWithdrawl = p.Bonds
 			#country.Bonds = p.Bonds
 			country.GovWelfare = p.Welfare
 			#Tarriffs
@@ -98,6 +99,14 @@ class GameEngine():
 				os.remove('.'+p.Inflation.url)
 				os.remove('.'+p.RealGDP.url)
 				os.remove('.'+p.Employment.url)
+				os.remove('.'+p.GovBudget.url)
+				os.remove('.'+p.tradeBalance.url)
+				os.remove('.'+p.GDPPerCapita.url)
+				os.remove('.'+p.InterestRate.url)
+				os.remove('.'+p.Capital.url)
+				os.remove('.'+p.GoodsProduction.url)
+				os.remove('.'+p.GDP.url)
+				os.remove('.'+p.GDPGrowth.url)
 			#Graphs:
 			#country.save_GoodsPerCapita('.'+p.GoodsPerCapita.url)
 			a = country.save_graphs('',p.name)
@@ -123,6 +132,47 @@ class GameEngine():
 				p.Employment = File(f)
 				p.save()
 			os.remove(a[3]+'.png')
+
+			with open(a[4]+'.png', 'rb') as f:
+				p.GovBudget = File(f)
+				p.save()
+			os.remove(a[4]+'.png')
+
+			with open(a[5]+'.png', 'rb') as f:
+				p.tradeBalance = File(f)
+				p.save()
+			os.remove(a[5]+'.png')
+
+			with open(a[6]+'.png', 'rb') as f:
+				p.GDPPerCapita = File(f)
+				p.save()
+			os.remove(a[6]+'.png')
+
+			with open(a[7]+'.png', 'rb') as f:
+				p.InterestRate = File(f)
+				p.save()
+			os.remove(a[7]+'.png')
+
+			with open(a[8]+'.png', 'rb') as f:
+				p.Capital = File(f)
+				p.save()
+			os.remove(a[8]+'.png')
+
+			with open(a[9]+'.png', 'rb') as f:
+				p.GoodsProduction = File(f)
+				p.save()
+			os.remove(a[9]+'.png')
+
+			with open(a[10]+'.png', 'rb') as f:
+				p.GDP = File(f)
+				p.save()
+			os.remove(a[10]+'.png')
+
+			with open(a[11]+'.png', 'rb') as f:
+				p.GDPGrowth = File(f)
+				p.save()
+			os.remove(a[11]+'.png')
+			
 	def calculate_differences(self, g, p, e):
 	    #g = Game.objects.filter(name=g)[0]
 	    #p = Player.objects.filter(name=p)[0]

@@ -254,8 +254,11 @@ def game(request, g, player):
         'player':ptemp,
         'govForm':govForm,
         'GovMoney':player.get_country().money[5],
+        'GovSavings':player.get_country().Government_Savings,
+        'GovDebt':player.get_country().Bonds,
         'CurrencyReserves':g.GameEngine.printCurrencyReserves(),
-        'graph':player.GoodsPerCapita
+        'graph':player.GoodsPerCapita,
+        'govBudget':player.GovBudget
     }
     return render(request, 'App/game.html', context)
 
@@ -387,9 +390,15 @@ def graph(request, g, p):
         'Inflation':p.Inflation,
         'RealGDP':p.RealGDP,
         'Employment':p.Employment,
+        'tradeBalance':p.tradeBalance,
+        'GDPPerCapita':p.GDPPerCapita,
+        'InterestRate':p.InterestRate,
+        'Capital':p.Capital,
+        'GoodsProduction':p.GoodsProduction,
+        'GDP':p.GDP,
+        'GDPGrowth':p.GDPGrowth,
         'game':gtemp,
         'player':ptemp
-
     }
     return render(request, 'App/graphs.html', context)
 
