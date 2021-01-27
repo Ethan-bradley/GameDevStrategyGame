@@ -83,7 +83,7 @@ S(document).ready(function(){
 		//var colours = [['#f7c229','#f7c229','#bb0e3b'],['#0000ff','#ffffff','#0000ff'],['#0da60f','#0da60f','#bb0e3b']]
 		var colours = {{ColorMap|safe}};
 		// We will choose a colour which is the sum of the q and r coordinate
-		return {'background-color':colours[hex.r][hex.q],'color':'black'};
+		return {'background-color':info[hex.r*5+hex.q][5],'color':'black'};
 	});
 	
 	hexmap.on('mouseover',function(e){
