@@ -19,7 +19,7 @@ class Country(models.Model):
 
 	def __str__(self):
 		return self.name
-
+#Game Class
 class Game(models.Model):
 	name = models.CharField(max_length=100)
 	host = models.ForeignKey(User, on_delete=models.CASCADE)
