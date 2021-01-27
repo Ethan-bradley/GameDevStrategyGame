@@ -289,7 +289,7 @@ def map(request, g, p, l, lprev):
     armies = Army.objects.filter(game=g)
     count = 0
     col.append([])
-    info = []
+    info = [0 for i in range(0,25)]
     row = 0
     for hC in hexColor:
         col[row].append(hC.color)
@@ -300,7 +300,7 @@ def map(request, g, p, l, lprev):
         else:
             army_size = a[0].size
             a = a[0].name
-        info.append([hC.population, hC.capital, hC.controller.name, a, army_size])
+        info[hC.xLocation+hC.yLocation*5] = [hC.population, hC.capital, hC.controller.name, a, army_size, hC.color]
         count += 1
         if count >= size:
             count = 0
