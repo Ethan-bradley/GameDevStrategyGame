@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 from scipy.stats import norm
 
 class Country():
@@ -27,7 +28,7 @@ class Country():
     self.GoodsBalance = []
     #Tracking Variables
     self.Bonds = 0
-    self.MoneyPrinting = 10
+    self.MoneyPrinting = 200
     self.money = np.array([10,10,10,15,10,10,0,0,10,self.MoneyPrinting])
     self.names = ['Households','Savings','Consumption','Investment','Corporations','Government','Imports','Exports','GDP','CentralBank']
     self.goods = np.array([10,10,10,10,10])
@@ -101,6 +102,9 @@ class Country():
     self.capital = 10
     self.employment_per_capital = 0.2
     self.last_capital = 9
+
+    self.lastcapital = 0
+    self.lastPopulation = 0
 
     #Education
     self.Education = 9
@@ -227,7 +231,7 @@ class Country():
       #print((-Population*ScienceRate*np.exp((-4/(Population*ScienceRate))*employment*ScienceRate)+ScienceRate*Population)/goods[1])
       #print(ScienceRate)
       #GDP
-      self.money[1] += 200
+      #self.money[1]
       print("Total Savings"+str(self.money[1]))
       #GDP = money[2]+money[3]+money[5]
       print('GDP: '+str(self.money[8]))
@@ -237,7 +241,7 @@ class Country():
       print('M0: '+str(self.M0))
 
       #Money Printing
-      self.money[9] += 400
+      self.money[9] += self.MoneyPrinting
 
       #Calculates Inflation
       #ConsumerPrice = money[2]/goods[2] + money[3]/goods[1]
@@ -452,42 +456,65 @@ class Country():
     plt.title('GoodsPerCapita')
     plt.plot(self.GoodsPerCapita)
     plt.ylabel('Goods')
+    plt.xlabel('Years')
     return plt.savefig(file)
 
   def save_graphs(self, file_path, player_name):
+    matplotlib.use('Agg')
+    plt.title('GoodsPerCapita')
+    plt.plot(self.GoodsPerCapita[15:])
+    plt.ylabel('Goods')
+    plt.xlabel('Years')
+    plt.clf()
+
     a = []
     plt.title('GoodsPerCapita')
-    plt.plot(self.GoodsPerCapita)
+    plt.plot(self.GoodsPerCapita[15:])
     plt.ylabel('Goods')
+    plt.xlabel('Years')
     plt.savefig(file_path+player_name+'GoodsPerCapita')
     a.append(file_path+player_name+'GoodsPerCapita')
+    plt.clf()
 
     plt.title('Inflation')
-    plt.plot(self.Inflation)
+    plt.plot(self.InflationTracker[15:])
     plt.ylabel('Inflation')
+    plt.xlabel('Years')
     plt.savefig(file_path+player_name+'Inflation')
     a.append(file_path+player_name+'Inflation')
+    plt.clf()
 
     plt.title('Real GDP Growth')
-    plt.plot(self.RealGDPGrowth)
+    plt.plot(self.RealGDPGrowth[15:])
     plt.ylabel('Real GDP Growth')
+    plt.xlabel('Years')
     plt.savefig(file_path+player_name+'RealGDPGrowth')
     a.append(file_path+player_name+'RealGDPGrowth')
+    plt.clf()
 
     plt.title('Employment')
-    plt.plot(self.RealGDPGrowth)
+    plt.plot(self.EmploymentRate[15:])
     plt.ylabel('Employment')
+    plt.xlabel('Years')
     plt.savefig(file_path+player_name+'Employment')
     a.append(file_path+player_name+'Employment')
+    plt.clf()
+
+    plt.close()
 
     return a
     
-  def create_distribution(self, hexCapital, hexCenter, totalCapital, hexNum):
+  def create_distribution(self, hexCapital, hexCenter, totalCapital, hexNum): 
     x = np.arange(0, hexNum, 1)
+    if len(hexCapital) == 0:
+      a = norm.pdf(x,0,1)
+      multiplier = totalCapital
+      finalCapital = [i*multiplier for i in a]
+      return finalCapital
     for i in range(0,len(hexCapital)):
       hexCapital[i] = norm.pdf(x,hexCenter[i],1)
     print(totalCapital)
     a = [sum([hexCapital[j][i] for j in range(0,len(hexCapital))]) for i in range(0,len(hexCapital[0]))]
-    multiplier = totalCapital/len(hexCenter)
+    multiplier = totalCapital
     finalCapital = [i*multiplier for i in a]
     return finalCapital

@@ -6,12 +6,13 @@ from django.forms import formset_factory, modelformset_factory
 from .Game import GameEngine
 from .models import Post
 from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country
-from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm
+from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet
 from django.views.generic.edit import CreateView
 from django.apps import apps
 import json
 from .HexList import HexList
 from .PolicyList import PolicyList
+from django.db.models.fields import *
 
 def home(request):
 	#import pdb; pdb.set_trace()
@@ -50,7 +51,7 @@ def new_game(request):
             #Creates the game object
             f = form.save(commit=False)
             f.host = request.user
-            f.GameEngine = GameEngine(4, ['UK','Germany','France','Spain'])
+            f.GameEngine = GameEngine(5, ['UK','Germany','France','Spain','Italy'])
             f.curr_num_players = 1
             f.save()
             #Saves game name in temporary variable
@@ -64,6 +65,7 @@ def new_game(request):
             pf.host = True
             pf.user = request.user
             pf.game = temp
+            pf.color = pf.country.color
             pf.save()
             curr_player = Player.objects.filter(name=pf.name, game=temp)[0]
             #Creates Hexes
@@ -72,6 +74,7 @@ def new_game(request):
             hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
             for i in hex_list:
                 i.controller = curr_player
+                i.save()
             #Creates Policies
             p2 = PolicyList()
             p2.add_policies(curr_player, temp, request)
@@ -91,7 +94,8 @@ def new_game(request):
                 itf.key = curr_player
                 itf.save()
             #game_name = form.cleaned_data.get('game_name')
-            temp.GameEngine.start_capital(temp)
+            #Uncomment for single-player games
+            #temp.GameEngine.start_capital(temp)
             messages.success(request, f'New Game created!')
             return redirect('app-game', g=temp.name, player=curr_player.name)
         else:
@@ -113,9 +117,9 @@ def joinGame(request, g):
     for k in gameList:
         if str(k) == g:
             temp = k
-    p = Player.objects.filter(user=request.user, game=temp)[0]
-    if p:
-        return redirect('app-game', g=temp.name, player=p.name)
+    p = Player.objects.filter(user=request.user, game=temp)
+    if len(p) > 0:
+        return redirect('app-game', g=temp.name, player=p[0].name)
 
     if request.method == 'POST':
         form = JoinGameForm(request.POST)
@@ -125,15 +129,17 @@ def joinGame(request, g):
             f.host = False 
             f.user = request.user
             f.game = temp
+            f.color = f.country.color
             f.save()
             curr_player = Player.objects.filter(name=f.name, game=temp)[0]
             #Creates Policies
             p2 = PolicyList()
             p2.add_policies(curr_player, temp, request)
             #Adds control to related hexes
-            hex_list = Country.objects.filter(game=temp, start_country=curr_player.country)[0]
+            hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
             for i in hex_list:
                 i.controller = curr_player
+                i.save()
             #Creates Tariff object associated with player and game.
             formt = AddTariffForm(request.POST)
             formt = formt.save(commit=False)
@@ -145,14 +151,18 @@ def joinGame(request, g):
             tariffList = Tariff.objects.filter(game=temp)
             for p in tariffList:
                 if p.curr_player.game == temp:
-                    iForm = AddIndTariffForm(request.POST)
+                    itf = IndTariff(controller=p, key=curr_player, tariffAm=0)
+                    itf.save()
+                    """iForm = AddIndTariffForm(request.POST)
                     itf = iForm.save(commit=False)
                     itf.controller = p
                     itf.key = curr_player
-                    itf.save()
+                    itf.save()"""
             temp.curr_num_players += 1
             temp.save()
-            if temp.num_players == curr_num_players:
+            #Remove this if game isn't 2 player
+            #temp.GameEngine.start_capital(temp)
+            if temp.num_players == temp.curr_num_players:
                 temp.GameEngine.start_capital(temp)
             messages.success(request, f'Successfully Joined a Game!')
             return redirect('app-game', g=temp.name, player=curr_player.name)
@@ -203,7 +213,7 @@ def game(request, g, player):
         if govForm2.is_valid():
             govForm2.save()
         else:
-            messages.success(request, f'Government spending total must not be more than 1')
+            messages.warning(request, f'Government spending total must not be more than 1')
         #Runs ready form for whether ready for moving onto next turn
         ready = NextTurn(request.POST, instance=player)
         if ready.is_valid():
@@ -309,16 +319,16 @@ def map(request, g, p, l, lprev):
         h2 = Hexes.objects.filter(game=g, hexNum=l)[0]
         v = v[0]
         if v.moved:
-            messages.success(request, f'This army has already been moved!')
+            messages.warning(request, f'This army has already been moved!')
             return redirect('map', gtemp, ptemp, 'null', 'null')
         if v.naval and not h2.water:
-            messages.success(request, f'A naval force cannot move on land!')
+            messages.warning(request, f'A naval force cannot move on land!')
             return redirect('map', gtemp, ptemp, lprev, 'null')
         if not v.naval and h2.water:
-            messages.success(request, f'A land force cannot move on water!')
+            messages.warning(request, f'A land force cannot move on water!')
             return redirect('map', gtemp, ptemp, lprev, 'null')
         if calculate_distance(h.xLocation, h.yLocation, h2.xLocation, h2.yLocation) > v.max_movement:
-            messages.success(request, f'This army cannot move that far!')
+            messages.warning(request, f'This army cannot move that far!')
             return redirect('map', gtemp, ptemp, lprev, 'null')
         f = ArmyForm(instance=v)
         form = f.save(commit=False)
@@ -342,7 +352,7 @@ def map(request, g, p, l, lprev):
             print(v)
             f = ArmyForm(instance=v)
             if v.controller != p:
-                messages.success(request, f'You cannot move another players army!')
+                messages.warning(request, f'You cannot move another players army!')
                 f = ArmyForm()
                 return redirect('map', gtemp, ptemp, 'null', 'null')
     context = {
@@ -391,6 +401,7 @@ def policies(request, g, p):
     policy_list = PolicyGroup.objects.filter(game=g, player=p)
     titles = {}
     group_titles = {}
+    Effects = {}
     counter = 1
     PFS = []
     PolicyFormArray = []
@@ -400,23 +411,46 @@ def policies(request, g, p):
     if request.method == 'POST':
         #Submits the Tariff formset
         for pg in policy_list:
-            PolicyFormSet = PolicyFormArray[counter - 1](request.POST, queryset=Policy.objects.filter(policy_group=pg), prefix='Policy'+str(counter))
-            for f in PolicyFormSet:
+            PolicyFormSet2 = PolicyFormArray[counter - 1](request.POST, queryset=Policy.objects.filter(policy_group=pg), prefix='Policy'+str(counter))
+            ap = 0
+            for f in PolicyFormSet2:
                 if f.is_valid():
-                    f.save()
+                    f2 = f.save(commit=False)
+                    if f2.applied == True:
+                        ap += 1
+            if ap > 1:
+                messages.warning(request, f'You cannot select more than one of the same policy type!')
+                return redirect('app-policies', gtemp, ptemp)
+            else:
+                PolicyFormSet2.save()
             counter += 1
     count = 1
     counter = 1
     for pg in policy_list:
         #PolicyFormSet = modelformset_factory(Policy, fields=['applied'], extra=0)
         t = {}
+        ef = {}
         titles[counter] = t
+        Effects[counter] = ef
         group_titles[counter] = pg.name
         k = Policy.objects.filter(policy_group=pg)
         for f in k:
             #v = IndTariffForm(instance=f)
+            ef_list = {}
             t[count] = f.name
+            ef[count] = ef_list
             count += 1
+            #Gets the effects of a policy
+            all_fields = f._meta.get_fields() #_meta.fields
+            c = 1
+            for a in all_fields:
+                if isinstance(a, FloatField):
+                    n = a.name
+                    value = getattr(f, n)
+                    print(value)
+                    if value > 0.00001 or value < -0.00001:
+                        ef_list[c] = str(n) + ": " + str(value)
+                        c += 1
         PFS.append(PolicyFormArray[counter - 1](queryset=Policy.objects.filter(policy_group=pg), prefix='Policy'+str(counter)))
         count = 1
         counter += 1
@@ -424,6 +458,7 @@ def policies(request, g, p):
     context = {
         'group_titles':group_titles,
         'titles':titles,
+        'effects':Effects,
         'policyForms':PFS,
         'game':gtemp,
         'player':ptemp

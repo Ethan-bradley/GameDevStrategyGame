@@ -18,6 +18,9 @@
                 {{ formset.management_form }}
                 {% for form in formset %}
                     <legend class="text-secondary">{{ titles|get_item:rowloopcounter|get_item:forloop.counter }}</legend>
+                    {% for e in effects|get_item:rowloopcounter|get_item:forloopcounter %}
+                        <legend class="text-secondary">e</legend>
+                    {% endfor %}
                     {{ form |crispy }}
                 {% endfor %}
                 {% endwith %}

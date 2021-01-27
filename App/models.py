@@ -15,6 +15,7 @@ class Post(models.Model):
 
 class Country(models.Model):
 	name = models.CharField(max_length=100)
+	color = models.CharField(max_length=50, default='#ffffff')
 
 	def __str__(self):
 		return self.name
@@ -22,8 +23,9 @@ class Country(models.Model):
 class Game(models.Model):
 	name = models.CharField(max_length=100)
 	host = models.ForeignKey(User, on_delete=models.CASCADE)
-	num_players = models.IntegerField(default=4)
+	num_players = models.IntegerField(default=5)
 	curr_num_players = models.IntegerField(default=0)
+	color = models.CharField(max_length=50, default='#ffffff')
 	#players = ManyToManyField("Player")
 	#hexes = ManyToManyField("Hexes")
 	#TradeEngine = PickledObjectField()
@@ -64,7 +66,7 @@ class Player(models.Model):
 		return self.game.GameEngine.get_trade(self.game.GameEngine.get_country_index(self.country.name), var)
 
 class Tariff(models.Model):
-	curr_player = models.OneToOneField("Player", on_delete=models.CASCADE, default="")
+	curr_player = models.ForeignKey("Player", on_delete=models.CASCADE, default="")
 	name = models.CharField(max_length=100)
 	game = models.ForeignKey("Game", on_delete=models.CASCADE, default="")
 	#players = models.ManyToManyField("Player")
@@ -73,7 +75,7 @@ class Tariff(models.Model):
 class IndTariff(models.Model):
 	controller = models.ForeignKey(Tariff, db_index=True, on_delete=models.CASCADE)
 	#key = models.CharField(max_length=100)
-	key = models.OneToOneField("Player", on_delete=models.CASCADE)
+	key = models.ForeignKey("Player", on_delete=models.CASCADE)
 	tariffAm = models.FloatField(default=0)
 
 class Hexes(models.Model):

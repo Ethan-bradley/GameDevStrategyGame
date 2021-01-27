@@ -6,6 +6,7 @@ from django.core.files import File
 from .HexList import HexList
 from .ArmyCombat import ArmyCombat
 from django.db.models.fields import *
+import os
 
 
 class GameEngine():
@@ -92,26 +93,36 @@ class GameEngine():
 			for t in k:
 				self.TradeEngine.Tariffs[index][count] = t.tariffAm
 				count += 1
-
+			if (p.GoodsPerCapita.name != 'default_graph.png'):
+				os.remove('.'+p.GoodsPerCapita.url)
+				os.remove('.'+p.Inflation.url)
+				os.remove('.'+p.RealGDP.url)
+				os.remove('.'+p.Employment.url)
 			#Graphs:
-			country.save_GoodsPerCapita('.'+p.GoodsPerCapita.url)
-			a = country.save_graphs('./media/graphs',p.name)
-			print(a[1])
-			with open('.'+p.GoodsPerCapita.url, 'rb') as f:
+			#country.save_GoodsPerCapita('.'+p.GoodsPerCapita.url)
+			a = country.save_graphs('',p.name)
+			#print(a[1])
+			
+			with open(a[0]+'.png', 'rb') as f:
 				p.GoodsPerCapita = File(f)
 				p.save()
+			os.remove(a[0]+'.png')
 
+			
 			with open(a[1]+'.png', 'rb') as f:
 				p.Inflation = File(f)
 				p.save()
-
+			os.remove(a[1]+'.png')
+			
 			with open(a[2]+'.png', 'rb') as f:
 				p.RealGDP = File(f)
 				p.save()
-
+			os.remove(a[2]+'.png')
+			
 			with open(a[3]+'.png', 'rb') as f:
 				p.Employment = File(f)
 				p.save()
+			os.remove(a[3]+'.png')
 	def calculate_differences(self, g, p, e):
 	    #g = Game.objects.filter(name=g)[0]
 	    #p = Player.objects.filter(name=p)[0]
@@ -158,6 +169,8 @@ class GameEngine():
 		#print(centers)
 		capital_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.capital, len(hex_list))
 		population_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.Population, len(hex_list))
+		e.lastcapital = e.capital
+		e.lastPopulation = e.Population
 		for h in range(0, len(hex_list)):
 			print(capital_list[h])
 			hex_list[h].capital = int(capital_list[h])

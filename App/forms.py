@@ -1,11 +1,13 @@
 from django import forms
 from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction
 from django.forms import ModelForm
+from django.forms import formset_factory, BaseFormSet
+from django.core.exceptions import ValidationError
 
 class NewGameForm(ModelForm):
     class Meta:
         model = Game
-        fields = ['name']
+        fields = ['name','num_players']
 
     def clean(self):
         super(NewGameForm, self).clean()
@@ -116,4 +118,17 @@ class CreateFactionForm(ModelForm):
     class Meta:
         model = Faction
         fields = ['name']
+
+class PolicyFormSet(BaseFormSet):
+    #def __init__(self, *args, **kwargs):
+    #    super(BaseFormSet, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        count = 0
+        for form in self.forms:
+            result = form.cleaned_data.get('applied')
+            if result:
+                count += 1
+        if count > 1:
+            raise ValidationError("Only one option in the formset may be clicked.")
 

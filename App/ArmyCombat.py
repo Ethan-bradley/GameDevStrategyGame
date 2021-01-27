@@ -7,9 +7,13 @@ class ArmyCombat():
 	def doCombat(self, g):
 		army_list = Army.objects.filter(game=g)
 		for a in army_list:
+			fought = False
 			for j in army_list:
 				if a.controller.name != j.controller.name and a.location.hexNum == j.location.hexNum:
 					self.calculateCombat(g,a,j)
+					fought = True
+			if not fought:
+				self.switch_hex(a.location, a.controller)
 
 
 	def calculateCombat(self, g, Army1, Army2):

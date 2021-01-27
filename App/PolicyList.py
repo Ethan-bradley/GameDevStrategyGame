@@ -5,7 +5,11 @@ class PolicyList():
 	def __init__(self):
 		policyOne = ['Pension Plan', ['Government Funded Plan', {'WelfareEffect':0.2, 'InequalityEffect':-0.2}], ['Mandatory Personal Savings Plan', {'SavingsEffect': 0.2, 'InequalityEffect':-0.1}], ['Optional Personal Savings Plan',{'SavingsEffect':0.05}],['No Pension Plan', {}]]
 		policyTwo = ['Unemployment Welfare', ['Large Plan', {'WelfareEffect':0.15}], ['Medium Plan', {'WelfareEffect':0.1}],['Small Plan', {'WelfareEffect':0.05}], ['Mandatory Savings Plan', {'SavingsEffect':0.1}]]
-		self.policyList = [policyOne, policyTwo]
+		#policyThree = ['Financial Regulation', ['High',{''}]]
+		policyThree = ['Unions', ['Unions Banned', {'WageEffect':-0.1}], ['Unions Allowed but power limited', {}], ['Unions Encouraged', {'WageEffect':0.1}], ['Unions Mandatory', {'WageEffect':0.2}]]
+		policyFour = ['Minimum Wage', ['None',{}], ['Low',{'WageEffect':0.05}],['Medium',{'WageEffect':0.1}],['High',{'WageEffect':0.15}]]
+		policyFive = ['Child Subsidies', ['Subsidies for fewer children',{'WelfareEffect':0.02, 'PopEffect':-0.005}],['None',{}],['Small Subsidies',{'WelfareEffect':0.02,'PopEffect':0.005}],['Medium Subsidies',{'WelfareEffect':0.05, 'PopEffect':0.01}],['Large Subsidies', {'WelfareEffect':0.1, 'PopEffect':0.015}]]
+		self.policyList = [policyOne, policyTwo, policyThree, policyFour, policyFive]
 
 	def add_policies(self, p, g, request):
 		for i in self.policyList:
@@ -21,7 +25,7 @@ class PolicyList():
 				for k in diction:
 					print("k: "+k)
 					print("value: "+str(diction[k]))
-					val = getattr(p2, k)
-					#print("val "+val)
-					val = diction[k]
+					val = setattr(p2, k, diction[k])
+					#print("val "+str(val))
+					#val = diction[k]
 				p2.save()
