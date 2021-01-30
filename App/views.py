@@ -13,6 +13,7 @@ import json
 from .HexList import HexList
 from .PolicyList import PolicyList
 from django.db.models.fields import *
+from django.db.models import Q
 
 def home(request):
 	#import pdb; pdb.set_trace()
@@ -96,6 +97,8 @@ def new_game(request):
             #game_name = form.cleaned_data.get('game_name')
             #Uncomment for single-player games
             #temp.GameEngine.start_capital(temp)
+            if temp.num_players == temp.curr_num_players:
+                temp.GameEngine.start_capital(temp)
             messages.success(request, f'New Game created!')
             return redirect('app-game', g=temp.name, player=curr_player.name)
         else:
@@ -124,6 +127,7 @@ def joinGame(request, g):
     if request.method == 'POST':
         form = JoinGameForm(request.POST)
         if form.is_valid():
+            
             #Creates player object associated with this user and game.
             f = form.save(commit=False)
             f.host = False 
@@ -147,7 +151,14 @@ def joinGame(request, g):
             formt.name = curr_player.name
             formt.game = temp
             formt.save()
-            #Adds an IndTariff object to each player's tariff object.
+            #Gets list of players before adding this player for adding tarriff forms
+            player_list = Player.objects.filter(game=temp).exclude(id=curr_player.id)
+            #Adds existing players TariffObjects to this player:
+            control = Tariff.objects.filter(game=temp, curr_player=curr_player)[0]
+            for p in player_list:
+                itf = IndTariff(controller=control, key=p, tariffAm=0)
+                itf.save()
+            #Adds an IndTariff object related to this player to each existing player's tariff object.
             tariffList = Tariff.objects.filter(game=temp)
             for p in tariffList:
                 if p.curr_player.game == temp:
@@ -320,6 +331,8 @@ def map(request, g, p, l, lprev):
         h = Hexes.objects.filter(game=g, hexNum=lprev)[0]
         v = Army.objects.filter(game=g,location=h)
         h2 = Hexes.objects.filter(game=g, hexNum=l)[0]
+        if len(v) == 0:
+            return redirect('map', gtemp, ptemp, 'null', 'null')
         v = v[0]
         if v.moved:
             messages.warning(request, f'This army has already been moved!')

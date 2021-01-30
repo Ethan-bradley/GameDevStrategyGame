@@ -43,7 +43,10 @@ class GameEngine():
 		for e in self.EconEngines:
 			e.run_turn(1)
 			e.save_GoodsPerCapita('default_graph.png')
-		self.TradeEngine.conductTrade()
+		self.TradeEngine.conductTrade(self.EconEngines)
+		print(self.printTradeAms())
+		print(self.printCurrencyReserves())
+		print(self.printCurrencyExchange())
 		print('running engine')
 		for p in all_players:
 			index = self.nameList.index(p.country.name)
@@ -78,7 +81,7 @@ class GameEngine():
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
 			self.calculate_differences(g, p, country)
-			self.get_hex_numbers(g, p, country)
+			#self.get_hex_numbers(g, p, country)
 			country.IncomeTax = p.IncomeTax
 			country.CorporateTax = p.CorporateTax
 			country.GovGoods = p.Education + p.Military
@@ -217,14 +220,14 @@ class GameEngine():
 			if hex_list[h].center:
 				centers.append(h)
 		#print(centers)
-		capital_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.capital, len(hex_list))
-		population_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.Population, len(hex_list))
-		e.lastcapital = e.capital
-		e.lastPopulation = e.Population
+		capital_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.capital - e.lastcapital, len(hex_list))
+		population_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.Population - e.lastPopulation, len(hex_list))
+
+		#e.lastPopulation = e.Population
 		for h in range(0, len(hex_list)):
 			print(capital_list[h])
-			hex_list[h].capital = int(capital_list[h])
-			hex_list[h].population = int(population_list[h])
+			hex_list[h].capital += int(capital_list[h])
+			hex_list[h].population += int(population_list[h])
 			hex_list[h].save()
 			print(hex_list[h].capital)
 
@@ -245,7 +248,7 @@ class GameEngine():
 		currencyReserves = self.TradeEngine.currencyReserves 
 		string = ""
 		for i in range(0,len(currencyReserves)):
-			string += "Trade Portfolio of "+countryNames[i]+"\n"
+			string += "Currency Reserves of "+countryNames[i]+"\n"
 		for j in range(0,len(currencyReserves[0])):
 			if i == j:
 				continue
@@ -254,7 +257,7 @@ class GameEngine():
 
 	def printCurrencyExchange(self):
 		countryNames = self.nameList
-		currencyRates = self.TradeEngine.currencyRates 
+		currencyRates = self.TradeEngine.exchangeRates 
 		string = ""
 		for i in range(0,len(currencyRates)):
 			string += "Currency Exchange of "+countryNames[i]+"\n"

@@ -5,16 +5,18 @@ class Trade():
 		self.Tariffs = []
 		self.currencyReserves = []
 		self.exchangeRates = []
+		self.currencyChangeReserves = []
 		for i in self.CountryList:
 			self.Tariffs.append([0 for j in self.CountryList])
 			self.currencyReserves.append([0 for j in self.CountryList])
-			self.exchangeRates.append([0 for j in self.CountryList])
+			self.exchangeRates.append([1 for j in self.CountryList])
+			self.currencyChangeReserves = [[1 for j in self.CountryList] for i in self.CountryList]
 
-	def conductTrade(self):
-		currencyChangeReserves = [[0 for j in self.CountryList] for i in self.CountryList]
-		self.trade(self.CountryName,self.Tariffs, self.currencyReserves, currencyChangeReserves, self.exchangeRates)
-		#printTradeAms(['Sweden','US','Singapore','Japan'],currencyChangeReserves)
-		#printCurrencyExchange(['Sweden','US','Singapore','Japan'],exchangeRates)
+	def conductTrade(self, CountryList2):
+		self.currencyChangeReserves = [[1 for j in self.CountryList] for i in self.CountryList]
+		self.trade(CountryList2, self.Tariffs, self.currencyReserves, self.currencyChangeReserves, self.exchangeRates)
+		#printTradeAms(self.CountryName,currencyChangeReserves)
+		#printCurrencyExchange(self.CountryName,exchangeRates)
 
 	def trade(self, Country, Tariffs, CurrencyReserves, currencyChangeReserves, exchangeRates):
 		prev = []
@@ -33,12 +35,12 @@ class Trade():
 		  for k in range(0, len(Country[i].HousePrices)):
 		    #print(Country[j].HousePrices[k]*exchangeRates[i][j]*(1 + Tariffs[j][i]))
 		    if (Country[i].HousePrices[k] > Country[j].HousePrices[k]*exchangeRates[j][i]*(1 + Tariffs[i][j])):
-		      #print('trading Houses')
+		      print('trading Houses')
 		      HouseDifferenceArray.append(((Country[j].HousePrices[k]*exchangeRates[j][i]*(1 + Tariffs[i][j]))/Country[i].HousePrices[k])*0.5)
 		    else:
 		      HouseDifferenceArray.append(0)
 		    if (Country[i].CapitalPrices[k] > Country[j].CapitalPrices[k]*exchangeRates[j][i]*(1 + Tariffs[i][j])):
-		      #print('trading Capital')
+		      print('trading Capital')
 		      CapitalDifferenceArray.append(((Country[j].CapitalPrices[k]*exchangeRates[j][i]*(1 + Tariffs[i][j]))/Country[i].CapitalPrices[k])*0.5)
 		    else:
 		      CapitalDifferenceArray.append(0)
@@ -75,4 +77,10 @@ class Trade():
 		CurrencyReserves[fro][to] += Country[to].HousePrices[k]*(1-Tariffs[to][fro])
 		currencyChangeReserves[fro][to] += Country[to].HousePrices[k]*(1-Tariffs[to][fro])
 		Country[to].money[5] += Country[to].HousePrices[k]*Tariffs[to][fro]
-		calculateExchangeRates(exchangeRates, currencyChangeReserves)
+		self.calculateExchangeRates(exchangeRates, currencyChangeReserves)
+
+	def calculateExchangeRates(self, exchangeRates, currencyChangeReserves):
+		for i in range(0,len(currencyChangeReserves)):
+			for j in range(0,len(currencyChangeReserves[i])):
+				if currencyChangeReserves[j] != 0:
+					exchangeRates[i][j] = currencyChangeReserves[i][j]/currencyChangeReserves[j][i]

@@ -17,7 +17,7 @@ class ArmyCombat():
 
 
 	def calculateCombat(self, g, Army1, Army2):
-		diff = Army1.size - Army2.size
+		diff = abs(Army1.size - Army2.size)
 		if Army1.size > Army2.size:
 			Army1.size -= diff/3
 			Army2.size -= diff/2
@@ -61,8 +61,14 @@ class ArmyCombat():
 
 	#Switches control of a hex between two players (doesn't work yet)
 	def switch_hex(self, h, player_to):
+		loser = h.controller
+		loser.get_country().Population -= h.population
+		loser.get_country().capital -= h.capital
 		h.controller = player_to
 		h.color = player_to.color
+		player_to.get_country().Population += h.population
+		player_to.get_country().capital += h.capital
+		
 		h.save()
 
 	def square(self, x):

@@ -178,6 +178,8 @@ class Country():
 
   def run_turn(self, num):
     for i in range(0,num):
+      self.lastcapital = self.capital
+      self.lastPopulation = self.Population
       #Values matrix
       self.transG1 = np.zeros((5,5))
       #Transformation Matrix
@@ -299,7 +301,7 @@ class Country():
         self.capital = self.ScienceRate*(self.Population - self.Researchers - self.Innovators - self.StructuralUnemployment*self.Population)
         self.employment = self.capital/self.ScienceRate
 
-      capital_destroyed = self.last_capital - self.capital
+      capital_destroyed = self.lastcapital - self.capital
       capital_percentage = capital_destroyed/self.last_capital
       self.PercentNPL.append(capital_percentage) 
       self.Household_Savings *= (1 - capital_percentage)
