@@ -18,6 +18,7 @@ urlpatterns = [
     path('map/<str:g>/<str:p>/<str:l>/<str:lprev>', views.map, name='map'),
     path('map/<str:g>/<str:p>', views.map, name='app-map'),
     path('graphs/<str:g>/<str:p>', views.graph, name='app-graph'),
+    path('gamegraphs/<str:g>/<str:p>', views.gamegraph, name='app-game-graph'),
     path('policies/<str:g>/<str:p>', views.policies, name='app-policies'),
 ] + static(settings.STATIC_URL,document_root = settings.STATIC_ROOT)
 

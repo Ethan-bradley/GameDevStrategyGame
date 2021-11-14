@@ -24,6 +24,10 @@
 
 
 <div class="content-section">
+	<div class="media-body">
+		<p class="text-secondary">Total Military Goods Available: {{ MilitaryAm }}</p>
+	</div>
+
         <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
@@ -71,7 +75,7 @@ S(document).ready(function(){
 		'formatLabel': function(id,hex){
 			// "id" = unique ID of the hex
 			// "hex" = object containing the properties of the specific hex
-			return hex.n + "\n "+info[hex.r*5+hex.q][3];
+			return hex.n + "\n "+info[hex.r*6+hex.q][3];
 		}
 	});
 
@@ -83,12 +87,12 @@ S(document).ready(function(){
 		//var colours = [['#f7c229','#f7c229','#bb0e3b'],['#0000ff','#ffffff','#0000ff'],['#0da60f','#0da60f','#bb0e3b']]
 		var colours = {{ColorMap|safe}};
 		// We will choose a colour which is the sum of the q and r coordinate
-		return {'background-color':info[hex.r*5+hex.q][5],'color':'black'};
+		return {'background-color':info[hex.r*6+hex.q][5],'color':'black'};
 	});
 	
 	hexmap.on('mouseover',function(e){
 
-		S('#message-6').html('Population: '+info[e.i][0]+' Capital: '+info[e.i][1]+' Player: '+info[e.i][2]+' Army Size: '+info[e.i][4])
+		S('#message-6').html('Population: '+info[e.i][0]+' Capital: '+info[e.i][1]+' Player: '+info[e.i][2]+' Army Size: '+info[e.i][4]+' Iron: '+info[e.i][6] + ' Wheat: '+info[e.i][7] + ' Coal: '+info[e.i][8] + ' Oil: '+info[e.i][9])
 
 	}).on('click',function(e){
 		S('#message-6').html('You have clicked hex '+e.i+' ('+e.hex.id+')')

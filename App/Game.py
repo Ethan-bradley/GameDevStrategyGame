@@ -7,6 +7,8 @@ from .HexList import HexList
 from .ArmyCombat import ArmyCombat
 from django.db.models.fields import *
 import os
+import matplotlib.pyplot as plt
+import matplotlib
 
 
 class GameEngine():
@@ -43,11 +45,9 @@ class GameEngine():
 		for e in self.EconEngines:
 			e.run_turn(1)
 			e.save_GoodsPerCapita('default_graph.png')
-		self.TradeEngine.conductTrade(self.EconEngines)
-		print(self.printTradeAms())
-		print(self.printCurrencyReserves())
-		print(self.printCurrencyExchange())
+		self.TradeEngine.trade(self.EconEngines, [[0.0 for i in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))], [[0.0 for i in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))])
 		print('running engine')
+		self.create_compare_graph(self.EconEngines, self.nameList, 20, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance'],'',g.name, g)
 		for p in all_players:
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
@@ -76,6 +76,63 @@ class GameEngine():
 		elif var == 3:
 			return self.TradeEngine.Tariffs[index]
 
+	def create_compare_graph(self, CountryList, CountryName, start, attribute_list, file_path, game_name, g):
+		if (g.GoodsPerCapita.name != 'default_graph.png'):
+			os.remove('.'+g.GoodsPerCapita.url)
+			os.remove('.'+g.Inflation.url)
+			os.remove('.'+g.Resentment.url)
+			os.remove('.'+g.Employment.url)
+			os.remove('.'+g.Consumption.url)
+			os.remove('.'+g.InterestRate.url)
+			os.remove('.'+g.GoodsBalance.url)
+		a = []
+		for j in range(0, len(attribute_list)):
+			plt.title(attribute_list[j])
+			for i in range(0,len(CountryList)):
+				plt.plot(getattr(CountryList[i],attribute_list[j])[start:],label=CountryName[i])
+				plt.ylabel(attribute_list[j])
+				plt.xlabel('Years')
+				plt.legend()
+			plt.savefig(file_path+game_name+attribute_list[j])
+			a.append(file_path+game_name+attribute_list[j])
+			plt.clf()
+		plt.close()
+
+		with open(a[0] +'.png', 'rb') as f:
+			g.GoodsPerCapita = File(f)
+			g.save()
+		os.remove(a[0] +'.png')
+
+		with open(a[1] +'.png', 'rb') as f:
+			g.Inflation = File(f)
+			g.save()
+		os.remove(a[1] +'.png')
+		
+		with open(a[2] +'.png', 'rb') as f:
+			g.Resentment = File(f)
+			g.save()
+		os.remove(a[2] +'.png')
+
+		with open(a[3] +'.png', 'rb') as f:
+			g.Employment = File(f)
+			g.save()
+		os.remove(a[3] +'.png')
+
+		with open(a[4] +'.png', 'rb') as f:
+			g.Consumption = File(f)
+			g.save()
+		os.remove(a[4] +'.png')
+
+		with open(a[5] +'.png', 'rb') as f:
+			g.InterestRate = File(f)
+			g.save()
+		os.remove(a[5] +'.png')
+
+		with open(a[6] +'.png', 'rb') as f:
+			g.GoodsBalance = File(f)
+			g.save()
+		os.remove(a[6] +'.png')
+
 	def set_vars(self, g, all_players):
 		for p in all_players:
 			index = self.nameList.index(p.country.name)
@@ -85,17 +142,35 @@ class GameEngine():
 			country.IncomeTax = p.IncomeTax
 			country.CorporateTax = p.CorporateTax
 			country.GovGoods = p.Education + p.Military
-			country.EducationSpend = p.Education/(p.Education + p.Military)
+			if ((p.Education + p.Military) != 0):
+				country.EducationSpend = p.Education/(p.Education + p.Military)
+				country.MilitarySpend = p.Military/(p.Education + p.Military)
+			else:
+				country.EducationSpend = 0
 			country.MoneyPrinting = p.MoneyPrinting
 			country.BondWithdrawl = p.Bonds
 			#country.Bonds = p.Bonds
-			country.GovWelfare = p.Welfare
+			country.GovWelfare = p.Welfare + p.AdditionalWelfare
+			#Investment
+			total_gov_money = country.money[5]
+			total_investor_money = country.money[4]*country.InvestmentRate
+
+			country.GovernmentInvest = p.InfrastructureInvest + p.ScienceInvest
+			total_money = country.money[5]*country.GovernmentInvest + total_investor_money
+			country.InfrastructureInvest = ((total_gov_money*p.InfrastructureInvest)/total_money) + ((total_investor_money*0.1)/total_money)
+			country.ScienceInvest = ((total_gov_money*p.ScienceInvest)/total_money) + ((total_investor_money*0.2)/total_money)
+			#country.QuickInvestment = p.CapitalInvestment
+			country.TheoreticalInvest = p.TheoreticalInvest
+			country.PracticalInvest = p.PracticalInvest
+			country.AppliedInvest = p.AppliedInvest
+
 			#Tarriffs
 			tar = Tariff.objects.filter(game=g, curr_player=p)[0]
 			k = IndTariff.objects.filter(controller=tar)
 			count = 0
 			for t in k:
 				self.TradeEngine.Tariffs[index][count] = t.tariffAm
+				self.TradeEngine.Sanctions[index][count] = t.sanctionAm
 				count += 1
 			if (p.GoodsPerCapita.name != 'default_graph.png'):
 				os.remove('.'+p.GoodsPerCapita.url)
@@ -198,7 +273,7 @@ class GameEngine():
 		#print(BalanceList[1])
 		e.ConsumptionRate = 0.5 + BalanceList[1]
 		#print(BalanceList[2])
-		p.Welfare = 0.7 + BalanceList[2]
+		p.Welfare = BalanceList[2]
 		e.Wages = 0.4 + BalanceList[9]
 		e.population_growth = 0.02 + BalanceList[10]
 		p.save()
@@ -207,11 +282,25 @@ class GameEngine():
 		hex_list = Hexes.objects.filter(game=g, controller=p, water=False)
 		total_population = 0
 		total_capital = 0
+		total_iron = 0.5
+		total_wheat = 0.5
+		total_coal = 0.5
+		total_oil = 0.5
 		for h in hex_list:
 			total_population += h.population
 			total_capital += h.capital
+			total_iron += h.iron
+			total_wheat += h.wheat
+			total_coal += h.coal
+			total_oil += h.oil
 		e.Population = total_population
 		e.capital = total_capital
+		e.RawResources[0] = total_iron
+		e.RawResources[1] = total_wheat
+		e.RawResources[2] = total_coal
+		e.RawResources[3] = total_oil
+		p.save()
+
 
 	def apply_hex_number(self, g, p, e):
 		hex_list = Hexes.objects.filter(game=g, controller=p, water=False)
@@ -260,9 +349,6 @@ class GameEngine():
 		currencyRates = self.TradeEngine.exchangeRates 
 		string = ""
 		for i in range(0,len(currencyRates)):
-			string += "Currency Exchange of "+countryNames[i]+"\n"
-		for j in range(0,len(currencyRates[0])):
-			if i == j:
-				continue
-			string += "Your dollar can buy "+str(currencyRates[i][j])+" of "+countryNames[j]+"\n"
+			string += " "+countryNames[i]
+			string += ": "+str(currencyRates[i])+"\n"
 		return string

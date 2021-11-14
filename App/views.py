@@ -244,7 +244,7 @@ def game(request, g, player):
                 messages.success(request, f'Turn succesfully run!')
                 return redirect('app-game', g=g.name, player=str(player))
     #Creates the tariff formset and titles for it.
-    IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm'], extra=0)
+    IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm'], extra=0)
     titles = {}
     count = 1
     for f in k:
@@ -267,7 +267,7 @@ def game(request, g, player):
         'GovMoney':player.get_country().money[5],
         'GovSavings':player.get_country().Government_Savings,
         'GovDebt':player.get_country().Bonds,
-        'CurrencyReserves':g.GameEngine.printCurrencyReserves(),
+        'CurrencyReserves':g.GameEngine.printCurrencyExchange(),
         'graph':player.GoodsPerCapita,
         'govBudget':player.GovBudget
     }
@@ -286,10 +286,18 @@ def map(request, g, p, l, lprev):
     p = Player.objects.filter(name=p)[0]
     #Loads the army form on post
     if request.method == 'POST':
-        #v = Army.objects.filter(game=g,location=f.location)
-        form = ArmyForm(request.POST)
+        if l != 'null':
+            h = Hexes.objects.filter(game=g, hexNum=l)[0]
+            v = Army.objects.filter(game=g,location=h, controller=p)
+            if len(v) > 0:
+                form = ArmyForm(request.POST, instance=v[0])
+            else:
+                form = ArmyForm(request.POST)
+        else:
+            form = ArmyForm(request.POST)
         if form.is_valid():
             f = form.save(commit=False)
+            v = Army.objects.filter(game=g,location=f.location, controller=p)
             #if l != 'null':
                 #f.Hexes = l
             #Creates player object associated with this user and game.
@@ -297,14 +305,29 @@ def map(request, g, p, l, lprev):
             #v = Army.objects.filter(game=g,location=f.location)
             f.controller = p
             f.game = g
+            s = f.size
+            if len(v) == 0:
+                if p.get_country().Military - s >= 0:
+                    p.get_country().Military -= s;
+                    p.save()
+                else:
+                    f.size = 1
+            else:
+                s = s - v[0].size
+                if p.get_country().Military - s >= 0:
+                    p.get_country().Military -= s;
+                    p.save()
+                else:
+                    f.size = v[0].size
             f.save()
     #Gets the different colors of the hexes and the stats of the hexes
     hexColor = Hexes.objects.filter(game=g)
     armies = Army.objects.filter(game=g)
     count = 0
     col.append([])
-    info = [0 for i in range(0,25)]
+    info = [0 for i in range(0,36)]
     row = 0
+    #import pdb; pdb.set_trace()
     for hC in hexColor:
         col[row].append(hC.color)
         a = Army.objects.filter(game=g, location=hC)
@@ -314,7 +337,7 @@ def map(request, g, p, l, lprev):
         else:
             army_size = a[0].size
             a = a[0].name
-        info[hC.xLocation+hC.yLocation*5] = [hC.population, hC.capital, hC.controller.name, a, army_size, hC.color]
+        info[hC.xLocation+hC.yLocation*6] = [hC.population, hC.capital, hC.controller.name, a, army_size, hC.color, hC.iron, hC.wheat, hC.coal, hC.oil]
         count += 1
         if count >= size:
             count = 0
@@ -340,9 +363,9 @@ def map(request, g, p, l, lprev):
         if v.naval and not h2.water:
             messages.warning(request, f'A naval force cannot move on land!')
             return redirect('map', gtemp, ptemp, lprev, 'null')
-        if not v.naval and h2.water:
-            messages.warning(request, f'A land force cannot move on water!')
-            return redirect('map', gtemp, ptemp, lprev, 'null')
+        #if not v.naval and h2.water:
+        #    messages.warning(request, f'A land force cannot move on water!')
+        #    return redirect('map', gtemp, ptemp, lprev, 'null')
         if calculate_distance(h.xLocation, h.yLocation, h2.xLocation, h2.yLocation) > v.max_movement:
             messages.warning(request, f'This army cannot move that far!')
             return redirect('map', gtemp, ptemp, lprev, 'null')
@@ -372,6 +395,7 @@ def map(request, g, p, l, lprev):
                 f = ArmyForm()
                 return redirect('map', gtemp, ptemp, 'null', 'null')
     context = {
+        'MilitaryAm':p.get_country().Military,
         'ColorMap':json_list,
         'hi':'hello',
         'info':info_list,
@@ -414,6 +438,24 @@ def graph(request, g, p):
         'player':ptemp
     }
     return render(request, 'App/graphs.html', context)
+
+def gamegraph(request, g, p):
+    gtemp = g
+    ptemp = p
+    g = Game.objects.filter(name=g)[0]
+    p = Player.objects.filter(name=p)[0]
+    context = {
+        'GoodsPerCapita':g.GoodsPerCapita,
+        'Inflation':g.Inflation,
+        'Resentment':g.Resentment,
+        'Employment':g.Employment,
+        'GoodsBalance':g.GoodsBalance,
+        'InterestRate':g.InterestRate,
+        'Consumption':g.Consumption,
+        'game':gtemp,
+        'player':ptemp
+    }
+    return render(request, 'App/gamegraphs.html', context)
 
 def policies(request, g, p):
     gtemp = g

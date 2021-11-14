@@ -8,7 +8,7 @@
            <img class="thumbnail-img" src="{{ graph.url }}">
            <h2 class="account-heading">Government Budget</h2>
            <img class="thumbnail-img" src="{{ govBudget.url }}">
-           <p class="text-secondary">Total Government Money: {{ GovMoney }}</p>
+           <p class="text-secondary">Total Government Revenue: {{ GovMoney }}</p>
            <p class="text-secondary">Total Government Debt: {{ GovDebt }}</p>
            <p class="text-secondary">Total Government Savings: {{ GovSavings }}</p>
     </div>
@@ -23,7 +23,7 @@
             {% endfor %}
 
             <legend class="border-bottom mb-4">Government Spending and Central Bank</legend>
-            <p class="text-secondary">Ensure that Welfare, Education, and Military add up to 1.</p>
+            <p class="text-secondary">Ensure that Welfare, AdditionalWelfare, Education, Military, InfrastructureInvest, and ScienceInvest add up to 1. TheoreticalInvest, PracticalInvest, and AppliedInvest must also add up to 1.</p>
                 {{ govForm |crispy }}
             <p class="text-secondary">Each value is a percentage in decimal form.</p>
             <legend class="border-bottom mb-4">Ready for next turn?</legend>

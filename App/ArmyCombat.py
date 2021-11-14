@@ -6,6 +6,7 @@ class ArmyCombat():
 
 	def doCombat(self, g):
 		army_list = Army.objects.filter(game=g)
+		bounce = {}
 		for a in army_list:
 			fought = False
 			for j in army_list:
@@ -18,23 +19,41 @@ class ArmyCombat():
 
 	def calculateCombat(self, g, Army1, Army2):
 		diff = abs(Army1.size - Army2.size)
+		#Destroy Army if it encounters a naval unit on water.
+		if Army1.location.water:
+			if Army1.naval and not Army2.naval:
+				Army2.delete()
+				Army1.save()
+				return
+			if Army2.naval and not Army1.naval:
+				Army1.delete()
+				Army2.save()
+				return
 		if Army1.size > Army2.size:
-			Army1.size -= diff/3
-			Army2.size -= diff/2
+			Army1.size -= min(diff/3, Army1.size)
+			Army2.size -= min(diff/2, Army2.size)
 			self.switch_hex(Army1.location, Army1.controller)
 			self.retreat_army(g, Army2)
-		elif Army2.size < Army1.size:
-			Army1.size -= diff/2
-			Army2.size -= diff/3
+		elif Army2.size > Army1.size:
+			Army1.size -= min(diff/2, Army2.size)
+			Army2.size -= min(diff/3, Army1.size)
 			self.switch_hex(Army2.location, Army2.controller)
 			self.retreat_army(g, Army1)
 		else:
-			Army1.size -= diff/2
-			Army2.size -= diff/2
+			Army1.size -= min(diff/2, Army2.size)
+			Army2.size -= min(diff/2, Army1.size)
 			self.switch_hex(Army1.location, Army1.controller)
 			self.retreat_army(g, Army2)
-		Army1.save()
-		Army2.save()
+
+		if Army1.size < 0:
+			Army1.delete()
+			Army2.save()
+		elif Army2.size < 0:
+			Army2.delete()
+			Army1.save()
+		else:
+			Army1.save()
+			Army2.save()
 
 	def retreat_army(self, g, curr_army):
 		h = self.find_retreat_hex(g, curr_army.location, curr_army)
@@ -70,6 +89,7 @@ class ArmyCombat():
 		player_to.get_country().capital += h.capital
 		
 		h.save()
+		player_to.save()
 
 	def square(self, x):
 		return x*x

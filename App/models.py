@@ -30,6 +30,13 @@ class Game(models.Model):
 	#hexes = ManyToManyField("Hexes")
 	#TradeEngine = PickledObjectField()
 	GameEngine = PickledObjectField(default="")
+	GoodsPerCapita = models.ImageField(default='default_graph.png', upload_to='graphs')
+	Inflation = models.ImageField(default='default_graph.png', upload_to='graphs')
+	Resentment = models.ImageField(default='default_graph.png', upload_to='graphs')
+	Employment = models.ImageField(default='default_graph.png', upload_to='graphs')
+	Consumption = models.ImageField(default='default_graph.png', upload_to='graphs')
+	InterestRate = models.ImageField(default='default_graph.png', upload_to='graphs')
+	GoodsBalance = models.ImageField(default='default_graph.png', upload_to='graphs')
 
 class Player(models.Model):
 	name = models.CharField(max_length=100)
@@ -44,11 +51,20 @@ class Player(models.Model):
 	#Government Variables:
 	IncomeTax = models.FloatField(default=0.2)
 	CorporateTax = models.FloatField(default=0.1)
-	Welfare = models.FloatField(default=0.7)
+	Welfare = models.FloatField(default=0.0)
+	AdditionalWelfare= models.FloatField(default=0.7)
 	Education = models.FloatField(default=0.3)
 	Military = models.FloatField(default=0)
 	Bonds = models.FloatField(default=0)
 	MoneyPrinting = models.IntegerField(default=200)
+
+	#Science Investment
+	InfrastructureInvest = models.FloatField(default=0.1)
+	#CapitalInvestment = models.FloatField(default=0.0)
+	ScienceInvest = models.FloatField(default=0.0)
+	TheoreticalInvest = models.FloatField(default=0.1)
+	PracticalInvest = models.FloatField(default=0.3)
+	AppliedInvest = models.FloatField(default=0.6)
 
 	#Graph Images
 	GoodsPerCapita = models.ImageField(default='default_graph.png', upload_to='graphs')
@@ -85,6 +101,7 @@ class IndTariff(models.Model):
 	#key = models.CharField(max_length=100)
 	key = models.ForeignKey("Player", on_delete=models.CASCADE)
 	tariffAm = models.FloatField(default=0)
+	sanctionAm = models.FloatField(default=0)
 
 class Hexes(models.Model):
 	hexNum = models.IntegerField()
@@ -125,7 +142,7 @@ class Army(models.Model):
 	location = models.ForeignKey("Hexes", on_delete=models.CASCADE)
 	name = models.CharField(max_length=100)
 	moved = models.BooleanField(default=False)
-	max_movement = models.IntegerField(default=1)
+	max_movement = models.IntegerField(default=2)
 
 	def __str__(self):
 		return self.name

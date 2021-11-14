@@ -1,0 +1,17 @@
+{% extends "App/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+    <div class="media-body">
+          <h2 class="account-heading">Game Graphs</h2>
+           <img class="thumbnail-img" src="{{ GoodsPerCapita.url }}">
+           <img class="thumbnail-img" src="{{ Inflation.url }}">
+           <img class="thumbnail-img" src="{{ Resentment.url }}">
+           <img class="thumbnail-img" src="{{ Employment.url }}">
+           <img class="thumbnail-img" src="{{ GoodsBalance.url }}">
+           <img class="thumbnail-img" src="{{ InterestRate.url }}">
+           <img class="thumbnail-img" src="{{ Consumption.url }}">
+    </div>
+
+</div>
+{% endblock content %}

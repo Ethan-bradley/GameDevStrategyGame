@@ -25,7 +25,7 @@ class JoinGameForm(ModelForm):
 
     class Meta:
         model = Player
-        fields = ['name','country', 'color']
+        fields = ['name','country']
 
     """def clean(self):
         super(GovernmentSpendingForm, self).clean()
@@ -66,7 +66,7 @@ class AddTariffForm(ModelForm):
 class IndTariffForm(ModelForm):
 	class Meta:
 		model = IndTariff
-		fields = ['tariffAm']
+		fields = ['tariffAm','sanctionAm']
 
 class EconomyForm(ModelForm):
     class Meta:
@@ -88,20 +88,52 @@ class ArmyForm(ModelForm):
         model = Army
         fields = ['name','size','location','naval']
 
+    def clean(self):
+        super(ArmyForm, self).clean()
+        #c = self.cleaned_data.get('controller')
+        s = self.cleaned_data.get('size')
+        return self.cleaned_data
+
+    """def save(self, excerpt=None, force_insert=False, force_update=False, commit=True):
+        #object = super(Army, self).save(commit=commit)
+        import pdb; pdb.set_trace()
+        c = self.controller
+        if self._state.adding is True:
+            if c.get_country().Military - s >= 0:
+                c.get_country().Military -= s;
+            else:
+                c.size = 1"""
+
+            #self._errors['IncomeTax'] = self.error_class(['You cannot have negative numbers in spending plan.'])
+
 class GovernmentSpendingForm(ModelForm):
     class Meta:
         model = Player
-        fields = ['IncomeTax','CorporateTax','Welfare','Education','Military','Bonds','MoneyPrinting']
+        fields = ['IncomeTax','CorporateTax','Welfare','AdditionalWelfare','Education','Military','InfrastructureInvest','Bonds','MoneyPrinting','ScienceInvest','TheoreticalInvest','PracticalInvest','AppliedInvest']
+
     def clean(self):
         super(GovernmentSpendingForm, self).clean()
         it = self.cleaned_data.get('IncomeTax')
         ct = self.cleaned_data.get('CorporateTax')
         w = self.cleaned_data.get('Welfare')
+        aw = self.cleaned_data.get('AdditionalWelfare')
         e = self.cleaned_data.get('Education')
         m = self.cleaned_data.get('Military')
-        total = w + e + m
+        ii = self.cleaned_data.get('InfrastructureInvest')
+        si = self.cleaned_data.get('ScienceInvest')
+        total = w + e + m + ii + si + aw
+        ti = self.cleaned_data.get('TheoreticalInvest')
+        pi = self.cleaned_data.get('PracticalInvest')
+        ai = self.cleaned_data.get('AppliedInvest')
+
         if total > 1:
-            self._errors['IncomeTax'] = self.error_class(['Spending must add up to 1.'])
+            self._errors['IncomeTax'] = self.error_class(['Spending must not be more than 1.'])
+        if it < 0 or ct < 0 or w < 0 or e < 0 or m < 0 or ii < 0 or si < 0:
+            self._errors['IncomeTax'] = self.error_class(['You cannot have negative numbers in spending plan.'])
+
+        if ti + pi + ai != 1:
+            self._errors['IncomeTax'] = self.error_class(['Theoretical, Practical, and Applied Invest must equal 1.'])
+
         return self.cleaned_data
 
 class PolicyForm(ModelForm):

@@ -9,3 +9,5 @@ scipy
 django-crispy-forms
 django-storages
 boto3
+plotly
+statistics
