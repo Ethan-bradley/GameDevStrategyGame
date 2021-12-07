@@ -37,6 +37,8 @@ class Game(models.Model):
 	Consumption = models.ImageField(default='default_graph.png', upload_to='graphs')
 	InterestRate = models.ImageField(default='default_graph.png', upload_to='graphs')
 	GoodsBalance = models.ImageField(default='default_graph.png', upload_to='graphs')
+	ScienceArr = models.ImageField(default='default_graph.png', upload_to='graphs')
+
 
 class Player(models.Model):
 	name = models.CharField(max_length=100)
@@ -52,7 +54,7 @@ class Player(models.Model):
 	IncomeTax = models.FloatField(default=0.2)
 	CorporateTax = models.FloatField(default=0.1)
 	Welfare = models.FloatField(default=0.0)
-	AdditionalWelfare= models.FloatField(default=0.7)
+	AdditionalWelfare= models.FloatField(default=0.6)
 	Education = models.FloatField(default=0.3)
 	Military = models.FloatField(default=0)
 	Bonds = models.FloatField(default=0)
@@ -85,6 +87,10 @@ class Player(models.Model):
 
 	def get_country(self):
 		return self.game.GameEngine.get_country_by_name(self.country.name)
+
+	def modify_country(self, attr, set_am):
+		self.game.GameEngine.modify_country_by_name(self.country.name, attr, set_am)
+		self.game.save()
 
 	def get_trade_var(self, var):
 		return self.game.GameEngine.get_trade(self.game.GameEngine.get_country_index(self.country.name), var)

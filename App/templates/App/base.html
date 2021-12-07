@@ -33,7 +33,6 @@
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="{% url 'app-home' %}">Home</a>
-              <a class="nav-item nav-link" href="{% url 'app-home' %}">About</a>
               {% if user.is_authenticated %}
                 <a class="nav-item nav-link" href="{% url 'app-new_game' %}">New Game</a>
                 <a class="nav-item nav-link" href="{% url 'app-lobby' %}">Lobby</a>
@@ -75,6 +74,7 @@
                 <li class="list-group-item list-group-item-light"><a href="{% url 'map' g=game p=player l='null' lprev='null' %}">Army Map</a></li>
                 <li class="list-group-item list-group-item-light"><a href="{% url 'app-graph' g=game p=player %}">Graphs</a></li>
                 <li class="list-group-item list-group-item-light"><a href="{% url 'app-policies' g=game p=player %}">Policies</a></li>
+                <li class="list-group-item list-group-item-light"><a href="{% url 'app-trade' g=game p=player %}">Trade Graph</a></li>
               </ul>
             </p>
             {% endif %}

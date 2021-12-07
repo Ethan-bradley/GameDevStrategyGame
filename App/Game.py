@@ -47,11 +47,11 @@ class GameEngine():
 			e.save_GoodsPerCapita('default_graph.png')
 		self.TradeEngine.trade(self.EconEngines, [[0.0 for i in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))], [[0.0 for i in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))])
 		print('running engine')
-		self.create_compare_graph(self.EconEngines, self.nameList, 20, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance'],'',g.name, g)
 		for p in all_players:
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
 			self.apply_hex_number(g, p, country)
+		self.create_compare_graph(self.EconEngines, self.nameList, 20, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 		return [self.EconEngines, self.TradeEngine]
 
 	def get_country(self, index):
@@ -65,6 +65,11 @@ class GameEngine():
 	def get_country_index(self, name):
 		index = self.nameList.index(name)
 		return index
+
+	def modify_country_by_name(self, name, attr, set_am):
+		index = self.nameList.index(name)
+		country = self.get_country(index)
+		setattr(country, attr, set_am)
 
 	def get_trade(self, index, var):
 		if var == 0:
@@ -85,7 +90,9 @@ class GameEngine():
 			os.remove('.'+g.Consumption.url)
 			os.remove('.'+g.InterestRate.url)
 			os.remove('.'+g.GoodsBalance.url)
+			os.remove('.'+g.ScienceArr.url)
 		a = []
+		matplotlib.use('Agg')
 		for j in range(0, len(attribute_list)):
 			plt.title(attribute_list[j])
 			for i in range(0,len(CountryList)):
@@ -132,6 +139,11 @@ class GameEngine():
 			g.GoodsBalance = File(f)
 			g.save()
 		os.remove(a[6] +'.png')
+
+		with open(a[7] +'.png', 'rb') as f:
+			g.ScienceArr = File(f)
+			g.save()
+		os.remove(a[7] +'.png')
 
 	def set_vars(self, g, all_players):
 		for p in all_players:

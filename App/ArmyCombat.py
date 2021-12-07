@@ -8,13 +8,15 @@ class ArmyCombat():
 		army_list = Army.objects.filter(game=g)
 		bounce = {}
 		for a in army_list:
+			a.moved = False
+			a.save()
 			fought = False
 			for j in army_list:
 				if a.controller.name != j.controller.name and a.location.hexNum == j.location.hexNum:
 					self.calculateCombat(g,a,j)
 					fought = True
-			if not fought:
-				self.switch_hex(a.location, a.controller)
+			if not fought and a.controller != a.location.controller:
+				self.switch_hex(a.location, a.controller, g)
 
 
 	def calculateCombat(self, g, Army1, Army2):
@@ -30,19 +32,19 @@ class ArmyCombat():
 				Army2.save()
 				return
 		if Army1.size > Army2.size:
-			Army1.size -= min(diff/3, Army1.size)
-			Army2.size -= min(diff/2, Army2.size)
-			self.switch_hex(Army1.location, Army1.controller)
-			self.retreat_army(g, Army2)
-		elif Army2.size > Army1.size:
-			Army1.size -= min(diff/2, Army2.size)
-			Army2.size -= min(diff/3, Army1.size)
-			self.switch_hex(Army2.location, Army2.controller)
+			Army1.size -= max((int) (Army2.size*0.05), 1)
+			Army2.size -= max((int) (Army1.size*0.1), 1)
+			self.switch_hex(Army1.location, Army1.controller, g)
 			self.retreat_army(g, Army1)
+		elif Army2.size > Army1.size:
+			Army1.size -= max((int) (Army2.size*0.1), 1)
+			Army2.size -= max((int) (Army1.size*0.05), 1)
+			self.switch_hex(Army2.location, Army2.controller, g)
+			self.retreat_army(g, Army2)
 		else:
-			Army1.size -= min(diff/2, Army2.size)
-			Army2.size -= min(diff/2, Army1.size)
-			self.switch_hex(Army1.location, Army1.controller)
+			Army1.size -= max((int) (Army2.size*0.05), 1)
+			Army2.size -= max((int) (Army1.size*0.05), 1)
+			self.switch_hex(Army1.location, Army1.controller, g)
 			self.retreat_army(g, Army2)
 
 		if Army1.size < 0:
@@ -70,8 +72,10 @@ class ArmyCombat():
 	def find_retreat_hex(self, g, curr_hex, curr_army):
 		hex_list = Hexes.objects.filter(game=g, water=curr_army.naval)
 		temp = []
+		#import pdb; pdb.set_trace()
 		for h in hex_list:
-			if self.calculate_distance(h.xLocation, h.yLocation, curr_hex.xLocation, curr_hex.yLocation) < 2:
+
+			if self.calculate_distance(h.xLocation, h.yLocation, curr_hex.xLocation, curr_hex.yLocation) < 2 and h != curr_army.location and h.controller == curr_army.controller:
 				a = Army.objects.filter(game=g, location=h)
 				if len(a) < 1:
 					return h
@@ -79,17 +83,26 @@ class ArmyCombat():
 		return 'null'
 
 	#Switches control of a hex between two players (doesn't work yet)
-	def switch_hex(self, h, player_to):
+	def switch_hex(self, h, player_to, g):
 		loser = h.controller
-		loser.get_country().Population -= h.population
-		loser.get_country().capital -= h.capital
+		g.GameEngine.modify_country_by_name(loser.country.name, 'Population', loser.get_country().Population - h.population*0.8)
+		g.save()
+		g.GameEngine.modify_country_by_name(loser.country.name, 'capital', loser.get_country().Population - h.capital*0.9)
+		g.save()
+		#loser.get_country().Population -= 
+		#loser.get_country().capital -= 
 		h.controller = player_to
-		h.color = player_to.color
-		player_to.get_country().Population += h.population
-		player_to.get_country().capital += h.capital
-		
+		h.color = player_to.country.color
+		g.GameEngine.modify_country_by_name(player_to.country.name, 'Population', player_to.get_country().Population + h.population*0.8)
+		g.save()
+		g.GameEngine.modify_country_by_name(player_to.country.name, 'capital', player_to.get_country().capital + h.capital*0.7)
+		#player_to.get_country().Population += h.population*0.75
+		#player_to.get_country().capital += h.capital*0.75
+		g.save()
+
 		h.save()
 		player_to.save()
+		loser.save()
 
 	def square(self, x):
 		return x*x

@@ -20,6 +20,7 @@ urlpatterns = [
     path('graphs/<str:g>/<str:p>', views.graph, name='app-graph'),
     path('gamegraphs/<str:g>/<str:p>', views.gamegraph, name='app-game-graph'),
     path('policies/<str:g>/<str:p>', views.policies, name='app-policies'),
+    path('trade/<str:g>/<str:p>', views.trade, name='app-trade'),
 ] + static(settings.STATIC_URL,document_root = settings.STATIC_ROOT)
 
 if settings.DEBUG:

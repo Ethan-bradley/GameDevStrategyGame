@@ -36,8 +36,10 @@ class Country():
     self.PhillipsArr = [0,0,0,0,0];
     self.capitalChange2 = 2
     self.ResentmentArr = []
+
     #Tracking Variables
     self.Bonds = 0
+    self.GovDebt = 0
     self.TariffRevenue = 0
     self.TransportRevenue = 0
     self.BondWithdrawl = 0
@@ -360,6 +362,8 @@ class Country():
       self.Bonds *= self.interest_rate
       self.money[5] += self.BondWithdrawl
       self.money[1] -= self.BondWithdrawl
+      self.GovDebt *= self.interest_rate
+      self.GovDebt +=  self.BondWithdrawl
       #print("InterestRate2: "+str(-0.7*np.exp(((Population*ScienceRate - capital)*-1)/(money[1]/investment_good_price))+0.7))
       #Update Invest
       self.TotalInvest += self.money[3]
@@ -497,10 +501,13 @@ class Country():
         gov_goods += self.production_function(GovDemand[j], self.GovCapital[j])
     if self.goods[0] >= 0.1:
       self.goods[0] *= ((self.money[2]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*house_goods)/self.goods[0]
-    if self.goods[1] > 0.1:
+    if self.goods[1] >= 0.1:
       self.goods[1] *= ((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*capital_goods)/self.goods[1]
     self.capitalChange2 = self.goods[1]
-    self.goods[2] *= ((self.money[5]*self.GovGoods/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*gov_goods)/self.goods[2]
+    if self.goods[2] >= 0.1:
+      self.goods[2] *= ((self.money[5]*self.GovGoods/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*gov_goods)/self.goods[2]
+    else:
+      self.goods[2] = 0.1
     
   def production_function(self, percentage, capital, extra=1):
     #Total = (-self.Employable*percentage*self.ScienceRate*extra*np.exp((-4/(self.Employable*percentage*self.ScienceRate*extra))*capital)+self.ScienceRate*self.Employable*percentage*extra)*(0.9+self.Infrastructure)

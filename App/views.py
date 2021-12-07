@@ -266,10 +266,11 @@ def game(request, g, player):
         'govForm':govForm,
         'GovMoney':player.get_country().money[5],
         'GovSavings':player.get_country().Government_Savings,
-        'GovDebt':player.get_country().Bonds,
+        'GovDebt':player.get_country().GovDebt,
         'CurrencyReserves':g.GameEngine.printCurrencyExchange(),
         'graph':player.GoodsPerCapita,
-        'govBudget':player.GovBudget
+        'govBudget':player.GovBudget,
+        'CurrentYear':player.get_country().time - 20
     }
     return render(request, 'App/game.html', context)
 
@@ -284,7 +285,9 @@ def map(request, g, p, l, lprev):
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
+    player = p
     #Loads the army form on post
+    #import pdb; pdb.set_trace()
     if request.method == 'POST':
         if l != 'null':
             h = Hexes.objects.filter(game=g, hexNum=l)[0]
@@ -306,19 +309,31 @@ def map(request, g, p, l, lprev):
             f.controller = p
             f.game = g
             s = f.size
-            if len(v) == 0:
-                if p.get_country().Military - s >= 0:
-                    p.get_country().Military -= s;
-                    p.save()
+            if s < 0:
+                messages.warning(request, f'You cannot have an army with negative size!')
+                return redirect('map', gtemp, ptemp, 'null', 'null')
+            if f.location.controller != p:
+                messages.warning(request, f'You cannot build an army in another Players territory!')
+                return redirect('map', gtemp, ptemp, 'null', 'null')
+            if lprev == 'null':
+                if len(v) == 0:
+                    #country = p.get_country()
+                    if p.get_country().Military - s >= 0:
+                        g.GameEngine.modify_country_by_name(p.country.name, 'Military', p.get_country().Military - s)
+                        g.save()
+                    else:
+                        f.size = 1
                 else:
-                    f.size = 1
+                    s = s - v[0].size
+                    if p.get_country().Military - s >= 0:
+                        g.GameEngine.modify_country_by_name(p.country.name, 'Military', p.get_country().Military - s)
+                        g.save()
+                    else:
+                        f.size = v[0].size
             else:
-                s = s - v[0].size
-                if p.get_country().Military - s >= 0:
-                    p.get_country().Military -= s;
-                    p.save()
-                else:
-                    f.size = v[0].size
+                p.modify_country('Military', p.get_country().Military - s)
+                g.save()
+            f.moved = True
             f.save()
     #Gets the different colors of the hexes and the stats of the hexes
     hexColor = Hexes.objects.filter(game=g)
@@ -327,7 +342,7 @@ def map(request, g, p, l, lprev):
     col.append([])
     info = [0 for i in range(0,36)]
     row = 0
-    #import pdb; pdb.set_trace()
+    
     for hC in hexColor:
         col[row].append(hC.color)
         a = Army.objects.filter(game=g, location=hC)
@@ -358,6 +373,7 @@ def map(request, g, p, l, lprev):
             return redirect('map', gtemp, ptemp, 'null', 'null')
         v = v[0]
         if v.moved:
+
             messages.warning(request, f'This army has already been moved!')
             return redirect('map', gtemp, ptemp, 'null', 'null')
         if v.naval and not h2.water:
@@ -372,7 +388,20 @@ def map(request, g, p, l, lprev):
         f = ArmyForm(instance=v)
         form = f.save(commit=False)
         form.location = h2
-        form.moved = True
+        #import pdb; pdb.set_trace()
+        """s = form.size
+        if s < 0:
+            messages.warning(request, f'No negative armies!')
+            return redirect('map', gtemp, ptemp, lprev, 'null')
+        if p.get_country().Military - s >= 0:
+            p.get_country().Military -= s;
+            p.save()
+        else:
+            f.size = 1"""
+        #p.save()
+        if h2 != h:
+            form.moved = True
+
         form.save()
         return redirect('map', gtemp, ptemp, 'null', 'null')
     #data = serializers.serialize("json", <col>)
@@ -456,6 +485,13 @@ def gamegraph(request, g, p):
         'player':ptemp
     }
     return render(request, 'App/gamegraphs.html', context)
+
+def trade(request, g, p):
+    gtemp = g
+    ptemp = p
+    g = Game.objects.filter(name=g)[0]
+    p = Player.objects.filter(name=p)[0]
+    return render(request, 'App/trade.html')
 
 def policies(request, g, p):
     gtemp = g

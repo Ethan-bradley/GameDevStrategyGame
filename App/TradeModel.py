@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib
 from scipy.stats import norm
 import statistics as stat
+import plotly.express as px
 
 class Trade():
   def __init__(self, CountryListInput, CountryNameInput):
@@ -278,6 +279,7 @@ def trade_diagram(CountryNames, tradeBalance):
   fig = go.Figure(dict(data=[data_trace], layout=layout))
   #go.iplot(fig, validate=False)
   fig.show()
+  fig.write_html("templates/App/trade.html")
 
 def create_color_array(length, opacity, multiplier):
   arr = []
