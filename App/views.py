@@ -623,7 +623,7 @@ def gamegraph(request, g, p):
             data['Exchange Rate'] += trade.exchangeRateArr[j][start:]
             data['Year'] += [start+i for i in range(0,len(trade.exchangeRateArr[j][start:]))]
             data['Country'] += [trade.CountryName[j] for i in range(0,len(trade.exchangeRateArr[j][start:]))]
-        fig = px.line(data,x='Year', y='Exchange Rate',title="Exchange Rates", color="Country")
+        fig = px.line(data, x='Year', y='Exchange Rate',title="Exchange Rates", color="Country")
         fig.update_xaxes(title="Year")
         fig.update_yaxes(title="Amount")
         fig.write_html("templates/App/exchange.html")
