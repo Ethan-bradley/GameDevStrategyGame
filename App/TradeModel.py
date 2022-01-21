@@ -19,15 +19,33 @@ class Trade():
     self.total_flow = []
     self.exchangeRates = [1 for j in self.CountryList]
     self.equil_rate = 0
-    self.trade_flows = None
+    self.restrictions = [{} for i in range(0,len(self.CountryList))]
+    self.investment_restrictions = []
+    self.balance = [0 for i in range(0,len(self.CountryList))]
+    self.create_restriction_list(self.restrictions)
+    self.foreign_investment = [[0 for j in range(0,len(self.CountryList))] for i in range(0,len(self.CountryList))]
+    self.exchangeRateArr = [[] for j in self.CountryList]
     for i in self.CountryList:
-      self.Tariffs.append([0.0 for j in self.CountryList])
-      self.Sanctions.append([0.0 for j in self.CountryList])
+      self.Tariffs.append([0 for j in self.CountryList])
+      self.Sanctions.append([0 for j in self.CountryList])
+      self.investment_restrictions = [0 for j in self.CountryList]
       self.currencyReserves.append([0 for j in self.CountryList])
       #self.exchangeRates.append([1 for j in self.CountryList])
       self.currencyChangeReserves = [[1 for j in self.CountryList] for i in self.CountryList]
+  def create_restriction_list(self, restrictions):
+    c = 0
+    for dict in restrictions:
+        dict['HouseProduction'] = [1 for i in range(0,len(self.CountryList[c].HouseProducts))]
+        dict['CapitalProduction'] = [1 for i in range(0,len(self.CountryList[c].CapitalGoods))]
+        dict['RawProduction'] = [1 for i in range(0,len(self.CountryList[c].RawGoods))]
+        c += 1
+        
+  def add_restrictions(self, country_index, name, rest_list):
+    self.restrictions[country_index][name] = rest_list
+
   def trade(self, Country, Tariffs, Sanctions):
     Sanctions = self.Sanctions
+    self.Sanctions = Sanctions
     self.initial = True
     HousePriceArray = self.createHousePriceArray(Country)
     CapitalPriceArray = self.createCapitalPriceArray(Country)
@@ -56,14 +74,28 @@ class Trade():
     global_price = global_price/ total_gdp
     self.equil_rate = equil_rate
     for i in range(0,len(Country)):
-      price_index = (Country[i].ConsumerPrice/global_price)*4
-      new_rate = np.exp(((Country[i].interest_rate - Country[i].Inflation*0.01 - equil_rate)*price_index + (trade_balance[i]/Country[i].money[8])*price_index))
-      if abs(self.exchangeRates[i] - new_rate) > 0.15:
+      price_index = (global_price/Country[i].ConsumerPrice)
+      #new_rate = np.exp(((2*Country[i].interest_rate - Country[i].Inflation*0.01 - equil_rate)*price_index + ((trade_balance[i] + self.balance[i]*self.exchangeRates[i] + self.sum_cols(i, self.foreign_investment)*(self.CountryList[i].interest_rate)*self.exchangeRates[i])/Country[i].money[1])*price_index) + self.investment_restrictions[i])
+      new_rate = ((Country[i].interest_rate + 0.01*np.exp((trade_balance[i] + self.balance[i]*self.exchangeRates[i] - self.sum_cols(i, self.foreign_investment)*(self.CountryList[i].interest_rate)*self.exchangeRates[i] + self.sum_foreign_investment(i, self.foreign_investment))/Country[i].money[1]) - 0.01)/equil_rate)*price_index
+      if abs(self.exchangeRates[i] - new_rate) < 7:
         self.exchangeRates[i] = new_rate
       else:
         self.exchangeRates[i] = self.exchangeRates[i]
+      self.exchangeRateArr[i].append(self.exchangeRates[i])
     self.initial = False
     return self.second_trade(Country, Tariffs)
+  
+  def sum_cols(self, index, arr):
+    total_sum = 0
+    for i in range(0,len(arr)):
+      total_sum += arr[i][index]
+    return total_sum
+
+  def sum_foreign_investment(self, index, arr):
+    total_sum = 0
+    for i in range(0,len(arr)):
+      total_sum += arr[index][i]*self.CountryList[i].interest_rate*(self.exchangeRates[index]/self.exchangeRates[i])
+    return total_sum
 
   def second_trade(self, Country, Tariffs):
     HousePriceArray = self.createHousePriceArray(Country)
@@ -82,10 +114,32 @@ class Trade():
     #Prints trade flow diagram
     for i in range(0,len(Country)):
       Country[i].tradeBalance = trade_balance[i]
+    self.calculateForeignInvestment(trade_balance)
     print("Good Balance: ", good_balance)
     print("Trade Balanace: ", trade_balance)
     trade_diagram(self.CountryName, total_flow)
     return a
+  
+  def calculateForeignInvestment(self, trade_balance):
+    surplus = [ele if ele > 0 else 0 for ele in trade_balance]
+    deficit = [abs(ele) if ele < 0 else 0 for ele in trade_balance]
+    total = sum(surplus)
+    surplus = self.normalize(surplus)
+    deficit = self.normalize(deficit)
+    for i in range(0,len(self.CountryList)):
+      for j in range(0,len(self.CountryList)):
+        #i is the destination country, j is the source country.
+        #am = self.foreign_investment[i][j]*(self.CountryList[j].interest_rate)*(self.exchangeRates[i]/self.exchangeRates[j])
+        #self.CountryList[i].money[1] += am
+        #self.CountryList[j].money[1] -= am
+        self.foreign_investment[i][j] += surplus[i]*total*deficit[j]*self.exchangeRates[j]
+
+  def normalize(self, arr):
+    sum2 = sum(arr)
+    if sum2 > 0:
+      for i in range(0,len(arr)):
+        arr[i] = arr[i]/sum2
+    return arr
 
   def calculateTrade(self, Country, Tariffs, trade_balance, good_balance, demand_attr, supply_attr, price_attr, cheapest_prices, total_flow, goods_index, money_index):
     demand, supply, equil_price = self.findDemandSupply(Country, cheapest_prices, 2, 0, demand_attr, supply_attr)
@@ -140,7 +194,7 @@ class Trade():
       supply_array.append([])
       total_money.append([])
       for j in range(0,len(Country)):
-        supply_array[i].append((Country[j].goods[good_index]*getattr(Country[j], supply)[i]))
+        supply_array[i].append((Country[j].goods[good_index]*getattr(Country[j], supply)[i])*self.restrictions[j][supply][i])
       for j in range(0,len(Country)):
         total_money[i].append(Country[j].money[money_index]*getattr(Country[j], demand)[i]*self.exchangeRates[i])
       equil_price[i] = sum(total_money[i])/sum(supply_array[i])
@@ -193,9 +247,22 @@ class Trade():
           am2 = am*(self.exchangeRates[i]/self.exchangeRates[j])
         Countries[i].money[5] += am
         Countries[i].money[1] -= am
+        self.balance[i] += am
         
         Countries[j].money[5] -= am2
         Countries[j].money[1] += am2
+        self.balance[j] -= am
+
+  #Transfer military goods between countries. Transfer array is similar to tariff array, each row represnting the transfer wishes of one country
+  def trade_military_goods(self, Countries, transfer_array):
+  #i is the destination country, j is the source country.
+    for i in range(0, len(Countries)):
+      for j in range(0, len(Countries)):
+        am = transfer_array[j][i]
+        am2 = transfer_array[j][i]
+        if Countries[j].Military > am:
+          Countries[i].Military += am
+          Countries[j].Military -= am
 
 def parse_flows(Countries, good_balance, trade_balance, flows, goods_index, money_index, price, country_names, initial, exchangeRates):
   
@@ -203,19 +270,29 @@ def parse_flows(Countries, good_balance, trade_balance, flows, goods_index, mone
     #Gets the flow value to/from that country of this particular good (getting the difference between the first and last arrows).
     flow = flows[1, len(Countries) + 2 + i] + flows[0, i + 2]
     #print(country_names[i],": ",flow)
-    good_balance[i] += flow*0.25
-    value = flow*price*0.25
+    good_balance[i] += flow*0.05
+    value = flow*price*0.05
     trade_balance[i] += value
     if not initial:
-      Countries[i].goods[goods_index] -= flow*0.25
-      Countries[i].money[money_index] += value*exchangeRates[i]
-      Countries[i].money[1] -= value*exchangeRates[i]
+      if (Countries[i].money[1] - value*exchangeRates[i]) >= 0:
+        if (Countries[i].money[money_index] + value*exchangeRates[i] >= 0):
+          Countries[i].goods[goods_index] -= flow*0.25
+          Countries[i].money[money_index] += value*exchangeRates[i]
+          Countries[i].money[1] -= value*exchangeRates[i]
+        else:
+          Countries[i].goods[goods_index] -= flow*0.25*(Countries[i].money[1]/(value*exchangeRates[i]))
+          Countries[i].money[money_index] += Countries[i].money[1]
+          Countries[i].money[1] = 5
+      elif value*exchangeRates[i] != 0:
+        Countries[i].goods[goods_index] -= flow*0.25*(Countries[i].money[1]/(value*exchangeRates[i]))
+        Countries[i].money[money_index] += Countries[i].money[1]
+        Countries[i].money[1] = 5
   #trade_diagram(country_names, trade_balance)
 
 def get_flows(Countries, flows, price, trade_flows, tarriffs, price_index, price_attr, exchangeRates):
   for i in range(2,len(Countries) + 2):
     for j in range(len(Countries) + 2, len(Countries)*2 + 2):
-      value = flows[i, j]*price*0.25
+      value = flows[i, j]*price*0.05
       #Tariff sent to j's government
       if value > 0:
         tarriff_am = value*tarriffs[j - len(Countries) - 2][i-2]*(1/exchangeRates[j - len(Countries) - 2])
@@ -232,7 +309,7 @@ def get_flows(Countries, flows, price, trade_flows, tarriffs, price_index, price
         Countries[i-2].money[1] -= payment #*tarriffs[j - len(Countries) - 2][i-2]
       #Adding trade flow
       trade_flows[j - len(Countries) - 2][i - 2] += value
-
+  
 def trade_diagram(CountryNames, tradeBalance):
   new_trade_balance = []
   for i in range(0,len(tradeBalance)):
@@ -278,7 +355,7 @@ def trade_diagram(CountryNames, tradeBalance):
 
   fig = go.Figure(dict(data=[data_trace], layout=layout))
   #go.iplot(fig, validate=False)
-  fig.show()
+  #fig.show()
   fig.write_html("templates/App/trade.html")
 
 def create_color_array(length, opacity, multiplier):
@@ -287,6 +364,5 @@ def create_color_array(length, opacity, multiplier):
     for i in range(0,length):
       arr.append('hsla(' + str(i*25) + ', 100%, 50%, 0.4)')
   return arr
-
 
   

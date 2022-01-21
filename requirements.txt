@@ -12,3 +12,4 @@ boto3
 plotly
 statistics
 pandas
+math

@@ -21,11 +21,26 @@
 		"G":{"n":"UK","q":0,"r":2},
 		"H":{"n":"North Sea","q":1,"r":2},
 		"I":{"n":"Germany","q":2,"r":2} -->
-
+<div class="content-section">
+	{% if resources %}
+		<p class="text-secondary">Red=Iron, Yellow=Wheat, Blue=Coal, Purple=Oil</p>
+	{% endif %}
+	<form method="POST">
+	    {% csrf_token %}
+	    <fieldset class="form-group">
+	        <legend class="border-bottom mb-4">Map Mode</legend>
+	        {{ map_form|crispy }}
+	    </fieldset>
+	    <div class="form-group">
+	        <button class="btn btn-outline-info" type="submit" id="MapMode" value="MapMode">Change Map Mode</button>
+	    </div>
+	</form>
+</div>
 
 <div class="content-section">
 	<div class="media-body">
 		<p class="text-secondary">Total Military Goods Available: {{ MilitaryAm }}</p>
+		<p class="text-secondary">Total Maintenance Cost Next Year: {{ maintenace }}</p>
 	</div>
 
         <form method="POST">
@@ -94,7 +109,7 @@ S(document).ready(function(){
 
 		S('#message-6').html('Population: '+info[e.i][0]+' Capital: '+info[e.i][1]+' Player: '+info[e.i][2]+' Army Size: '+info[e.i][4]+' Iron: '+info[e.i][6] + ' Wheat: '+info[e.i][7] + ' Coal: '+info[e.i][8] + ' Oil: '+info[e.i][9])
 
-	}).on('click',function(e){
+	}).on('click',function(e) {
 		S('#message-6').html('You have clicked hex '+e.i+' ('+e.hex.id+')')
 		url = "{% url 'app-map' g=game p=player %}";
 		//var pagebutton= document.getElementById("ArmyCreate");

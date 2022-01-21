@@ -7,21 +7,38 @@ class ArmyCombat():
 	def doCombat(self, g):
 		army_list = Army.objects.filter(game=g)
 		bounce = {}
+		deleted = []
 		for a in army_list:
+			if a in deleted:
+				continue
 			a.moved = False
 			a.save()
 			fought = False
 			for j in army_list:
 				if a.controller.name != j.controller.name and a.location.hexNum == j.location.hexNum:
-					self.calculateCombat(g,a,j)
+					self.calculateCombat(g,a,j, deleted)
 					fought = True
 			if not fought and a.controller != a.location.controller:
 				self.switch_hex(a.location, a.controller, g)
+		self.doMaintenace(g)
 
+	def doMaintenace(self,g):
+		army_list = Army.objects.filter(game=g)
+		for a in army_list:
+			if a.controller.get_country().Military - a.size*0.1 < 0:
+				self.rebel(g,a)
+			else:
+				g.GameEngine.modify_country_by_name(a.controller.country.name, 'Military', a.controller.get_country().Military - a.size*0.1)
+				g.save()
 
-	def calculateCombat(self, g, Army1, Army2):
+	def rebel(self,g,a):
+		a.delete()
+
+	def calculateCombat(self, g, Army1, Army2, deleted):
 		diff = abs(Army1.size - Army2.size)
 		#Destroy Army if it encounters a naval unit on water.
+		arm1_deleted = True
+		arm2_deleted = True
 		if Army1.location.water:
 			if Army1.naval and not Army2.naval:
 				Army2.delete()
@@ -35,35 +52,42 @@ class ArmyCombat():
 			Army1.size -= max((int) (Army2.size*0.05), 1)
 			Army2.size -= max((int) (Army1.size*0.1), 1)
 			self.switch_hex(Army1.location, Army1.controller, g)
-			self.retreat_army(g, Army1)
+			arm2_deleted = self.retreat_army(g, Army2, deleted)
 		elif Army2.size > Army1.size:
 			Army1.size -= max((int) (Army2.size*0.1), 1)
 			Army2.size -= max((int) (Army1.size*0.05), 1)
 			self.switch_hex(Army2.location, Army2.controller, g)
-			self.retreat_army(g, Army2)
+			arm1_deleted = self.retreat_army(g, Army1, deleted)
 		else:
 			Army1.size -= max((int) (Army2.size*0.05), 1)
 			Army2.size -= max((int) (Army1.size*0.05), 1)
 			self.switch_hex(Army1.location, Army1.controller, g)
-			self.retreat_army(g, Army2)
-
-		if Army1.size < 0:
+			arm2_deleted = self.retreat_army(g, Army2, deleted)
+		#import pdb; pdb.set_trace()
+		if Army1.size < 0 and arm1_deleted:
+			deleted.append(Army1)
 			Army1.delete()
 			Army2.save()
-		elif Army2.size < 0:
+		if Army2.size < 0 and arm2_deleted:
+			deleted.append(Army2)
 			Army2.delete()
 			Army1.save()
-		else:
+		if arm1_deleted:
 			Army1.save()
+		if arm2_deleted:
 			Army2.save()
 
-	def retreat_army(self, g, curr_army):
+	def retreat_army(self, g, curr_army, deleted):
 		h = self.find_retreat_hex(g, curr_army.location, curr_army)
+		#import pdb; pdb.set_trace()
 		if h == 'null':
+			deleted.append(curr_army)
 			curr_army.delete()
+			return False
 		else:
 			curr_army.location = h
 			curr_army.save()
+			return True
 
 	#Calculates distance between two points
 	def calculate_distance(self, x1,y1,x2,y2):
@@ -85,21 +109,23 @@ class ArmyCombat():
 	#Switches control of a hex between two players (doesn't work yet)
 	def switch_hex(self, h, player_to, g):
 		loser = h.controller
-		g.GameEngine.modify_country_by_name(loser.country.name, 'Population', loser.get_country().Population - h.population*0.8)
+		#import pdb; pdb.set_trace()
+		#g.GameEngine.modify_country_by_name(loser.country.name, 'Population', loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8))
+		loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8)
 		g.save()
-		g.GameEngine.modify_country_by_name(loser.country.name, 'capital', loser.get_country().Population - h.capital*0.9)
+		g.GameEngine.modify_country_by_name(loser.country.name, 'capital', loser.get_country().capital - h.capital*0.9)
 		g.save()
 		#loser.get_country().Population -= 
 		#loser.get_country().capital -= 
 		h.controller = player_to
 		h.color = player_to.country.color
-		g.GameEngine.modify_country_by_name(player_to.country.name, 'Population', player_to.get_country().Population + h.population*0.8)
+		#g.GameEngine.modify_country_by_name(player_to.country.name, 'Population', player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.8))
+		player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.75)
 		g.save()
 		g.GameEngine.modify_country_by_name(player_to.country.name, 'capital', player_to.get_country().capital + h.capital*0.7)
 		#player_to.get_country().Population += h.population*0.75
 		#player_to.get_country().capital += h.capital*0.75
 		g.save()
-
 		h.save()
 		player_to.save()
 		loser.save()

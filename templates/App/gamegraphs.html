@@ -11,7 +11,15 @@
            <img class="thumbnail-img" src="{{ GoodsBalance.url }}">
            <img class="thumbnail-img" src="{{ InterestRate.url }}">
            <img class="thumbnail-img" src="{{ Consumption.url }}">
+           {% include 'App/Science.html' %}
+           {% include 'App/Unemployment.html' %}
     </div>
     {% include 'App/trade.html' %}
+    {% include 'App/exchange.html' %}
+    {% include 'App/foreign_investment.html' %}
+    {% include 'App/foreign_investment_domestic.html' %}
+    {% for title in titles %}
+      <p class="text-secondary">{{ title }}</p>
+    {% endfor %}
 </div>
 {% endblock content %}

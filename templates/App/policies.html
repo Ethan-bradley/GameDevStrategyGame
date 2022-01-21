@@ -2,12 +2,6 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <div class="content-section">
-    <div class="media-body">
-          <h2 class="account-heading">Data</h2>
-          <p class="text-secondary">Total Government Money: {{ GovMoney }}</p>
-          <p class="ExchangeRates">Currency Reserves: {{ CurrencyReserves }}</p>
-           <img class="thumbnail-img" src="{{ graph.url }}">
-    </div>
     <form method="POST">
         {% csrf_token %}
         <h2 class="account-heading">Policies</h2>

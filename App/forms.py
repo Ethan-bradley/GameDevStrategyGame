@@ -1,5 +1,5 @@
 from django import forms
-from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction
+from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface
 from django.forms import ModelForm
 from django.forms import formset_factory, BaseFormSet
 from django.core.exceptions import ValidationError
@@ -58,15 +58,30 @@ class AddTariffForm(ModelForm):
         model = Tariff
         fields = []
 
+
 """class WaitGameForm(ModelForm):
     class Meta:
         model = Player
         fields = ['ready']"""
+class AddPlayerProductForm(ModelForm):
+    class Meta:
+        model = PlayerProduct
+        fields = []
+
+class AddProductForm(ModelForm):
+    class Meta:
+        model = Product
+        fields = []
+
+class IndProductForm(ModelForm):
+    class Meta:
+        model = Product
+        fields = ['exportRestriction','subsidy']
 
 class IndTariffForm(ModelForm):
 	class Meta:
 		model = IndTariff
-		fields = ['tariffAm','sanctionAm']
+		fields = ['tariffAm','sanctionAm','moneySend','militarySend','nationalization']
 
 class EconomyForm(ModelForm):
     class Meta:
@@ -82,6 +97,11 @@ class HexForm(ModelForm):
     class Meta:
         model = Hexes
         fields = []
+
+class MapInterfaceForm(ModelForm):
+    class Meta:
+        model = MapInterface
+        fields = ['mode']
 
 class ArmyForm(ModelForm):
     class Meta:
@@ -109,7 +129,7 @@ class ArmyForm(ModelForm):
 class GovernmentSpendingForm(ModelForm):
     class Meta:
         model = Player
-        fields = ['IncomeTax','CorporateTax','Welfare','AdditionalWelfare','Education','Military','InfrastructureInvest','Bonds','MoneyPrinting','ScienceInvest','TheoreticalInvest','PracticalInvest','AppliedInvest']
+        fields = ['IncomeTax','CorporateTax','Welfare','AdditionalWelfare','Education','Military','InfrastructureInvest','MoneyPrinting','ScienceInvest','TheoreticalInvest','PracticalInvest','AppliedInvest','investment_restriction']
 
     def clean(self):
         super(GovernmentSpendingForm, self).clean()

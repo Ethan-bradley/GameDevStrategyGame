@@ -54,19 +54,23 @@ class Player(models.Model):
 	IncomeTax = models.FloatField(default=0.2)
 	CorporateTax = models.FloatField(default=0.1)
 	Welfare = models.FloatField(default=0.0)
-	AdditionalWelfare= models.FloatField(default=0.6)
-	Education = models.FloatField(default=0.3)
-	Military = models.FloatField(default=0)
+	AdditionalWelfare= models.FloatField(default=0.1)
+	Education = models.FloatField(default=0.05)
+	Military = models.FloatField(default=0.01)
 	Bonds = models.FloatField(default=0)
 	MoneyPrinting = models.IntegerField(default=200)
 
 	#Science Investment
-	InfrastructureInvest = models.FloatField(default=0.1)
+	InfrastructureInvest = models.FloatField(default=0.017)
 	#CapitalInvestment = models.FloatField(default=0.0)
 	ScienceInvest = models.FloatField(default=0.0)
 	TheoreticalInvest = models.FloatField(default=0.1)
 	PracticalInvest = models.FloatField(default=0.3)
 	AppliedInvest = models.FloatField(default=0.6)
+
+	#Restrictions
+	investment_restriction = models.FloatField(default=0.0)
+
 
 	#Graph Images
 	GoodsPerCapita = models.ImageField(default='default_graph.png', upload_to='graphs')
@@ -108,6 +112,23 @@ class IndTariff(models.Model):
 	key = models.ForeignKey("Player", on_delete=models.CASCADE)
 	tariffAm = models.FloatField(default=0)
 	sanctionAm = models.FloatField(default=0)
+	moneySend = models.FloatField(default=0)
+	militarySend = models.FloatField(default=0)
+	nationalization = models.FloatField(default=1.0)
+
+class PlayerProduct(models.Model):
+	curr_player = models.ForeignKey("Player", on_delete=models.CASCADE, default="")
+	name = models.CharField(max_length=100)
+	game = models.ForeignKey("Game", on_delete=models.CASCADE, default="")
+	#players = models.ManyToManyField("Player")
+	#for i in range(0,4):
+	#	i = models.DecimalField(max_digits=70, decimal_places=50)
+class Product(models.Model):
+	controller = models.ForeignKey("PlayerProduct", db_index=True, on_delete=models.CASCADE)
+	#key = models.CharField(max_length=100)
+	name = models.CharField(max_length=100)
+	exportRestriction = models.FloatField(default=1)
+	subsidy = models.FloatField(default=0.125)
 
 class Hexes(models.Model):
 	hexNum = models.IntegerField()
@@ -195,4 +216,15 @@ class PolicySupport(models.Model):
 	controller = models.ForeignKey("Player", on_delete=models.CASCADE, default="")
 	Faction = models.ForeignKey("Faction", on_delete=models.CASCADE, default="")
 	PolicyAssociated = models.ForeignKey("Policy", on_delete=models.CASCADE, default="")
+
+class MapInterface(models.Model):
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	controller = models.ForeignKey("Player", on_delete=models.CASCADE, default="")
+	POLITICAL = 'PO'
+	RESOURCES = 'RE'
+	MODES = [
+	(POLITICAL, 'Political'),
+	(RESOURCES, 'Resources'),
+	]
+	mode = models.CharField(max_length=2,choices=MODES,default=POLITICAL)
 	

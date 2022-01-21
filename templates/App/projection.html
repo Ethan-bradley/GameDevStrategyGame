@@ -1,0 +1,13 @@
+{% extends "App/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+    <div class="media-body">
+          <h2 class="account-heading">Projection Graphs</h2>
+           {% include inflation_graph %}
+           {% include unemployment_graph %}
+           {% include goodspercapita_graph %}
+           {% include consumptionpercapita_graph %}
+    </div>
+</div>
+{% endblock content %}

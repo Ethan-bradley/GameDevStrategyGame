@@ -1,4 +1,4 @@
-from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes
+from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, PlayerProduct, Product
 from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, ResetTurn
 from .GameEconModel import Country
 from .TradeModel import Trade
@@ -26,7 +26,8 @@ class GameEngine():
 		for p in all_players:
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
-			self.apply_hex_number(g, p, country)
+			#self.apply_hex_number(g, p, country)
+			self.start_hex_number(g, p, country)
 
 	def run_engine(self, g):
 		#Resetting model variables
@@ -146,6 +147,8 @@ class GameEngine():
 		os.remove(a[7] +'.png')
 
 	def set_vars(self, g, all_players):
+		transfer_array = [[0 for j in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))]
+		military_transfer = [[0 for j in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))]
 		for p in all_players:
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
@@ -153,37 +156,79 @@ class GameEngine():
 			#self.get_hex_numbers(g, p, country)
 			country.IncomeTax = p.IncomeTax
 			country.CorporateTax = p.CorporateTax
-			country.GovGoods = p.Education + p.Military
+			#country.GovGoods = p.Education + p.Military
+			
+			country.MoneyPrinting = p.MoneyPrinting
+			welfare = ((p.Welfare + p.AdditionalWelfare)*country.money[8])/country.money[5]
+			gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*country.money[8])/country.money[5]
+			gov_goods = ((p.Education + p.Military)*country.money[8])/country.money[5]
+			if welfare + gov_invest + gov_goods > 1:
+				country.BondWithdrawl = (welfare + gov_invest + gov_goods - 1)*country.money[5]
+				if country.BondWithdrawl > country.money[1]*0.5:
+					#Country is Bankrupt if this occurs.
+					country.BondWithdrawl = country.money[1]*0.5
+				welfare = ((p.Welfare + p.AdditionalWelfare)*country.money[8])/(country.money[5]+country.BondWithdrawl)
+				gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*country.money[8])/(country.money[5]+country.BondWithdrawl)
+				gov_goods = ((p.Education + p.Military)*country.money[8])/(country.money[5]+country.BondWithdrawl)
+
 			if ((p.Education + p.Military) != 0):
 				country.EducationSpend = p.Education/(p.Education + p.Military)
 				country.MilitarySpend = p.Military/(p.Education + p.Military)
 			else:
 				country.EducationSpend = 0
-			country.MoneyPrinting = p.MoneyPrinting
-			country.BondWithdrawl = p.Bonds
+
+			country.GovGoods = gov_goods
+			#country.BondWithdrawl = p.Bonds
 			#country.Bonds = p.Bonds
-			country.GovWelfare = p.Welfare + p.AdditionalWelfare
+			#country.GovWelfare = p.Welfare + p.AdditionalWelfare
+			country.GovWelfare = welfare
 			#Investment
-			total_gov_money = country.money[5]
+			total_gov_money = country.money[5] + country.BondWithdrawl
 			total_investor_money = country.money[4]*country.InvestmentRate
 
-			country.GovernmentInvest = p.InfrastructureInvest + p.ScienceInvest
+			country.GovernmentInvest = gov_invest #p.InfrastructureInvest + p.ScienceInvest
 			total_money = country.money[5]*country.GovernmentInvest + total_investor_money
-			country.InfrastructureInvest = ((total_gov_money*p.InfrastructureInvest)/total_money) + ((total_investor_money*0.1)/total_money)
-			country.ScienceInvest = ((total_gov_money*p.ScienceInvest)/total_money) + ((total_investor_money*0.2)/total_money)
+			country.InfrastructureInvest = ((total_gov_money*((p.InfrastructureInvest*country.money[8])/country.money[5]))/total_money) + ((total_investor_money*0.1)/total_money)
+			country.ScienceInvest = ((total_gov_money*((p.ScienceInvest*country.money[8])/country.money[5]))/total_money) + ((total_investor_money*0.05)/total_money)
 			#country.QuickInvestment = p.CapitalInvestment
 			country.TheoreticalInvest = p.TheoreticalInvest
 			country.PracticalInvest = p.PracticalInvest
 			country.AppliedInvest = p.AppliedInvest
 
+			self.TradeEngine.investment_restrictions[index] = p.investment_restriction
+			#Rebellions
+			if country.Resentment > 0.04:
+				self.rebel(g, p, country.Resentment)
 			#Tarriffs
 			tar = Tariff.objects.filter(game=g, curr_player=p)[0]
 			k = IndTariff.objects.filter(controller=tar)
+
 			count = 0
 			for t in k:
+				count = self.TradeEngine.CountryName.index(t.key.country.name)
 				self.TradeEngine.Tariffs[index][count] = t.tariffAm
 				self.TradeEngine.Sanctions[index][count] = t.sanctionAm
+				transfer_array[index][count] = t.moneySend
+				military_transfer[index][count] = t.militarySend
+				self.TradeEngine.foreign_investment[index][count] = self.TradeEngine.foreign_investment[index][count]*t.nationalization
 				count += 1
+			#Product subsidies/restrictions
+			productP = PlayerProduct.objects.filter(game=g, curr_player=p)[0]
+			products = Product.objects.filter(controller=productP)
+			for product in products:
+				if product.name in country.HouseProducts:
+					index = country.HouseProducts.index(product.name)
+					self.TradeEngine.restrictions[index]['HouseProduction'][index] = product.exportRestriction
+					country.HouseScience[index] = product.subsidy
+				if product.name in country.CapitalGoods:
+					index = country.CapitalGoods.index(product.name)
+					self.TradeEngine.restrictions[index]['CapitalProduction'][index] = product.exportRestriction
+					country.CapitalScience[index] = product.subsidy
+				if product.name in country.RawGoods:
+					index = country.RawGoods.index(product.name)
+					self.TradeEngine.restrictions[index]['RawProduction'][index] = product.exportRestriction
+					country.RawScience[index] = product.subsidy
+
 			if (p.GoodsPerCapita.name != 'default_graph.png'):
 				os.remove('.'+p.GoodsPerCapita.url)
 				os.remove('.'+p.Inflation.url)
@@ -262,6 +307,8 @@ class GameEngine():
 				p.GDPGrowth = File(f)
 				p.save()
 			os.remove(a[11]+'.png')
+		self.TradeEngine.trade_money(self.EconEngines, transfer_array)
+		self.TradeEngine.trade_military_goods(self.EconEngines, military_transfer)
 			
 	def calculate_differences(self, g, p, e):
 	    #g = Game.objects.filter(name=g)[0]
@@ -305,8 +352,8 @@ class GameEngine():
 			total_wheat += h.wheat
 			total_coal += h.coal
 			total_oil += h.oil
-		e.Population = total_population
-		e.capital = total_capital
+		#e.Population = total_population
+		#e.capital = total_capital
 		e.RawResources[0] = total_iron
 		e.RawResources[1] = total_wheat
 		e.RawResources[2] = total_coal
@@ -323,6 +370,24 @@ class GameEngine():
 		#print(centers)
 		capital_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.capital - e.lastcapital, len(hex_list))
 		population_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.Population - e.lastPopulation, len(hex_list))
+
+		#e.lastPopulation = e.Population
+		for h in range(0, len(hex_list)):
+			print(capital_list[h])
+			hex_list[h].capital += int(capital_list[h])
+			hex_list[h].population += int(population_list[h])
+			hex_list[h].save()
+			print(hex_list[h].capital)
+
+	def start_hex_number(self, g, p, e):
+		hex_list = Hexes.objects.filter(game=g, controller=p, water=False)
+		centers = []
+		for h in range(0, len(hex_list)):
+			if hex_list[h].center:
+				centers.append(h)
+		#print(centers)
+		capital_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.capital, len(hex_list))
+		population_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.Population, len(hex_list))
 
 		#e.lastPopulation = e.Population
 		for h in range(0, len(hex_list)):
@@ -364,3 +429,35 @@ class GameEngine():
 			string += " "+countryNames[i]
 			string += ": "+str(currencyRates[i])+"\n"
 		return string
+
+	def rebel(self, g, p, res):
+		hex_list = Hexes.objects.filter(game=g, controller=p, water=False)
+		if (len(hex_list) > 0):
+			neutral_player = Player.objects.filter(game=g,user=g.host)[0]
+			self.switch_hex(hex_list[0], neutral_player, g)
+			Army.objects.create(game=g, size=hex_list[0].population*res*100,controller=neutral_player, naval=False, location=hex_list[0], name=hex_list[0].name+" Rebel Army")
+
+	#Switches control of a hex between two players (doesn't work yet)
+	def switch_hex(self, h, player_to, g):
+		loser = h.controller
+		#import pdb; pdb.set_trace()
+		#g.GameEngine.modify_country_by_name(loser.country.name, 'Population', loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8))
+		loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8)
+		g.save()
+		g.GameEngine.modify_country_by_name(loser.country.name, 'capital', loser.get_country().capital - h.capital*0.9)
+		g.save()
+		#loser.get_country().Population -= 
+		#loser.get_country().capital -= 
+		h.controller = player_to
+		h.color = player_to.country.color
+		#g.GameEngine.modify_country_by_name(player_to.country.name, 'Population', player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.8))
+		player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.75)
+		g.save()
+		g.GameEngine.modify_country_by_name(player_to.country.name, 'capital', player_to.get_country().capital + h.capital*0.8)
+		#player_to.get_country().Population += h.population*0.75
+		#player_to.get_country().capital += h.capital*0.75
+		g.save()
+
+		h.save()
+		player_to.save()
+		loser.save()

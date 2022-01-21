@@ -2,29 +2,45 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <div class="content-section">
-    <div class="media-body">
-          <h2 class="account-heading">Data</h2>
-          <p class="ExchangeRates">Currency Exchange Rates: {{ CurrencyReserves }}</p>
-           <img class="thumbnail-img" src="{{ graph.url }}">
-           <h2 class="account-heading">Government Budget</h2>
-           <img class="thumbnail-img" src="{{ govBudget.url }}">
-           <p class="text-secondary">Total Government Revenue: {{ GovMoney }}</p>
-           <p class="text-secondary">Total Government Debt: {{ GovDebt }}</p>
-           <p class="text-secondary">Total Government Savings: {{ GovSavings }}</p>
-           <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
-    </div>
+  <form method="POST">
+    <legend class="border-bottom mb-4">Tariffs</legend>
+    {% csrf_token %}
+    {{ indForms.management_form }}
+      {% for form in indForms %}
+          <legend class="border-bottom mb-4">{{ titles|get_item:forloop.counter }}</legend>
+          {{ form |crispy }}
+      {% endfor %}
+      <br>
+      <div class="form-group">
+          <button class="btn btn-outline-info" type="submit" id="Tarriff" value="Tarriff">Submit Tarriff Changes</button>
+      </div>
+    </form>
     <form method="POST">
         {% csrf_token %}
-        <legend class="border-bottom mb-4">Tariffs</legend>
         <fieldset class="form-group">
-            {{ indForms.management_form }}
-            {% for form in indForms %}
-                <legend class="border-bottom mb-4">{{ titles|get_item:forloop.counter }}</legend>
-                {{ form |crispy }}
+            <p class="text-secondary">All the subsidy values below must add to 1.</p>
+            {{ PFS.management_form }}
+            {% for form2 in PFS %}
+                <legend class="border-bottom mb-4">{{ product_title|get_item:forloop.counter }}</legend>
+                {{ form2 |crispy }}
             {% endfor %}
-
+            <div class="media-body">
+              <h2 class="account-heading">Data</h2>
+              <p class="ExchangeRates">Currency Exchange Rates: {{ CurrencyReserves }}</p>
+               <img class="thumbnail-img" src="{{ graph.url }}">
+               <h2 class="account-heading">Government Budget</h2>
+               {% include govBudget %}
+               {% include govRevenue %}
+               <p class="text-secondary">Total Government Revenue: {{ GovMoney }}</p>
+               <p class="text-secondary">Total Government Revenue as % of GDP: {{ govRevenueGDP }}</p>
+               <p class="text-secondary">Government Expenditures as % of GDP: {{ govSpending }}</p>
+               <p class="text-secondary">Government Budget Balance as % of GDP: {{ govBalance }}</p>
+               <p class="text-secondary">Total Government Debt: {{ GovDebt }}</p>
+               <p class="text-secondary">Total Government Savings: {{ GovSavings }}</p>
+               <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
+            </div>
             <legend class="border-bottom mb-4">Government Spending and Central Bank</legend>
-            <p class="text-secondary">Ensure that Welfare, Education, and Military add up to 1.</p>
+            <p class="text-secondary">Welfare, Education, Military, InfrastructureInvest, and ScienceInvest are all as % of GDP.</p>
                 {{ govForm |crispy }}
             <p class="text-secondary">Each value is a percentage in decimal form.</p>
             <legend class="border-bottom mb-4">Ready for next turn?</legend>
