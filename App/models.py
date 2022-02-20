@@ -53,8 +53,8 @@ class Player(models.Model):
 	#Government Variables:
 	IncomeTax = models.FloatField(default=0.2)
 	CorporateTax = models.FloatField(default=0.1)
-	Welfare = models.FloatField(default=0.0)
-	AdditionalWelfare= models.FloatField(default=0.1)
+	Welfare = models.FloatField(default=0.1)
+	AdditionalWelfare= models.FloatField(default=0)
 	Education = models.FloatField(default=0.05)
 	Military = models.FloatField(default=0.01)
 	Bonds = models.FloatField(default=0)
@@ -227,4 +227,31 @@ class MapInterface(models.Model):
 	(RESOURCES, 'Resources'),
 	]
 	mode = models.CharField(max_length=2,choices=MODES,default=POLITICAL)
+
+class GraphInterface(models.Model):
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	controller = models.ForeignKey("Player", on_delete=models.CASCADE, default="")
+	INCOMETAX = 'Income_Tax'
+	CORPORATETAX = 'Corporate_Tax'
+	WELFARE = 'Welfare'
+	EDUCATION = "Education"
+	SCIENCE = "Science"
+	INFRASTRUCTURE = "Infrastructure"
+	MILITARY = "Military"
+	MONEY = "MoneyPrintingArr"
+	MODES = [
+	(INCOMETAX, 'Income Tax'),
+	(CORPORATETAX, 'Corporate Tax'),
+	(WELFARE, 'Welfare'),
+	(EDUCATION, 'Education'),
+	(SCIENCE, 'Science'),
+	(INFRASTRUCTURE, 'Infrastructure Spending'),
+	(MILITARY, 'Military Spending'),
+	(MONEY, 'Money Printing')
+	]
+	mode = models.CharField(max_length=20,choices=MODES,default=INCOMETAX)
+
+class Notification(models.Model):
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	message = models.TextField()
 	

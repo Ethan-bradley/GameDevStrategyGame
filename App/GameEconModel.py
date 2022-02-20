@@ -9,6 +9,8 @@ import math
 
 #RUN THIS CELL to start
 
+#RUN THIS CELL to start
+
 class Country():
 
   def __init__(self):
@@ -38,6 +40,13 @@ class Country():
     self.capitalChange2 = 2
     self.ResentmentArr = []
     self.UnemploymentArr = []
+    self.CorporateTaxArr = []
+    self.IncomeTaxArr = []
+    self.InfrastructureArr = []
+    self.WelfareArr = []
+    self.EducationArr = []
+    self.MilitaryArr = []
+    self.ScienceBudgetArr = []
     #Tracking Variables
     self.Unemployment = 0
     self.Bonds = 0
@@ -185,6 +194,19 @@ class Country():
     #Runs demography
     self.setup_demography()
 
+    #Variables, var_list is the name of array, variable_list is variable name.
+    #They should be the same.
+    self.var_list = ['EducationArr2','Government_SavingsArr','TarriffRevenuArr','GovDebtArr', 'Income_Tax','Corporate_Tax','MoneyPrintingArr']
+    self.variable_list = ['Education','Government_Savings','TariffRevenue','GovDebt','IncomeTax','CorporateTax','MoneyPrinting']
+    self.save_variable_list(self.var_list)
+    
+  def save_variable_list(self, var_list):
+    for i in var_list:
+      setattr(self,i,[])
+  def append_variable_list(self, var_list, variable_list):
+    for i in range(0,len(var_list)):
+      getattr(self,var_list[i]).append(getattr(self, variable_list[i]))
+
   def run_first(self):
     #Stats:
     #GDP
@@ -246,7 +268,6 @@ class Country():
 
   def run_turn(self, num):
     for i in range(0,num):
-      #import pdb; pdb.set_trace();
       self.TariffRevenue = 0
       self.TransportRevenue = 0
       self.lastcapital = self.capital
@@ -291,7 +312,7 @@ class Country():
       #print("Total: ", Total)
       print("Money: ", self.money[5]*self.GovGoods/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))
       #if self.goods[2] != 0:
-      #  self.goods[2] *= ((self.money[5]*self.GovGoods/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*Total)/self.goods[2]
+        #self.goods[2] *= ((self.money[5]*self.GovGoods/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*Total)/self.goods[2]
       #self.goods[3] *= ((self.money[3]*self.RawInvestment/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*Total)
       #Run each cycle, creates transformation matrix
       if self.money[1] < 0:
@@ -415,7 +436,7 @@ class Country():
       self.money[1] -= self.BondWithdrawl
       self.GovDebt *= (1 + self.interest_rate)
       if (self.Government_Savings + self.BondWithdrawl) < 1:
-        self.GovDebt += self.BondWithdrawl
+        self.GovDebt +=  self.BondWithdrawl
       else:
         self.Government_Savings -= self.BondWithdrawl
       #print("InterestRate2: "+str(-0.7*np.exp(((Population*ScienceRate - capital)*-1)/(money[1]/investment_good_price))+0.7))
@@ -500,7 +521,19 @@ class Country():
         self.CapitalPrices[i] = (self.CapitalDemand[i]*self.money[3]*self.QuickInvestment)/(self.CapitalProduction[i]*self.goods[1])
       #for i in range(0,len(self.RawDemand)):
       #  self.RawPrices[i] = (self.RawDemand[i]*self.money[3]*self.QuickInvestment)/(self.RawProduction[i]*self.goods[3])
+
+      #Adding budget variables in:
+      self.CorporateTaxArr.append(self.money[4]*self.CorporateTax)
+      self.IncomeTaxArr.append(self.money[0]*self.IncomeTax)
+      govshare = (self.GovernmentInvest*self.money[5])/(self.GovernmentInvest*self.money[5]+self.InvestmentRate*self.money[4])
+      self.InfrastructureArr.append(self.money[3]*self.InfrastructureInvest*govshare)
+      self.ScienceBudgetArr.append(self.money[3]*self.ScienceInvest*govshare)
+      self.WelfareArr.append(self.money[5]*self.GovWelfare)
+      self.EducationArr.append(self.money[5]*self.GovGoods*self.EducationSpend)
+      self.MilitaryArr.append(self.money[5]*self.GovGoods*(1-self.EducationSpend))
+
       #Stats Adding:
+      self.append_variable_list(self.var_list, self.variable_list)
       self.GDPPerCapita.append(self.money[8]/self.pop_matrix.sum())
       self.GoodsTotal.append(self.goods[0]+self.goods[1]+self.goods[2]+self.tradeBalance)
       self.GoodsPerCapita.append(self.GoodsTotal[len(self.GoodsTotal)-1]/self.pop_matrix.sum())
@@ -542,6 +575,7 @@ class Country():
     raw_goods = [0 for i in range(0,len(self.RawDemand))]
     for i in range(0, len(self.RawDemand)):
       print("Raw i",i)
+      print(len(self.RawPrices))
       self.RawCapital[i] *= 0.9
       self.RawCapital[i] += capitalChange*(self.RawDemand[i])*(self.money[3]/self.findMoneyTotal())
       labour = sum(self.pop_matrix[len(self.HouseDemand)+len(self.CapitalDemand) + i][20:self.retirement_age])/self.pop_matrix.sum()
@@ -679,7 +713,16 @@ class Country():
     percentage = population_added/self.pop_matrix.sum()
     self.pop_matrix = self.pop_matrix + percentage*other_pop_matrix
 
+  def create_graph(self, var_list, cutoff):
+    for i in var_list:
+      plt.plot(getattr(self,i)[cutoff:])
+      plt.title(i)
+      plt.ylabel(i)
+      plt.xlabel('Years')
+      plt.show()
+      
   def display_data(self):
+    self.create_graph(self.var_list, 15)
     plt.plot(self.GDP[5:])
     plt.title('GDP')
     plt.ylabel('GDP')
@@ -792,7 +835,7 @@ class Country():
     plt.show()
 
     plt.title('Infrastructure')
-    plt.plot(self.InfrastructureArray[20:])
+    plt.plot(self.InfrastructureArray[2:])
     plt.ylabel('Infrastructure')
     plt.show()
 
@@ -848,14 +891,14 @@ class Country():
   def save_graphs(self, file_path, player_name):
     matplotlib.use('Agg')
     plt.title('GoodsPerCapita')
-    plt.plot(self.GoodsPerCapita[15:])
+    plt.plot(self.GoodsPerCapita[17:])
     plt.ylabel('Goods')
     plt.xlabel('Years')
     plt.clf()
 
     a = []
     plt.title('GoodsPerCapita')
-    plt.plot(self.GoodsPerCapita[15:])
+    plt.plot(self.GoodsPerCapita[17:])
     plt.ylabel('Goods')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'GoodsPerCapita')
@@ -863,7 +906,7 @@ class Country():
     plt.clf()
 
     plt.title('Inflation')
-    plt.plot(self.InflationTracker[15:])
+    plt.plot(self.InflationTracker[17:])
     plt.ylabel('Inflation')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'Inflation')
@@ -871,7 +914,7 @@ class Country():
     plt.clf()
 
     plt.title('Real GDP Growth')
-    plt.plot(self.RealGDPGrowth[15:])
+    plt.plot(self.RealGDPGrowth[17:])
     plt.ylabel('Real GDP Growth')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'RealGDPGrowth')
@@ -879,7 +922,7 @@ class Country():
     plt.clf()
 
     plt.title('Employment')
-    plt.plot(self.EmploymentRate[15:])
+    plt.plot(self.EmploymentRate[17:])
     plt.ylabel('Employment')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'Employment')
@@ -896,7 +939,7 @@ class Country():
     plt.clf()
 
     plt.title('Trade Balance')
-    plt.plot(self.GoodsBalance[20:])
+    plt.plot(self.GoodsBalance[17:])
     plt.ylabel('Trade Balance')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'tradeBalance')
@@ -904,7 +947,7 @@ class Country():
     plt.clf()
 
     plt.title('GDPPerCapita')
-    plt.plot(self.GDPPerCapita[20:])
+    plt.plot(self.GDPPerCapita[17:])
     plt.ylabel('GDPperCapita')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'GDPPerCapita')
@@ -912,7 +955,7 @@ class Country():
     plt.clf()
 
     plt.title('Interest Rate')
-    plt.plot(self.InterestRate[15:])
+    plt.plot(self.InterestRate[17:])
     plt.ylabel('Interest Rate')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'InterestRate')
@@ -920,7 +963,7 @@ class Country():
     plt.clf()
 
     plt.title('Capital')
-    plt.plot(self.CapitalArr[20:])
+    plt.plot(self.CapitalArr[17:])
     plt.ylabel('Capital')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'Capital')
@@ -928,14 +971,14 @@ class Country():
     plt.clf()
 
     plt.title('GoodsProduction')
-    plt.plot(self.GoodsTotal[20:])
+    plt.plot(self.GoodsTotal[17:])
     plt.ylabel('Goods')
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'GoodsProduction')
     a.append(file_path+player_name+'GoodsProduction')
     plt.clf()
 
-    plt.plot(self.GDP[20:])
+    plt.plot(self.GDP[17:])
     plt.title('GDP')
     plt.ylabel('GDP')
     plt.xlabel('Years')
@@ -944,7 +987,7 @@ class Country():
     plt.clf()
 
     plt.title('GDPGrowth')
-    plt.plot(self.GDPGrowth[20:])
+    plt.plot(self.GDPGrowth[17:])
     plt.ylabel('GDPGrowth')
     plt.xlabel('GDPGrowth')
     plt.savefig(file_path+player_name+'GDPGrowth')

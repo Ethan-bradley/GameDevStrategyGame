@@ -1,8 +1,9 @@
 from django import forms
-from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface
+from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface
 from django.forms import ModelForm
 from django.forms import formset_factory, BaseFormSet
 from django.core.exceptions import ValidationError
+from django.forms.widgets import TextInput
 
 class NewGameForm(ModelForm):
     class Meta:
@@ -79,9 +80,13 @@ class IndProductForm(ModelForm):
         fields = ['exportRestriction','subsidy']
 
 class IndTariffForm(ModelForm):
-	class Meta:
-		model = IndTariff
-		fields = ['tariffAm','sanctionAm','moneySend','militarySend','nationalization']
+    class Meta:
+        model = IndTariff
+        fields = ['tariffAm','sanctionAm','moneySend','militarySend','nationalization']
+        dict2 = {}
+        for field in fields:
+            dict2[field] = TextInput(attrs={'type':'number','step': '0.01'})
+        widgets = dict2
 
 class EconomyForm(ModelForm):
     class Meta:
@@ -101,6 +106,11 @@ class HexForm(ModelForm):
 class MapInterfaceForm(ModelForm):
     class Meta:
         model = MapInterface
+        fields = ['mode']
+
+class GraphInterfaceForm(ModelForm):
+    class Meta:
+        model = GraphInterface
         fields = ['mode']
 
 class ArmyForm(ModelForm):
@@ -129,7 +139,16 @@ class ArmyForm(ModelForm):
 class GovernmentSpendingForm(ModelForm):
     class Meta:
         model = Player
-        fields = ['IncomeTax','CorporateTax','Welfare','AdditionalWelfare','Education','Military','InfrastructureInvest','MoneyPrinting','ScienceInvest','TheoreticalInvest','PracticalInvest','AppliedInvest','investment_restriction']
+        fields = ['IncomeTax','CorporateTax','Welfare','Education','Military','InfrastructureInvest','MoneyPrinting','ScienceInvest','TheoreticalInvest','PracticalInvest','AppliedInvest','investment_restriction']
+        dict2 = {}
+        for field in fields:
+            dict2[field] = TextInput(attrs={'type':'number','step': '0.01'})
+        widgets = dict2
+        """widgets = {
+        'IncomeTax': TextInput(attrs={'type':'number','min': '0', 'max': '1','step': '0.01'}),
+        'CorporateTax': TextInput(attrs={'type':'number','min': '0', 'max': '1','step': '0.01'})
+
+        }"""
 
     def clean(self):
         super(GovernmentSpendingForm, self).clean()
@@ -141,13 +160,13 @@ class GovernmentSpendingForm(ModelForm):
         m = self.cleaned_data.get('Military')
         ii = self.cleaned_data.get('InfrastructureInvest')
         si = self.cleaned_data.get('ScienceInvest')
-        total = w + e + m + ii + si + aw
+        #total = w + e + m + ii + si + aw
         ti = self.cleaned_data.get('TheoreticalInvest')
         pi = self.cleaned_data.get('PracticalInvest')
         ai = self.cleaned_data.get('AppliedInvest')
 
-        if total > 1:
-            self._errors['IncomeTax'] = self.error_class(['Spending must not be more than 1.'])
+        #if total > 1:
+        #    self._errors['IncomeTax'] = self.error_class(['Spending must not be more than 1.'])
         if it < 0 or ct < 0 or w < 0 or e < 0 or m < 0 or ii < 0 or si < 0:
             self._errors['IncomeTax'] = self.error_class(['You cannot have negative numbers in spending plan.'])
 

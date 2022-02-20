@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.forms import formset_factory, modelformset_factory
 from .Game import GameEngine
 from .models import Post
-from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface
-from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm
+from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface
+from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm
 from django.views.generic.edit import CreateView
 from django.apps import apps
 import json
@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import os
 import copy
+from .budgetgraph import budget_graph
 
 def home(request):
 	#import pdb; pdb.set_trace()
@@ -75,6 +76,7 @@ def new_game(request):
             curr_player = Player.objects.filter(name=pf.name, game=temp)[0]
             #Creates Map Interface
             MapInterface.objects.create(game=temp,controller=curr_player)
+            GraphInterface.objects.create(game=temp,controller=curr_player)
             #Creates Hexes
             h = HexList()
             h.apply(temp, curr_player)
@@ -170,6 +172,7 @@ def joinGame(request, g):
             curr_player = Player.objects.filter(name=f.name, game=temp)[0]
             #Creates Map Interface
             MapInterface.objects.create(game=temp,controller=curr_player)
+            GraphInterface.objects.create(game=temp,controller=curr_player)
             #Creates Policies
             p2 = PolicyList()
             p2.add_policies(curr_player, temp, request)
@@ -264,6 +267,7 @@ def game(request, g, player):
         'Categories':['Education','Military','Welfare','Science','Infrastructure','Interest']}
         fig = px.pie(data2, values='Expenditure', names='Categories', title="Expenditures")
         fig.write_html("templates/App/graphs/"+player.name+"expenditure.html")
+    context = {}
     gtemp = g
     ptemp = player
     g = Game.objects.filter(name=g)[0]
@@ -294,6 +298,7 @@ def game(request, g, player):
                 govForm2.save()
             else:
                 messages.warning(request, f'Government spending total must not be more than 1')
+            projection(gtemp, ptemp, context)
             #Runs ready form for whether ready for moving onto next turn
             ready = NextTurn(request.POST, instance=player)
             if ready.is_valid():
@@ -333,9 +338,10 @@ def game(request, g, player):
     #    print(i.label)
     create_revenue_pie(player.get_country(),player)
     create_expenditure_pie(player.get_country(),player)
+    budget_graph(player.get_country(), 17, "templates/App/graphs/"+player.name+"budgetgraph.html")
     govForm = GovernmentSpendingForm(instance=player)
     next_turn = NextTurn(instance=player)
-    context = {
+    context.update({
         'indForms': IFS,
         'PFS':PFS,
         'titles': titles,
@@ -352,11 +358,13 @@ def game(request, g, player):
         'graph':player.GoodsPerCapita,
         'govBudget':"App/graphs/"+player.name+"expenditure.html",
         'govRevenue':"App/graphs/"+player.name+"revenue.html",
-        'CurrentYear':player.get_country().time - 20,
+        'BudgetGraph':"App/graphs/"+player.name+"budgetgraph.html",
+        'CurrentYear':player.get_country().time - 18,
         'govRevenueGDP':round((player.get_country().money[5]/player.get_country().money[8]),4),
         'govSpending':round(player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military, 4),
-        'govBalance': round((player.get_country().money[5]/player.get_country().money[8]) - (player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military), 4)
-    }
+        'govBalance': round((player.get_country().money[5]/player.get_country().money[8]) - (player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military), 4),
+        'notifications': Notification.objects.filter(game=g)[::-1]
+    })
     return render(request, 'App/game.html', context)
 
 #loads the army map
@@ -406,12 +414,14 @@ def map(request, g, p, l, lprev):
                 f.controller = p
                 f.game = g
                 s = f.size
-
                 if s < 0:
                     messages.warning(request, f'You cannot have an army with negative size!')
                     return redirect('map', gtemp, ptemp, 'null', 'null')
                 if f.location.controller != p:
                     messages.warning(request, f'You cannot build an army in another Players territory!')
+                    return redirect('map', gtemp, ptemp, 'null', 'null')
+                if f.naval and not h.water:
+                    messages.warning(request, f'A naval force cannot be built on land!')
                     return redirect('map', gtemp, ptemp, 'null', 'null')
                 if lprev == 'null':
                     if len(v) == 0:
@@ -471,7 +481,7 @@ def map(request, g, p, l, lprev):
             print(color)
         else:
             color = hC.color
-        info[hC.xLocation+hC.yLocation*6] = [hC.population, hC.capital, hC.controller.name, a, army_size, color, hC.iron, hC.wheat, hC.coal, hC.oil]
+        info[hC.xLocation+hC.yLocation*6] = [str(hC.population)+'k', hC.capital, hC.controller.name, a, army_size, color, hC.iron, hC.wheat, hC.coal, hC.oil]
         count += 1
         if count >= size:
             count = 0
@@ -549,6 +559,7 @@ def map(request, g, p, l, lprev):
         'ColorMap':json_list,
         'hi':'hello',
         'info':info_list,
+        'CurrentYear':player.get_country().time - 18,
         'form':f,
         'map_form':mi,
         'game':gtemp,
@@ -556,7 +567,8 @@ def map(request, g, p, l, lprev):
         'prevNum':l,
         'hexmap':hexmap,
         'maintenace':total_size*0.1,
-        'resources':t.mode == "RE"
+        'resources':t.mode == "RE",
+        'notifications': Notification.objects.filter(game=g)[::-1]
     }
     return render(request, 'App/map.html', context)
 
@@ -593,6 +605,14 @@ def graph(request, g, p):
     create_wage_graph(p.get_country(),p)
     create_job_graph(p.get_country(),p)
     create_prices_graph(p.get_country(), p)
+    t = GraphInterface.objects.filter(game=g,controller=p)[0]
+    if request.method == 'POST':
+        mi2 = GraphInterfaceForm(request.POST, instance=t)
+        if mi2.is_valid():
+            mi2.save()
+            return redirect('app-graph', gtemp, ptemp)
+    else:
+        mi = GraphInterfaceForm(instance=t)
     context = {
         'GoodsPerCapita':p.GoodsPerCapita,
         'Inflation':p.Inflation,
@@ -601,6 +621,7 @@ def graph(request, g, p):
         'tradeBalance':p.tradeBalance,
         'GDPPerCapita':p.GDPPerCapita,
         'InterestRate':p.InterestRate,
+        'CurrentYear':p.get_country().time - 18,
         'Capital':p.Capital,
         'GoodsProduction':p.GoodsProduction,
         'GDP':p.GDP,
@@ -609,11 +630,14 @@ def graph(request, g, p):
         'player':ptemp,
         'wageGraph':'App/graphs/'+p.name+'wage.html',
         'jobGraph':'App/graphs/'+p.name+'jobs.html',
-        'pricesGraph':'App/graphs/'+p.name+'prices.html'
+        'pricesGraph':'App/graphs/'+p.name+'prices.html',
+        'notifications': Notification.objects.filter(game=g)[::-1],
+        'GraphInterface': mi
     }
+    gamegraph(gtemp, ptemp, context, t, g)
     return render(request, 'App/graphs.html', context)
 
-def gamegraph(request, g, p):
+def gamegraph(g, p, context, graphmode, game):
     def create_exchange_rate_graph(trade, start):
         data = {'Country': [],
         'Exchange Rate': [],
@@ -627,20 +651,29 @@ def gamegraph(request, g, p):
         fig.update_xaxes(title="Year")
         fig.update_yaxes(title="Amount")
         fig.write_html("templates/App/exchange.html")
-    def create_compare_graph(attribute,title,trade,countries,start):
+    def create_compare_graph(attribute,title,trade,countries,start, game=None, econattr=True):
         data = {'Country': [],
         title: [],
         'Year':[]
         }
         for j in range(0, len(trade.exchangeRateArr)):
-            arr = getattr(countries[j], attribute)[start:]
+            if hasattr(countries[j], attribute) and isinstance(getattr(countries[j], attribute), list):
+                arr = getattr(countries[j], attribute)[start:]
+            else:
+                #import pdb; pdb.set_trace()
+                arr = getattr(game, attribute)[j][start:]
+                if len(arr) == 0:
+                    continue
             data[title] += arr
             data['Year'] += [i for i in range(0,len(arr))]
             data['Country'] += [trade.CountryName[j] for i in range(0,len(arr))]
         fig = px.line(data,x='Year', y=title,title=title, color="Country")
         fig.update_xaxes(title="Year")
         fig.update_yaxes(title=title)
-        fig.write_html("templates/App/"+title+".html")
+        if econattr:
+            fig.write_html("templates/App/"+title+".html")
+        else:
+            fig.write_html("templates/App/budget2.html")
     def create_foreign_investment_pie(index, trade, title, data3):
         #matplotlib.rcParams.update({'font.size': 8})
         data = {'investment':trade.foreign_investment[index],
@@ -667,9 +700,11 @@ def gamegraph(request, g, p):
     data3 = []
     titles = []
     create_foreign_investment_pie(g.GameEngine.TradeEngine.CountryName.index(p.country.name), g.GameEngine.TradeEngine, titles, data3)
-    create_compare_graph("ScienceArr", "Science", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 20)
-    create_compare_graph("UnemploymentArr", "Unemployment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 20)
-    context = {
+    create_compare_graph("ScienceArr", "Science", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
+    create_compare_graph("UnemploymentArr", "Unemployment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
+    create_compare_graph("EducationArr2", "Education", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
+    create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 0, game.GameEngine, False)
+    context.update({
         'GoodsPerCapita':g.GoodsPerCapita,
         'Inflation':g.Inflation,
         'Resentment':g.Resentment,
@@ -680,10 +715,12 @@ def gamegraph(request, g, p):
         'game':gtemp,
         'player':ptemp,
         'data':data3,
-        'titles':titles
-    }
+        'titles':titles,
+        'notifications': Notification.objects.filter(game=g)[::-1],
+        'budgetGraph': 'templates/App/budget2.html'
+    })
     
-    return render(request, 'App/gamegraphs.html', context)
+    #return render(request, 'App/gamegraphs.html', context)
 
 def trade(request, g, p):
     gtemp = g
@@ -760,7 +797,8 @@ def policies(request, g, p):
         'effects':Effects,
         'policyForms':PFS,
         'game':gtemp,
-        'player':ptemp
+        'player':ptemp,
+        'notifications': Notification.objects.filter(game=g)[::-1]
     }
     return render(request, 'App/policies.html', context)
 
@@ -795,12 +833,13 @@ def delete(request, g):
     messages.success(request, f'Deletion of graph files was successfull!')
     return render(request, 'App/home.html', context)
 
-def projection(request, g, p):
+def projection(g, p, context):
     def create_graph(attribute,title,country,start):
         arr = getattr(country, attribute)[start:]
         fig = px.line(y=arr,title=title)
         fig.update_xaxes(title="Year")
         fig.update_yaxes(title=title)
+        fig.add_vline(x=p.get_country().time - 17)
         fig.write_html("templates/App/graphs/"+p.name+title+".html")
     gtemp = g
     ptemp = p
@@ -849,21 +888,22 @@ def projection(request, g, p):
     new_country.AppliedInvest = p.AppliedInvest
 
     new_country.run_turn(5)
-    create_graph('InflationTracker','Inflation',new_country,20)
-    create_graph('UnemploymentArr','Unemployment',new_country,20)
-    create_graph('GoodsPerCapita','GoodsPerCapita',new_country,20)
-    create_graph('ConsumptionArr','ConsumptionPerCapita',new_country,20)
-    context = {
+    create_graph('InflationTracker','Inflation',new_country,17)
+    create_graph('UnemploymentArr','Unemployment',new_country,17)
+    create_graph('GoodsPerCapita','GoodsPerCapita',new_country,17)
+    create_graph('ConsumptionArr','ConsumptionPerCapita',new_country,17)
+    context.update({
         'unemployment_graph': "App/graphs/"+p.name+"Unemployment.html",
         'inflation_graph': "App/graphs/"+p.name+"Inflation.html",
         'goodspercapita_graph': "App/graphs/"+p.name+"GoodsPerCapita.html",
         'consumptionpercapita_graph': "App/graphs/"+p.name+"ConsumptionPerCapita.html",
         'game':gtemp,
-        'player':ptemp
+        'player':ptemp,
+        'notifications': Notification.objects.filter(game=g)[::-1]
         #'posts': posts
-    }
+    })
 
-    return render(request, 'App/projection.html', context)
+    #return render(request, 'App/projection.html', context)
 
 #Calculates distance between two points
 def calculate_distance(x1, y1, x2, y2):

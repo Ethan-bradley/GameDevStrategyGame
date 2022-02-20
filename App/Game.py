@@ -1,4 +1,4 @@
-from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, PlayerProduct, Product
+from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, PlayerProduct, Product, Notification
 from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, ResetTurn
 from .GameEconModel import Country
 from .TradeModel import Trade
@@ -20,6 +20,9 @@ class GameEngine():
 			self.EconEngines[i].run_turn(20)
 		self.TradeEngine = Trade(self.EconEngines,self.nameList)
 		self.ArmyCombat = ArmyCombat()
+		self.var_list = ['Welfare','Education','Military','Infrastructure','Science']
+		self.variable_list = ['Welfare','Education','Military','InfrastructureInvest','ScienceInvest']
+		self.save_variable_list(self.var_list, num_players)
 
 	def start_capital(self, g):
 		all_players = Player.objects.filter(game=g)
@@ -52,7 +55,8 @@ class GameEngine():
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
 			self.apply_hex_number(g, p, country)
-		self.create_compare_graph(self.EconEngines, self.nameList, 20, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
+		self.create_graphs(g, all_players)
+		self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 		return [self.EconEngines, self.TradeEngine]
 
 	def get_country(self, index):
@@ -83,7 +87,7 @@ class GameEngine():
 			return self.TradeEngine.Tariffs[index]
 
 	def create_compare_graph(self, CountryList, CountryName, start, attribute_list, file_path, game_name, g):
-		if (g.GoodsPerCapita.name != 'default_graph.png'):
+		if (os.path.exists('.'+g.GoodsPerCapita.url) and g.GoodsPerCapita.name != 'default_graph.png'):
 			os.remove('.'+g.GoodsPerCapita.url)
 			os.remove('.'+g.Inflation.url)
 			os.remove('.'+g.Resentment.url)
@@ -95,6 +99,7 @@ class GameEngine():
 		a = []
 		matplotlib.use('Agg')
 		for j in range(0, len(attribute_list)):
+			plt.clf()
 			plt.title(attribute_list[j])
 			for i in range(0,len(CountryList)):
 				plt.plot(getattr(CountryList[i],attribute_list[j])[start:],label=CountryName[i])
@@ -191,9 +196,12 @@ class GameEngine():
 			country.InfrastructureInvest = ((total_gov_money*((p.InfrastructureInvest*country.money[8])/country.money[5]))/total_money) + ((total_investor_money*0.1)/total_money)
 			country.ScienceInvest = ((total_gov_money*((p.ScienceInvest*country.money[8])/country.money[5]))/total_money) + ((total_investor_money*0.05)/total_money)
 			#country.QuickInvestment = p.CapitalInvestment
-			country.TheoreticalInvest = p.TheoreticalInvest
-			country.PracticalInvest = p.PracticalInvest
-			country.AppliedInvest = p.AppliedInvest
+			#import pdb; pdb.set_trace();
+			total_money = ((total_gov_money*((p.ScienceInvest*country.money[8])/country.money[5]))) + ((total_investor_money*0.05))
+			#Money one side invests*share + money other side / total
+			country.TheoreticalInvest = ((total_gov_money*p.TheoreticalInvest*((p.ScienceInvest*country.money[8])/country.money[5])) + ((total_investor_money*0.05*0.1)))/total_money
+			country.PracticalInvest = ((total_gov_money*p.PracticalInvest*((p.ScienceInvest*country.money[8])/country.money[5])) + ((total_investor_money*0.05*0.3)))/total_money
+			country.AppliedInvest = ((total_gov_money*p.AppliedInvest*((p.ScienceInvest*country.money[8])/country.money[5])) + ((total_investor_money*0.05*0.6)))/total_money
 
 			self.TradeEngine.investment_restrictions[index] = p.investment_restriction
 			#Rebellions
@@ -212,6 +220,8 @@ class GameEngine():
 				military_transfer[index][count] = t.militarySend
 				self.TradeEngine.foreign_investment[index][count] = self.TradeEngine.foreign_investment[index][count]*t.nationalization
 				count += 1
+			#Append variables
+			self.append_variable_list(self.var_list, self.variable_list, index, p)
 			#Product subsidies/restrictions
 			productP = PlayerProduct.objects.filter(game=g, curr_player=p)[0]
 			products = Product.objects.filter(controller=productP)
@@ -229,7 +239,21 @@ class GameEngine():
 					self.TradeEngine.restrictions[index]['RawProduction'][index] = product.exportRestriction
 					country.RawScience[index] = product.subsidy
 
-			if (p.GoodsPerCapita.name != 'default_graph.png'):
+		self.TradeEngine.trade_money(self.EconEngines, transfer_array)
+		self.TradeEngine.trade_military_goods(self.EconEngines, military_transfer)
+
+	def save_variable_list(self, var_list, player_num):
+		for i in var_list:
+			setattr(self,i,[[] for i in range(player_num)])
+	def append_variable_list(self, var_list, variable_list, index, player):
+		for i in range(0,len(var_list)):
+			getattr(self,var_list[i])[index].append(getattr(player, variable_list[i]))
+
+	def create_graphs(self, g, all_players):
+		for p in all_players:
+			index = self.nameList.index(p.country.name)
+			country = self.get_country(index)
+			if (os.path.exists('.'+p.GoodsPerCapita.url) and p.GoodsPerCapita.name != 'default_graph.png'):
 				os.remove('.'+p.GoodsPerCapita.url)
 				os.remove('.'+p.Inflation.url)
 				os.remove('.'+p.RealGDP.url)
@@ -307,8 +331,7 @@ class GameEngine():
 				p.GDPGrowth = File(f)
 				p.save()
 			os.remove(a[11]+'.png')
-		self.TradeEngine.trade_money(self.EconEngines, transfer_array)
-		self.TradeEngine.trade_military_goods(self.EconEngines, military_transfer)
+		
 			
 	def calculate_differences(self, g, p, e):
 	    #g = Game.objects.filter(name=g)[0]
@@ -436,6 +459,8 @@ class GameEngine():
 			neutral_player = Player.objects.filter(game=g,user=g.host)[0]
 			self.switch_hex(hex_list[0], neutral_player, g)
 			Army.objects.create(game=g, size=hex_list[0].population*res*100,controller=neutral_player, naval=False, location=hex_list[0], name=hex_list[0].name+" Rebel Army")
+			message2 = "In "+p.name+"'s territory a rebel army of size "+str(round(hex_list[0].population*res*100,0))+" rose up in "+hex_list[0].name
+			Notification.objects.create(game=g, message=message2)
 
 	#Switches control of a hex between two players (doesn't work yet)
 	def switch_hex(self, h, player_to, g):
