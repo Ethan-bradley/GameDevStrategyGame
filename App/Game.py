@@ -355,7 +355,7 @@ class GameEngine():
 		#print(BalanceList[1])
 		e.ConsumptionRate = 0.5 + BalanceList[1]
 		#print(BalanceList[2])
-		p.Welfare = BalanceList[2]
+		#p.Welfare = BalanceList[2]
 		e.Wages = 0.4 + BalanceList[9]
 		e.population_growth = 0.02 + BalanceList[10]
 		p.save()
