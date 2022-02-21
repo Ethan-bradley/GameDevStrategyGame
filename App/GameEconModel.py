@@ -196,8 +196,8 @@ class Country():
 
     #Variables, var_list is the name of array, variable_list is variable name.
     #They should be the same.
-    self.var_list = ['EducationArr2','Government_SavingsArr','TarriffRevenuArr','GovDebtArr', 'Income_Tax','Corporate_Tax','MoneyPrintingArr']
-    self.variable_list = ['Education','Government_Savings','TariffRevenue','GovDebt','IncomeTax','CorporateTax','MoneyPrinting']
+    self.var_list = ['EducationArr2','Government_SavingsArr','TarriffRevenuArr','GovDebtArr','Income_Tax','Corporate_Tax','MoneyPrintingArr','Iron','Wheat','Coal','Oil','Food','ConsumerGoods','Steel','Machinery']
+    self.variable_list = ['Education','Government_Savings','TariffRevenue','GovDebt','IncomeTax','CorporateTax','MoneyPrinting','RawPrices0#','RawPrices1#','RawPrices2#','RawPrices3#','HousePrices0#','HousePrices1#','CapitalPrices0#','CapitalPrices1#']
     self.save_variable_list(self.var_list)
     
   def save_variable_list(self, var_list):
@@ -205,8 +205,10 @@ class Country():
       setattr(self,i,[])
   def append_variable_list(self, var_list, variable_list):
     for i in range(0,len(var_list)):
-      getattr(self,var_list[i]).append(getattr(self, variable_list[i]))
-
+      if variable_list[i][len(variable_list[i])-1] == '#':
+        getattr(self,var_list[i]).append(getattr(self, variable_list[i][0:len(variable_list[i])-2])[int(variable_list[i][len(variable_list[i])-2])])
+      else:
+        getattr(self,var_list[i]).append(getattr(self, variable_list[i]))
   def run_first(self):
     #Stats:
     #GDP

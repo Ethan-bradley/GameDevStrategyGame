@@ -11,7 +11,7 @@ class PolicyList():
 		policyFive = ['Child Subsidies', ['Subsidies for fewer children',{'WelfareEffect':0.02, 'PopEffect':-0.005}],['None',{}],['Small Subsidies',{'WelfareEffect':0.02,'PopEffect':0.005}],['Medium Subsidies',{'WelfareEffect':0.05, 'PopEffect':0.01}],['Large Subsidies', {'WelfareEffect':0.1, 'PopEffect':0.015}]]
 		self.policyList = [policyOne, policyTwo, policyThree, policyFour, policyFive]
 
-	def add_policies(self, p, g, request):
+	def add_policies(self, p, g, request=None):
 		for i in self.policyList:
 			group_name = i[0]
 			p_group = PolicyGroup(game=g, player=p, name=group_name)

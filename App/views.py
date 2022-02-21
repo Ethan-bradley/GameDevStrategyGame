@@ -19,6 +19,7 @@ import plotly.express as px
 import os
 import copy
 from .budgetgraph import budget_graph
+from .helper import add_players
 
 def home(request):
 	#import pdb; pdb.set_trace()
@@ -120,6 +121,8 @@ def new_game(request):
             #game_name = form.cleaned_data.get('game_name')
             #Uncomment for single-player games
             #temp.GameEngine.start_capital(temp)
+            if temp.num_players == 1:
+                add_players(temp)
             if temp.num_players == temp.curr_num_players:
                 temp.GameEngine.start_capital(temp)
             messages.success(request, f'New Game created!')
@@ -308,9 +311,10 @@ def game(request, g, player):
             if player.host:
                 all_players = Player.objects.filter(game=g)
                 ready_next_round = True
-                for p in all_players:
-                    if not p.ready:
-                        ready_next_round = False
+                if g.num_players > 1 and g.num_players < 6:
+                    for p in all_players:
+                        if not p.ready:
+                            ready_next_round = False
                 if ready_next_round:
                     temp = g.GameEngine.run_engine(g)
                     g.save()
@@ -402,6 +406,7 @@ def map(request, g, p, l, lprev):
                 else:
                     form = ArmyForm(request.POST)
             else:
+                h = None
                 form = ArmyForm(request.POST)
             if form.is_valid():
                 f = form.save(commit=False)
@@ -419,6 +424,9 @@ def map(request, g, p, l, lprev):
                     return redirect('map', gtemp, ptemp, 'null', 'null')
                 if f.location.controller != p:
                     messages.warning(request, f'You cannot build an army in another Players territory!')
+                    return redirect('map', gtemp, ptemp, 'null', 'null')
+                if h == None:
+                    messages.warning(request, f'You have not specified a location for this army!')
                     return redirect('map', gtemp, ptemp, 'null', 'null')
                 if f.naval and not h.water:
                     messages.warning(request, f'A naval force cannot be built on land!')
@@ -703,7 +711,7 @@ def gamegraph(g, p, context, graphmode, game):
     create_compare_graph("ScienceArr", "Science", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
     create_compare_graph("UnemploymentArr", "Unemployment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
     create_compare_graph("EducationArr2", "Education", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
-    create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 0, game.GameEngine, False)
+    create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17, game.GameEngine, False)
     context.update({
         'GoodsPerCapita':g.GoodsPerCapita,
         'Inflation':g.Inflation,

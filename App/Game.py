@@ -36,7 +36,15 @@ class GameEngine():
 		#Resetting model variables
 		all_players = Player.objects.filter(game=g)
 		self.set_vars(g, all_players)
-		for p in all_players:
+		if g.num_players > 1:
+			for p in all_players:
+				f = ResetTurn(instance=p)
+				pla = f.save(commit=False)
+				pla.ready = False
+				pla.save()
+		else:
+			p = Player.objects.filter(user=g.host)[0]
+			print(p.name)
 			f = ResetTurn(instance=p)
 			pla = f.save(commit=False)
 			pla.ready = False
@@ -244,7 +252,7 @@ class GameEngine():
 
 	def save_variable_list(self, var_list, player_num):
 		for i in var_list:
-			setattr(self,i,[[] for i in range(player_num)])
+			setattr(self,i,[[0.02 for i in range(0,20)] for i in range(player_num)])
 	def append_variable_list(self, var_list, variable_list, index, player):
 		for i in range(0,len(var_list)):
 			getattr(self,var_list[i])[index].append(getattr(player, variable_list[i]))

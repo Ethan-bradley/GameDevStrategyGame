@@ -239,6 +239,14 @@ class GraphInterface(models.Model):
 	INFRASTRUCTURE = "Infrastructure"
 	MILITARY = "Military"
 	MONEY = "MoneyPrintingArr"
+	IRON = "Iron"
+	WHEAT = "Wheat"
+	COAL = 'Coal'
+	OIL = 'Oil'
+	FOOD = 'Food'
+	CONSUMER = 'ConsumerGoods'
+	STEEL = 'Steel'
+	MACHINERY = 'Machinery'
 	MODES = [
 	(INCOMETAX, 'Income Tax'),
 	(CORPORATETAX, 'Corporate Tax'),
@@ -247,7 +255,15 @@ class GraphInterface(models.Model):
 	(SCIENCE, 'Science'),
 	(INFRASTRUCTURE, 'Infrastructure Spending'),
 	(MILITARY, 'Military Spending'),
-	(MONEY, 'Money Printing')
+	(MONEY, 'Money Printing'),
+	(IRON,'Iron Prices'),
+	(WHEAT, 'Wheat Prices'),
+	(COAL, 'Coal Prices'),
+	(OIL, 'Oil Prices'),
+	(FOOD, 'Food Prices'),
+	(CONSUMER, 'Consumer Goods Prices'),
+	(STEEL, 'Steel Prices'),
+	(MACHINERY, 'Machinery Prices')
 	]
 	mode = models.CharField(max_length=20,choices=MODES,default=INCOMETAX)
 

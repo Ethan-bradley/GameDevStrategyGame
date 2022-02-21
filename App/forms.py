@@ -143,6 +143,7 @@ class GovernmentSpendingForm(ModelForm):
         dict2 = {}
         for field in fields:
             dict2[field] = TextInput(attrs={'type':'number','step': '0.01'})
+        dict2['InfrastructureInvest'] = TextInput(attrs={'type':'number','step': '0.001'})
         widgets = dict2
         """widgets = {
         'IncomeTax': TextInput(attrs={'type':'number','min': '0', 'max': '1','step': '0.01'}),

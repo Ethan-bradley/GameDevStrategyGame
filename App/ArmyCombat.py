@@ -72,11 +72,17 @@ class ArmyCombat():
 		#import pdb; pdb.set_trace()
 		if Army1.size < 0 and arm1_deleted:
 			deleted.append(Army1)
-			Army1.delete()
+			try:
+				Army1.delete()
+			except:
+				print('No Army to delete.')
 			Army2.save()
 		if Army2.size < 0 and arm2_deleted:
 			deleted.append(Army2)
-			Army2.delete()
+			try:
+				Army2.delete()
+			except:
+				print('No Army to delete.')
 			Army1.save()
 		if arm1_deleted:
 			Army1.save()
