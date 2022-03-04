@@ -17,13 +17,22 @@ class GameEngine():
 		self.EconEngines = []
 		for i in range(0,num_players):
 			self.EconEngines.append(Country())
-			self.EconEngines[i].run_turn(20)
+			self.EconEngines[i].run_turn(13)
 		self.TradeEngine = Trade(self.EconEngines,self.nameList)
 		self.ArmyCombat = ArmyCombat()
 		self.var_list = ['Welfare','Education','Military','Infrastructure','Science']
 		self.variable_list = ['Welfare','Education','Military','InfrastructureInvest','ScienceInvest']
 		self.save_variable_list(self.var_list, num_players)
-
+		countries = self.nameList
+		self.TarriffsArr = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
+		#import pdb; pdb.set_trace()
+		self.SanctionsArr = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
+		self.ForeignAid = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
+		self.MilitaryAid = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
+	def run_start_trade(self, g, turn_num=7):
+		for i in range(0,turn_num-1):
+			self.run_engine(g, False)
+		self.run_engine(g)
 	def start_capital(self, g):
 		all_players = Player.objects.filter(game=g)
 		for p in all_players:
@@ -32,7 +41,7 @@ class GameEngine():
 			#self.apply_hex_number(g, p, country)
 			self.start_hex_number(g, p, country)
 
-	def run_engine(self, g):
+	def run_engine(self, g, graphs=True):
 		#Resetting model variables
 		all_players = Player.objects.filter(game=g)
 		self.set_vars(g, all_players)
@@ -63,8 +72,9 @@ class GameEngine():
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
 			self.apply_hex_number(g, p, country)
-		self.create_graphs(g, all_players)
-		self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
+		if graphs:
+			self.create_graphs(g, all_players)
+			self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 		return [self.EconEngines, self.TradeEngine]
 
 	def get_country(self, index):
@@ -166,7 +176,7 @@ class GameEngine():
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
 			self.calculate_differences(g, p, country)
-			#self.get_hex_numbers(g, p, country)
+			self.get_hex_numbers(g, p, country)
 			country.IncomeTax = p.IncomeTax
 			country.CorporateTax = p.CorporateTax
 			#country.GovGoods = p.Education + p.Military
@@ -222,6 +232,12 @@ class GameEngine():
 			count = 0
 			for t in k:
 				count = self.TradeEngine.CountryName.index(t.key.country.name)
+				#Save data to array
+				self.TarriffsArr[t.key.country.name][p.country.name].append(t.tariffAm)
+				self.SanctionsArr[t.key.country.name][p.country.name].append(t.sanctionAm)
+				self.ForeignAid[t.key.country.name][p.country.name].append(t.moneySend)
+				self.MilitaryAid[t.key.country.name][p.country.name].append(t.militarySend)
+				#save data to engines.
 				self.TradeEngine.Tariffs[index][count] = t.tariffAm
 				self.TradeEngine.Sanctions[index][count] = t.sanctionAm
 				transfer_array[index][count] = t.moneySend
@@ -372,10 +388,10 @@ class GameEngine():
 		hex_list = Hexes.objects.filter(game=g, controller=p, water=False)
 		total_population = 0
 		total_capital = 0
-		total_iron = 0.5
-		total_wheat = 0.5
-		total_coal = 0.5
-		total_oil = 0.5
+		total_iron = 0.01
+		total_wheat = 0.01
+		total_coal = 0.01
+		total_oil = 0.01
 		for h in hex_list:
 			total_population += h.population
 			total_capital += h.capital

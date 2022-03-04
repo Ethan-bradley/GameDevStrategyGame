@@ -267,6 +267,11 @@ class GraphInterface(models.Model):
 	]
 	mode = models.CharField(max_length=20,choices=MODES,default=INCOMETAX)
 
+class GraphCountryInterface(models.Model):
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	controller = models.ForeignKey("Player", on_delete=models.CASCADE, default="")
+	country = models.ForeignKey("Country", on_delete=models.CASCADE, default="")
+
 class Notification(models.Model):
 	game = models.ForeignKey("Game", on_delete=models.CASCADE)
 	message = models.TextField()

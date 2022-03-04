@@ -21,7 +21,7 @@ urlpatterns = [
     path('gamegraphs/<str:g>/<str:p>', views.gamegraph, name='app-game-graph'),
     path('policies/<str:g>/<str:p>', views.policies, name='app-policies'),
     path('trade/<str:g>/<str:p>', views.trade, name='app-trade'),
-    path('delete/<str:g>', views.delete, name='app-delete'),
+    path('delete/<str:g>/<str:p>', views.delete, name='app-delete'),
     path('projection/<str:g>/<str:p>', views.projection, name='app-projection'),
 ] + static(settings.STATIC_URL,document_root = settings.STATIC_ROOT)
 

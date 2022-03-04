@@ -1,5 +1,5 @@
 from django import forms
-from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface
+from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface, GraphCountryInterface
 from django.forms import ModelForm
 from django.forms import formset_factory, BaseFormSet
 from django.core.exceptions import ValidationError
@@ -112,6 +112,11 @@ class GraphInterfaceForm(ModelForm):
     class Meta:
         model = GraphInterface
         fields = ['mode']
+
+class GraphCountryInterfaceForm(ModelForm):
+    class Meta:
+        model = GraphCountryInterface
+        fields = ['country']
 
 class ArmyForm(ModelForm):
     class Meta:

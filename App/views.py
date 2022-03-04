@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.forms import formset_factory, modelformset_factory
 from .Game import GameEngine
 from .models import Post
-from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface
-from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm
+from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, GraphCountryInterface
+from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm, GraphCountryInterfaceForm
 from django.views.generic.edit import CreateView
 from django.apps import apps
 import json
@@ -78,6 +78,7 @@ def new_game(request):
             #Creates Map Interface
             MapInterface.objects.create(game=temp,controller=curr_player)
             GraphInterface.objects.create(game=temp,controller=curr_player)
+            GraphCountryInterface.objects.create(game=temp,controller=curr_player, country=curr_player.country)
             #Creates Hexes
             h = HexList()
             h.apply(temp, curr_player)
@@ -125,6 +126,7 @@ def new_game(request):
                 add_players(temp)
             if temp.num_players == temp.curr_num_players:
                 temp.GameEngine.start_capital(temp)
+                temp.GameEngine.run_start_trade(temp)
             messages.success(request, f'New Game created!')
             return redirect('app-game', g=temp.name, player=curr_player.name)
         else:
@@ -176,6 +178,7 @@ def joinGame(request, g):
             #Creates Map Interface
             MapInterface.objects.create(game=temp,controller=curr_player)
             GraphInterface.objects.create(game=temp,controller=curr_player)
+            GraphCountryInterface.objects.create(game=temp,controller=curr_player, country=curr_player.country)
             #Creates Policies
             p2 = PolicyList()
             p2.add_policies(curr_player, temp, request)
@@ -230,6 +233,7 @@ def joinGame(request, g):
             #temp.GameEngine.start_capital(temp)
             if temp.num_players == temp.curr_num_players:
                 temp.GameEngine.start_capital(temp)
+                temp.GameEngine.run_start_trade(temp)
             messages.success(request, f'Successfully Joined a Game!')
             return redirect('app-game', g=temp.name, player=curr_player.name)
     else:
@@ -653,7 +657,7 @@ def gamegraph(g, p, context, graphmode, game):
         }
         for j in range(0, len(trade.exchangeRateArr)):
             data['Exchange Rate'] += trade.exchangeRateArr[j][start:]
-            data['Year'] += [start+i for i in range(0,len(trade.exchangeRateArr[j][start:]))]
+            data['Year'] += [i for i in range(0,len(trade.exchangeRateArr[j][start:]))]
             data['Country'] += [trade.CountryName[j] for i in range(0,len(trade.exchangeRateArr[j][start:]))]
         fig = px.line(data, x='Year', y='Exchange Rate',title="Exchange Rates", color="Country")
         fig.update_xaxes(title="Year")
@@ -704,13 +708,14 @@ def gamegraph(g, p, context, graphmode, game):
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
-    create_exchange_rate_graph(g.GameEngine.TradeEngine,0)
+    create_exchange_rate_graph(g.GameEngine.TradeEngine,4)
     data3 = []
     titles = []
     create_foreign_investment_pie(g.GameEngine.TradeEngine.CountryName.index(p.country.name), g.GameEngine.TradeEngine, titles, data3)
     create_compare_graph("ScienceArr", "Science", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
     create_compare_graph("UnemploymentArr", "Unemployment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
     create_compare_graph("EducationArr2", "Education", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
+    create_compare_graph("InfrastructureArr", "Infrastructure", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
     create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17, game.GameEngine, False)
     context.update({
         'GoodsPerCapita':g.GoodsPerCapita,
@@ -735,7 +740,46 @@ def trade(request, g, p):
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
-    return render(request, 'App/trade.html')
+    def create_trade_rate_graph(game, attribute, title2, country, start):
+        data = {'Country': [],
+        'Rate': [],
+        'Year':[]
+        }
+        variable = getattr(game, attribute)
+        #import pdb; pdb.set_trace();
+        for j in game.nameList:
+            data['Rate'] += variable[country][j][start:]
+            data['Year'] += [i for i in range(0,len(variable[country][j][start:]))]
+            data['Country'] += [j for i in range(0,len(variable[country][j][start:]))]
+        fig = px.line(data, x='Year', y='Rate',title=country+" "+title2, color="Country")
+        fig.update_xaxes(title="Year")
+        fig.update_yaxes(title=title2+" Amount")
+        fig.write_html("templates/App/graphs/"+p.name+attribute+".html")
+    t = GraphCountryInterface.objects.filter(game=g,controller=p)[0]
+    create_trade_rate_graph(g.GameEngine,"TarriffsArr","Tarriffs",t.country.name,24)
+    create_trade_rate_graph(g.GameEngine,"SanctionsArr","Sanctions",t.country.name,24)
+    create_trade_rate_graph(g.GameEngine,"ForeignAid","Foreign Aid",t.country.name,24)
+    create_trade_rate_graph(g.GameEngine,"MilitaryAid","Military Aid",t.country.name,24)
+    if request.method == 'POST':
+        mi2 = GraphCountryInterfaceForm(request.POST, instance=t)
+        if mi2.is_valid():
+            mi2.save()
+            return redirect('app-trade', gtemp, ptemp)
+    else:
+        mi = GraphCountryInterfaceForm(instance=t)
+    context = {
+        'tarriffgraph':"App/graphs/"+p.name+"TarriffsArr.html",
+        'Sanctionsgraph':"App/graphs/"+p.name+"SanctionsArr.html",
+        'ForeignAidgraph':"App/graphs/"+p.name+"ForeignAid.html",
+        'MilitaryAidgraph':"App/graphs/"+p.name+"MilitaryAid.html",
+        'tradeBalance':p.tradeBalance,
+        'game':gtemp,
+        'player':ptemp,
+        'notifications': Notification.objects.filter(game=g)[::-1],
+        'GraphInterface': mi
+    }
+    return render(request, 'App/tradegraphs.html', context)
+    #return render(request, 'App/trade.html')
 
 def policies(request, g, p):
     gtemp = g
@@ -827,18 +871,25 @@ def Politics(request, g, p):
     }
     return render(request, 'App/policies.html', context)
 
-def delete(request, g):
+def delete(request, g, p):
     g = Game.objects.filter(name=g)[0]
+    p = Player.objects.filter(name=p)[0]
     all_players = Player.objects.filter(game=g)
-    for filename in os.listdir("templates/App/graphs"):
-        for p in all_players:
-            if p.name in filename:
-                os.remove(os.path.join("templates/App/graphs", filename))
     context = {
         'posts': Post.objects.all()
         #'posts': posts
     }
-    messages.success(request, f'Deletion of graph files was successfull!')
+    if p.host:
+        for filename in os.listdir("templates/App/graphs"):
+            for p in all_players:
+                if p.name in filename:
+                    os.remove(os.path.join("templates/App/graphs", filename))
+        g.delete()
+    else:
+
+        messages.warning(request, f'Must be host in order to delete!')
+        return render(request, 'App/home.html', context)
+    messages.success(request, f'Deletion of game was successfull!')
     return render(request, 'App/home.html', context)
 
 def projection(g, p, context):
