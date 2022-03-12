@@ -83,6 +83,7 @@ class Country():
     self.RawCapital = [10,10,10,10]
     self.RawResources = [0.01,0.01,0.01,0.01]
     self.GovCapital = [10,10]
+    self.GovernmentGoods = [1,1]
 
     self.Jobs = [0.1,0.1,0.1,0.1,0.1,0.1]
     self.goodsInd = [2,2,2,2,2,2]
@@ -117,7 +118,7 @@ class Country():
     self.CorporateWithdrawls = 0
     self.Bonds = 0
     self.Government_Savings = 0
-    self.Education_Divisor = 80
+    self.Education_Divisor = 1600
     self.MilitarySpend = 0.01
     
     #Money Printing
@@ -359,8 +360,8 @@ class Country():
       self.Population = self.pop_matrix.sum()#self.Population*self.Population_growth
       
       #Structural Unemployment and Education
-      self.Education = (self.goods[2]*self.EducationSpend)/self.Education_Divisor
-      self.Military += (self.goods[2]*self.MilitarySpend)
+      self.Education = (self.GovernmentGoods[0]*self.EducationSpend)/self.Education_Divisor
+      self.Military += (self.GovernmentGoods[1]*self.MilitarySpend)
       #print(goods[2]/(goods[0]+goods[1]+goods[2]))
       #1 - (self.employment)/self.Population
       print("Unemployment:"+str(self.Unemployment))
@@ -536,7 +537,7 @@ class Country():
 
       #Stats Adding:
       self.append_variable_list(self.var_list, self.variable_list)
-      self.GDPPerCapita.append(self.money[8]/self.pop_matrix.sum())
+      self.GDPPerCapita.append(((self.money[8]*50)/self.ConsumerPrice)/self.pop_matrix.sum())
       self.GoodsTotal.append(self.goods[0]+self.goods[1]+self.goods[2]+self.tradeBalance)
       self.GoodsPerCapita.append(self.GoodsTotal[len(self.GoodsTotal)-1]/self.pop_matrix.sum())
       #print(GoodsTotal[len(GoodsTotal)-1]/Population)
@@ -604,8 +605,10 @@ class Country():
       labour = sum(self.pop_matrix[len(self.HouseDemand) + len(self.CapitalDemand) +len(self.RawDemand) + j][20:self.retirement_age])/self.pop_matrix.sum()
       if j != 0:
         gov_goods += self.production_function(GovDemand[j], self.GovCapital[j], self.ScienceRate, labour, raw_goods[3]*raw_goods[0]*0.05)
+        self.GovernmentGoods[j] = self.production_function(GovDemand[j], self.GovCapital[j], self.ScienceRate, labour, raw_goods[3]*raw_goods[0]*0.05)
       else:
         gov_goods += self.production_function(GovDemand[j], self.GovCapital[j], self.ScienceRate, labour)
+        self.GovernmentGoods[j] = self.production_function(GovDemand[j], self.GovCapital[j], self.ScienceRate, labour)
     print("House goods: ", house_goods)
     if self.goods[0] >= 0.1 and not math.isnan(house_goods):
       self.goods[0] *= ((self.money[2]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*house_goods)/self.goods[0]
@@ -1015,4 +1018,3 @@ class Country():
     multiplier = totalCapital
     finalCapital = [i*multiplier for i in a]
     return finalCapital
-  

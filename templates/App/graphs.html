@@ -4,6 +4,7 @@
 <div class="content-section">
     <div class="media-body">
       <h2 class="account-heading">Budget Graphs</h2>
+      <legend class="border-bottom mb-4">{{ country }}</legend>
           {% include 'App/budget2.html' %}
            <form method="POST">
             {% csrf_token %}
@@ -28,6 +29,8 @@
            {% include 'App/Unemployment.html' %}
            {% include 'App/Education.html' %}
            {% include 'App/Infrastructure.html' %}
+           {% include 'App/Population.html' %}
+           {% include 'App/Real_GDP_Per_Capita_in_$US.html' %}
 
            <h2 class="account-heading">Graphs</h2>
            <img class="thumbnail-img" src="{{ RealGDP.url }}">
@@ -44,13 +47,6 @@
 
            
     </div>
-    {% include 'App/trade.html' %}
-    {% include 'App/exchange.html' %}
-    {% include 'App/foreign_investment.html' %}
-    {% include 'App/foreign_investment_domestic.html' %}
-    {% for title in titles %}
-      <p class="text-secondary">{{ title }}</p>
-    {% endfor %}
 
 </div>
 {% endblock content %}

@@ -3,6 +3,7 @@
 {% block content %}
 <div class="content-section">
     <div class="media-body">
+      <legend class="border-bottom mb-4">{{ country }}</legend>
       <h2 class="account-heading">Country Trade Graphs</h2>
       <p class="text-secondary">Graphs show the rates that are being placed on you by the countries in the legend.</p>
           {% include tarriffgraph %}
@@ -26,6 +27,9 @@
     {% include 'App/exchange.html' %}
     {% include 'App/foreign_investment.html' %}
     {% include 'App/foreign_investment_domestic.html' %}
+    {% for title in titles %}
+      <p class="text-secondary">{{ title }}</p>
+    {% endfor %}
     <!-- {% for title in titles %}
       <p class="text-secondary">{{ title }}</p>
     {% endfor %} -->

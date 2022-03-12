@@ -51,6 +51,9 @@ class GameEngine():
 				pla = f.save(commit=False)
 				pla.ready = False
 				pla.save()
+			neutral_player2 = Player.objects.filter(name="Neutral")[0]
+			neutral_player2.ready = True
+			neutral_player2.save()
 		else:
 			p = Player.objects.filter(user=g.host)[0]
 			print(p.name)
@@ -182,6 +185,7 @@ class GameEngine():
 			#country.GovGoods = p.Education + p.Military
 			
 			country.MoneyPrinting = p.MoneyPrinting
+			#import pdb; pdb.set_trace();
 			welfare = ((p.Welfare + p.AdditionalWelfare)*country.money[8])/country.money[5]
 			gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*country.money[8])/country.money[5]
 			gov_goods = ((p.Education + p.Military)*country.money[8])/country.money[5]
@@ -242,7 +246,8 @@ class GameEngine():
 				self.TradeEngine.Sanctions[index][count] = t.sanctionAm
 				transfer_array[index][count] = t.moneySend
 				military_transfer[index][count] = t.militarySend
-				self.TradeEngine.foreign_investment[index][count] = self.TradeEngine.foreign_investment[index][count]*t.nationalization
+				#import pdb; pdb.set_trace()
+				self.TradeEngine.foreign_investment[index][count] = self.TradeEngine.foreign_investment[count][index]*t.nationalization
 				count += 1
 			#Append variables
 			self.append_variable_list(self.var_list, self.variable_list, index, p)
@@ -480,7 +485,7 @@ class GameEngine():
 	def rebel(self, g, p, res):
 		hex_list = Hexes.objects.filter(game=g, controller=p, water=False)
 		if (len(hex_list) > 0):
-			neutral_player = Player.objects.filter(game=g,user=g.host)[0]
+			neutral_player = Player.objects.filter(game=g,name="Neutral")[0]
 			self.switch_hex(hex_list[0], neutral_player, g)
 			Army.objects.create(game=g, size=hex_list[0].population*res*100,controller=neutral_player, naval=False, location=hex_list[0], name=hex_list[0].name+" Rebel Army")
 			message2 = "In "+p.name+"'s territory a rebel army of size "+str(round(hex_list[0].population*res*100,0))+" rose up in "+hex_list[0].name

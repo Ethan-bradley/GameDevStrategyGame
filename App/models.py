@@ -26,6 +26,7 @@ class Game(models.Model):
 	num_players = models.IntegerField(default=5)
 	curr_num_players = models.IntegerField(default=0)
 	color = models.CharField(max_length=50, default='#ffffff')
+	neutral = models.CharField(max_length=100,default="Neutral")
 	#players = ManyToManyField("Player")
 	#hexes = ManyToManyField("Hexes")
 	#TradeEngine = PickledObjectField()

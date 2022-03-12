@@ -76,7 +76,14 @@ class Trade():
     for i in range(0,len(Country)):
       price_index = (global_price/Country[i].ConsumerPrice)
       #new_rate = np.exp(((2*Country[i].interest_rate - Country[i].Inflation*0.01 - equil_rate)*price_index + ((trade_balance[i] + self.balance[i]*self.exchangeRates[i] + self.sum_cols(i, self.foreign_investment)*(self.CountryList[i].interest_rate)*self.exchangeRates[i])/Country[i].money[1])*price_index) + self.investment_restrictions[i])
-      new_rate = ((Country[i].interest_rate + 0.01*np.exp((trade_balance[i] + self.balance[i]*self.exchangeRates[i] - self.sum_cols(i, self.foreign_investment)*(self.CountryList[i].interest_rate)*self.exchangeRates[i] + self.sum_foreign_investment(i, self.foreign_investment))/Country[i].money[1]) - 0.01)/equil_rate)*price_index
+      #new_rate = ((Country[i].interest_rate + 0.01*np.exp((trade_balance[i] + self.balance[i]*self.exchangeRates[i] - self.sum_cols(i, self.foreign_investment)*(self.CountryList[i].interest_rate)*self.exchangeRates[i] + self.sum_foreign_investment(i, self.foreign_investment))/Country[i].money[1]) - 0.01)/equil_rate)*price_index
+      t = trade_balance[i] + self.balance[i]*self.exchangeRates[i] - self.sum_cols(i, self.foreign_investment)*(self.CountryList[i].interest_rate)*self.exchangeRates[i] + self.sum_foreign_investment(i, self.foreign_investment)
+      #print("balance money", t)
+      if (Country[i].money[1] < 0):
+        Country[i].money[1] = 10
+      savings_money_flow = 0.166*t - 8.333*(Country[i].interest_rate - equil_rate)+np.exp(-Country[i].money[1]*0.5)
+      #print("savings money", savings_money_flow)
+      new_rate = np.exp(-0.02*(savings_money_flow - t))
       if abs(self.exchangeRates[i] - new_rate) < 7:
         self.exchangeRates[i] = new_rate
       else:
