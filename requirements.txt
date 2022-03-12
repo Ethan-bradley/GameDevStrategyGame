@@ -3,7 +3,7 @@ gunicorn
 django-heroku
 flask
 pypi
-matplotlib
+matplotlib==3.3.2
 django-picklefield
 scipy
 django-crispy-forms
