@@ -4,6 +4,7 @@ import matplotlib
 from scipy.stats import norm
 import statistics as stat
 import math
+import warnings
 
 #RUN THIS CELL to start
 
@@ -894,6 +895,7 @@ class Country():
     return plt.savefig(file)
 
   def save_graphs(self, file_path, player_name):
+    warnings.filterwarnings("ignore")
     matplotlib.use('Agg')
     plt.title('GoodsPerCapita')
     plt.plot(self.GoodsPerCapita[17:])
