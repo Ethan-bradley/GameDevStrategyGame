@@ -32,7 +32,10 @@ class ArmyCombat():
 				g.save()
 
 	def rebel(self,g,a):
-		a.delete()
+		try:
+			a.delete()
+		except:
+			print("Army deletion error.")
 
 	def calculateCombat(self, g, Army1, Army2, deleted):
 		diff = abs(Army1.size - Army2.size)
@@ -103,7 +106,10 @@ class ArmyCombat():
 		#import pdb; pdb.set_trace()
 		if h == 'null':
 			deleted.append(curr_army)
-			curr_army.delete()
+			try:
+				curr_army.delete()
+			except:
+				print("No army to delete.")
 			return False
 		else:
 			curr_army.location = h
