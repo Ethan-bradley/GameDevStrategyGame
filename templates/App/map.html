@@ -92,7 +92,7 @@ S(document).ready(function(){
 		'formatLabel': function(id,hex){
 			// "id" = unique ID of the hex
 			// "hex" = object containing the properties of the specific hex
-			return hex.n + "\n "+info[hex.r*7+hex.q][3];
+			return hex.n + "\n "+info[hex.r*{{ board_size }}+hex.q][3];
 		}
 	});
 
@@ -104,7 +104,7 @@ S(document).ready(function(){
 		//var colours = [['#f7c229','#f7c229','#bb0e3b'],['#0000ff','#ffffff','#0000ff'],['#0da60f','#0da60f','#bb0e3b']]
 		var colours = {{ColorMap|safe}};
 		// We will choose a colour which is the sum of the q and r coordinate
-		return {'background-color':info[hex.r*7+hex.q][5],'color':'black'};
+		return {'background-color':info[hex.r*{{ board_size }}+hex.q][5],'color':'black'};
 	});
 	
 	hexmap.on('mouseover',function(e){

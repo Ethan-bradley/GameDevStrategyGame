@@ -58,7 +58,10 @@ def new_game(request):
             #Creates the game object
             f = form.save(commit=False)
             f.host = request.user
-            f.GameEngine = GameEngine(6, ['UK','Germany','France','Spain','Italy','Neutral'])
+            if f.num_players <= 5:
+                f.GameEngine = GameEngine(6, ['UK','Germany','France','Spain','Italy','Neutral'])
+            else:
+                f.GameEngine = GameEngine(15, ['UK','Germany','France','Spain','Italy','Poland','Sweden','Egypt','Algeria','Turkey','Ukraine','Russia','Iran','Saudi Arabia','Neutral'])
             f.curr_num_players = 1
             f.save()
             #Saves game name in temporary variable
@@ -389,12 +392,13 @@ def map(request, g, p, l, lprev):
     #Col used for storing the map colors in a 2d array
     col = []
     #one side of 2d side
-    size = 7
+    
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
     player = p
+    size = g.board_size
     #Finds total size of all armies of this player.
     total_armies = Army.objects.filter(game=g, controller=p)
     total_size = 0
@@ -503,7 +507,7 @@ def map(request, g, p, l, lprev):
             print(color)
         else:
             color = hC.color
-        info[hC.xLocation+hC.yLocation*7] = [str(hC.population)+'k', hC.capital, hC.controller.name, army_name, army_size, color, hC.iron, hC.wheat, hC.coal, hC.oil]
+        info[hC.xLocation+hC.yLocation*g.board_size] = [str(hC.population)+'k', hC.capital, hC.controller.name, army_name, army_size, color, hC.iron, hC.wheat, hC.coal, hC.oil]
         count += 1
         if count >= size:
             count = 0
@@ -591,7 +595,8 @@ def map(request, g, p, l, lprev):
         'hexmap':hexmap,
         'maintenace':total_size*0.1,
         'resources':t.mode == "RE",
-        'notifications': Notification.objects.filter(game=g)[::-1]
+        'notifications': Notification.objects.filter(game=g)[::-1],
+        'board_size':g.board_size
     }
     return render(request, 'App/map.html', context)
 
@@ -717,6 +722,10 @@ def trade(request, g, p):
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
+    player = p
+    tar = Tariff.objects.filter(game=g, curr_player=player)[0]
+    k = IndTariff.objects.filter(controller=tar)
+    IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
     def create_exchange_rate_graph(trade, start):
         data = {'Country': [],
         'Exchange Rate': [],
@@ -772,25 +781,49 @@ def trade(request, g, p):
     create_trade_rate_graph(g.GameEngine,"SanctionsArr","Sanctions",t.country.name,24)
     create_trade_rate_graph(g.GameEngine,"ForeignAid","Foreign Aid",t.country.name,24)
     create_trade_rate_graph(g.GameEngine,"MilitaryAid","Military Aid",t.country.name,24)
+    other_player = Player.objects.filter(country=t.country)[0]
+    budget_graph(other_player.get_country(), 17, "templates/App/graphs/"+p.name+"tradebudgetgraph.html")
     if request.method == 'POST':
-        mi2 = GraphCountryInterfaceForm(request.POST, instance=t)
-        if mi2.is_valid():
-            mi2.save()
+        if 'form-0-tariffAm' in request.POST:
+            #Submits the Tariff formset
+            IndFormSet = IndFormSet(request.POST, queryset=IndTariff.objects.filter(controller=tar))
+            for f in IndFormSet:
+                if f.is_valid():
+                    f.save()
+            messages.success(request, f'Tarriffs succesfully submitted!')
             return redirect('app-trade', gtemp, ptemp)
+        else:
+            mi2 = GraphCountryInterfaceForm(request.POST, instance=t)
+            if mi2.is_valid():
+                mi2.save()
+                return redirect('app-trade', gtemp, ptemp)
     else:
         mi = GraphCountryInterfaceForm(instance=t)
+        #Creates the tariff formset and titles for it.
+        IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
+        tariff_titles = {}
+        count = 1
+        for f in k:
+            #v = IndTariffForm(instance=f)
+            tariff_titles[count] = f.key
+            count += 1
+        IFS = IndFormSet(queryset=IndTariff.objects.filter(controller=tar))
     context = {
+        'indForms': IFS,
         'country': p.country,
         'tarriffgraph':"App/graphs/"+p.name+"TarriffsArr.html",
         'Sanctionsgraph':"App/graphs/"+p.name+"SanctionsArr.html",
         'ForeignAidgraph':"App/graphs/"+p.name+"ForeignAid.html",
         'MilitaryAidgraph':"App/graphs/"+p.name+"MilitaryAid.html",
+        'Budgetgraph':"App/graphs/"+p.name+"tradebudgetgraph.html",
+        'goodsBalance':g.GoodsBalance,
         'tradeBalance':p.tradeBalance,
         'game':gtemp,
         'player':ptemp,
         'notifications': Notification.objects.filter(game=g)[::-1],
         'GraphInterface': mi,
         'data':data3,
+        'tariff_titles':tariff_titles,
         'titles':titles,
     }
     return render(request, 'App/tradegraphs.html', context)

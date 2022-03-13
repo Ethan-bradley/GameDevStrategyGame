@@ -48,14 +48,23 @@ class ArmyCombat():
 				Army1.delete()
 				Army2.save()
 				return
-		if Army1.size > Army2.size:
+		defense_bonus = 2
+		army1_fortification = 1
+		army2_fortification = 1
+		if not Army1.moved:
+			army1_fortification = 2
+		if not Army2.moved:
+			army2_fortification = 2
+		Army1combat = Army1.size*army1_fortification
+		Army2combat = Army2.size*army2_fortification
+		if Army1combat > Army2combat:
 			Army1.size -= max((int) (Army2.size*0.05), 1)
 			Army2.size -= max((int) (Army1.size*0.1), 1)
 			self.switch_hex(Army1.location, Army1.controller, g)
 			arm2_deleted = self.retreat_army(g, Army2, deleted)
 			message2 = "A battle occured in "+Army1.location.name+" with the victory of "+Army1.controller.name+"'s "+Army1.name+" over "+Army2.controller.name+"'s "+Army2.name
 			Notification.objects.create(game=g, message=message2)
-		elif Army2.size > Army1.size:
+		elif Army2combat > Army1combat:
 			Army1.size -= max((int) (Army2.size*0.1), 1)
 			Army2.size -= max((int) (Army1.size*0.05), 1)
 			self.switch_hex(Army2.location, Army2.controller, g)

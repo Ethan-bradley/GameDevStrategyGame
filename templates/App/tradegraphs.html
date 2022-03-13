@@ -10,6 +10,7 @@
           {% include Sanctionsgraph %}
           {% include MilitaryAidgraph %}
           {% include ForeignAidgraph %}
+          {% include Budgetgraph %}
            <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
@@ -20,9 +21,23 @@
                 <button class="btn btn-outline-info" type="submit" id="submit">Change Graph Mode</button>
             </div>
         </form>
+      <legend class="border-bottom mb-4">Tariffs</legend>
+      <form method="POST">
+    {% csrf_token %}
+    {{ indForms.management_form }}
+      {% for form in indForms %}
+          <legend class="border-bottom mb-4">{{ tariff_titles|get_item:forloop.counter }}</legend>
+          {{ form |crispy }}
+      {% endfor %}
+      <br>
+      <div class="form-group">
+          <button class="btn btn-outline-info" type="submit" id="Tarriff" value="Tarriff">Submit Tarriff Changes</button>
+      </div>
           <h2 class="account-heading">Multiple Player Graphs</h2>
           <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
     </div>
+  </form>
+    <img class="thumbnail-img" src="{{ goodsBalance.url }}">
     {% include 'App/trade.html' %}
     {% include 'App/exchange.html' %}
     {% include 'App/foreign_investment.html' %}

@@ -2,20 +2,8 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <div class="content-section">
-  <form method="POST">
     <legend class="border-bottom mb-4">{{ country }}</legend>
-    <legend class="border-bottom mb-4">Tariffs</legend>
-    {% csrf_token %}
-    {{ indForms.management_form }}
-      {% for form in indForms %}
-          <legend class="border-bottom mb-4">{{ titles|get_item:forloop.counter }}</legend>
-          {{ form |crispy }}
-      {% endfor %}
-      <br>
-      <div class="form-group">
-          <button class="btn btn-outline-info" type="submit" id="Tarriff" value="Tarriff">Submit Tarriff Changes</button>
-      </div>
-    </form>
+    <legend class="border-bottom mb-4">Indivudal Product Forms</legend>
     <form method="POST">
         {% csrf_token %}
         <fieldset class="form-group">
