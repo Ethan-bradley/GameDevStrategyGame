@@ -51,6 +51,7 @@ class Player(models.Model):
 	#Whether ready or not for the next turn
 	ready = models.BooleanField(default=False)
 	color = models.CharField(max_length=50, default='#ffffff')
+	robot = models.BooleanField(default=False)
 	#Country = PickledObjectField()
 	#Government Variables:
 	IncomeTax = models.FloatField(default=0.2)

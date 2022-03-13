@@ -282,84 +282,85 @@ class GameEngine():
 		for p in all_players:
 			index = self.nameList.index(p.country.name)
 			country = self.get_country(index)
-			if (os.path.exists('.'+p.GoodsPerCapita.url) and p.GoodsPerCapita.name != 'default_graph.png'):
-				os.remove('.'+p.GoodsPerCapita.url)
-				os.remove('.'+p.Inflation.url)
-				os.remove('.'+p.RealGDP.url)
-				os.remove('.'+p.Employment.url)
-				os.remove('.'+p.GovBudget.url)
-				os.remove('.'+p.tradeBalance.url)
-				os.remove('.'+p.GDPPerCapita.url)
-				os.remove('.'+p.InterestRate.url)
-				os.remove('.'+p.Capital.url)
-				os.remove('.'+p.GoodsProduction.url)
-				os.remove('.'+p.GDP.url)
-				os.remove('.'+p.GDPGrowth.url)
-			#Graphs:
-			#country.save_GoodsPerCapita('.'+p.GoodsPerCapita.url)
-			a = country.save_graphs('',p.name)
-			#print(a[1])
-			
-			with open(a[0]+'.png', 'rb') as f:
-				p.GoodsPerCapita = File(f)
-				p.save()
-			os.remove(a[0]+'.png')
+			if not p.robot:
+				if (os.path.exists('.'+p.GoodsPerCapita.url) and p.GoodsPerCapita.name != 'default_graph.png'):
+					os.remove('.'+p.GoodsPerCapita.url)
+					os.remove('.'+p.Inflation.url)
+					os.remove('.'+p.RealGDP.url)
+					os.remove('.'+p.Employment.url)
+					os.remove('.'+p.GovBudget.url)
+					os.remove('.'+p.tradeBalance.url)
+					os.remove('.'+p.GDPPerCapita.url)
+					os.remove('.'+p.InterestRate.url)
+					os.remove('.'+p.Capital.url)
+					os.remove('.'+p.GoodsProduction.url)
+					os.remove('.'+p.GDP.url)
+					os.remove('.'+p.GDPGrowth.url)
+				#Graphs:
+				#country.save_GoodsPerCapita('.'+p.GoodsPerCapita.url)
+				a = country.save_graphs('',p.name)
+				#print(a[1])
+				
+				with open(a[0]+'.png', 'rb') as f:
+					p.GoodsPerCapita = File(f)
+					p.save()
+				os.remove(a[0]+'.png')
 
-			
-			with open(a[1]+'.png', 'rb') as f:
-				p.Inflation = File(f)
-				p.save()
-			os.remove(a[1]+'.png')
-			
-			with open(a[2]+'.png', 'rb') as f:
-				p.RealGDP = File(f)
-				p.save()
-			os.remove(a[2]+'.png')
-			
-			with open(a[3]+'.png', 'rb') as f:
-				p.Employment = File(f)
-				p.save()
-			os.remove(a[3]+'.png')
+				
+				with open(a[1]+'.png', 'rb') as f:
+					p.Inflation = File(f)
+					p.save()
+				os.remove(a[1]+'.png')
+				
+				with open(a[2]+'.png', 'rb') as f:
+					p.RealGDP = File(f)
+					p.save()
+				os.remove(a[2]+'.png')
+				
+				with open(a[3]+'.png', 'rb') as f:
+					p.Employment = File(f)
+					p.save()
+				os.remove(a[3]+'.png')
 
-			with open(a[4]+'.png', 'rb') as f:
-				p.GovBudget = File(f)
-				p.save()
-			os.remove(a[4]+'.png')
+				with open(a[4]+'.png', 'rb') as f:
+					p.GovBudget = File(f)
+					p.save()
+				os.remove(a[4]+'.png')
 
-			with open(a[5]+'.png', 'rb') as f:
-				p.tradeBalance = File(f)
-				p.save()
-			os.remove(a[5]+'.png')
+				with open(a[5]+'.png', 'rb') as f:
+					p.tradeBalance = File(f)
+					p.save()
+				os.remove(a[5]+'.png')
 
-			with open(a[6]+'.png', 'rb') as f:
-				p.GDPPerCapita = File(f)
-				p.save()
-			os.remove(a[6]+'.png')
+				with open(a[6]+'.png', 'rb') as f:
+					p.GDPPerCapita = File(f)
+					p.save()
+				os.remove(a[6]+'.png')
 
-			with open(a[7]+'.png', 'rb') as f:
-				p.InterestRate = File(f)
-				p.save()
-			os.remove(a[7]+'.png')
+				with open(a[7]+'.png', 'rb') as f:
+					p.InterestRate = File(f)
+					p.save()
+				os.remove(a[7]+'.png')
 
-			with open(a[8]+'.png', 'rb') as f:
-				p.Capital = File(f)
-				p.save()
-			os.remove(a[8]+'.png')
+				with open(a[8]+'.png', 'rb') as f:
+					p.Capital = File(f)
+					p.save()
+				os.remove(a[8]+'.png')
 
-			with open(a[9]+'.png', 'rb') as f:
-				p.GoodsProduction = File(f)
-				p.save()
-			os.remove(a[9]+'.png')
+				with open(a[9]+'.png', 'rb') as f:
+					p.GoodsProduction = File(f)
+					p.save()
+				os.remove(a[9]+'.png')
 
-			with open(a[10]+'.png', 'rb') as f:
-				p.GDP = File(f)
-				p.save()
-			os.remove(a[10]+'.png')
+				with open(a[10]+'.png', 'rb') as f:
+					p.GDP = File(f)
+					p.save()
+				os.remove(a[10]+'.png')
 
-			with open(a[11]+'.png', 'rb') as f:
-				p.GDPGrowth = File(f)
-				p.save()
-			os.remove(a[11]+'.png')
+				with open(a[11]+'.png', 'rb') as f:
+					p.GDPGrowth = File(f)
+					p.save()
+				os.remove(a[11]+'.png')
 		
 			
 	def calculate_differences(self, g, p, e):

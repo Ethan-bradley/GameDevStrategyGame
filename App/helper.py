@@ -23,6 +23,7 @@ def add_players(temp):
 	    f.user = temp.host
 	    f.game = temp
 	    f.color = f.country.color
+	    f.robot = True
 	    f.save()
 	    curr_player = Player.objects.filter(name=f.name, game=temp)[0]
 	    #Creates Map Interface
@@ -91,6 +92,7 @@ def add_neutral(temp):
     f.user = temp.host
     f.game = temp
     f.color = f.country.color
+    f.robot = True
     f.save()
     curr_player = Player.objects.filter(name=f.name, game=temp)[0]
     #Creates Map Interface
