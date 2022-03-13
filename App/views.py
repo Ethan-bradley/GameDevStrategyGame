@@ -998,11 +998,13 @@ def projection(g, p, context):
     create_graph('InflationTracker','Inflation',new_country,17)
     create_graph('UnemploymentArr','Unemployment',new_country,17)
     create_graph('GoodsPerCapita','GoodsPerCapita',new_country,17)
+    create_graph('GDPPerCapita','RealGDPPerCapita',new_country,17)
     create_graph('ConsumptionArr','ConsumptionPerCapita',new_country,17)
     context.update({
         'unemployment_graph': "App/graphs/"+p.name+"Unemployment.html",
         'inflation_graph': "App/graphs/"+p.name+"Inflation.html",
         'goodspercapita_graph': "App/graphs/"+p.name+"GoodsPerCapita.html",
+        'gdppercapita_graph': "App/graphs/"+p.name+"GDPPerCapita.html",
         'consumptionpercapita_graph': "App/graphs/"+p.name+"ConsumptionPerCapita.html",
         'game':gtemp,
         'player':ptemp,

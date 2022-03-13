@@ -482,10 +482,10 @@ class GameEngine():
 			string += " "+countryNames[i]
 			string += ": "+str(currencyRates[i])+"\n"
 		return string
-
+	#Causes a province to rebel.
 	def rebel(self, g, p, res):
 		hex_list = Hexes.objects.filter(game=g, controller=p, water=False)
-		if (len(hex_list) > 0):
+		if p.name != "Neutral" and (len(hex_list) > 0):
 			neutral_player = Player.objects.filter(game=g,name="Neutral")[0]
 			self.switch_hex(hex_list[0], neutral_player, g)
 			Army.objects.create(game=g, size=hex_list[0].population*res*100,controller=neutral_player, naval=False, location=hex_list[0], name=hex_list[0].name+" Rebel Army")
