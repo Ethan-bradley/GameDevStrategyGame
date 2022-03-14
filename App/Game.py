@@ -79,7 +79,10 @@ class GameEngine():
 			self.create_graphs(g, all_players)
 			self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 		return [self.EconEngines, self.TradeEngine]
-
+	def run_graphs(self, g):
+		all_players = Player.objects.filter(game=g)
+		self.create_graphs(g, all_players)
+		self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 	def get_country(self, index):
 		return self.EconEngines[index]
 
@@ -180,15 +183,17 @@ class GameEngine():
 			country = self.get_country(index)
 			self.calculate_differences(g, p, country)
 			self.get_hex_numbers(g, p, country)
+			prev_revenue = country.IncomeTax*country.money[0] + country.CorporateTax*country.money[4]
+			diff = country.money[5] - prev_revenue
 			country.IncomeTax = p.IncomeTax
 			country.CorporateTax = p.CorporateTax
 			#country.GovGoods = p.Education + p.Military
-			
+			revenue = p.IncomeTax*country.money[0] + p.CorporateTax*country.money[4] + diff
 			country.MoneyPrinting = p.MoneyPrinting
 			#import pdb; pdb.set_trace();
-			welfare = ((p.Welfare + p.AdditionalWelfare)*country.money[8])/country.money[5]
-			gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*country.money[8])/country.money[5]
-			gov_goods = ((p.Education + p.Military)*country.money[8])/country.money[5]
+			welfare = ((p.Welfare + p.AdditionalWelfare)*country.money[8])/revenue
+			gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*country.money[8])/revenue
+			gov_goods = ((p.Education + p.Military)*country.money[8])/revenue
 			if welfare + gov_invest + gov_goods > 1:
 				country.BondWithdrawl = (welfare + gov_invest + gov_goods - 1)*country.money[5]
 				if country.BondWithdrawl > country.money[1]*0.5:
@@ -210,20 +215,20 @@ class GameEngine():
 			#country.GovWelfare = p.Welfare + p.AdditionalWelfare
 			country.GovWelfare = welfare
 			#Investment
-			total_gov_money = country.money[5] + country.BondWithdrawl
+			total_gov_money = revenue + country.BondWithdrawl
 			total_investor_money = country.money[4]*country.InvestmentRate
 
 			country.GovernmentInvest = gov_invest #p.InfrastructureInvest + p.ScienceInvest
-			total_money = country.money[5]*country.GovernmentInvest + total_investor_money
-			country.InfrastructureInvest = ((total_gov_money*((p.InfrastructureInvest*country.money[8])/country.money[5]))/total_money) + ((total_investor_money*0.1)/total_money)
-			country.ScienceInvest = ((total_gov_money*((p.ScienceInvest*country.money[8])/country.money[5]))/total_money) + ((total_investor_money*0.05)/total_money)
+			total_money = revenue*country.GovernmentInvest + total_investor_money
+			country.InfrastructureInvest = ((total_gov_money*((p.InfrastructureInvest*country.money[8])/revenue))/total_money) + ((total_investor_money*0.1)/total_money)
+			country.ScienceInvest = ((total_gov_money*((p.ScienceInvest*country.money[8])/revenue))/total_money) + ((total_investor_money*0.05)/total_money)
 			#country.QuickInvestment = p.CapitalInvestment
 			#import pdb; pdb.set_trace();
-			total_money = ((total_gov_money*((p.ScienceInvest*country.money[8])/country.money[5]))) + ((total_investor_money*0.05))
+			total_money = ((total_gov_money*((p.ScienceInvest*country.money[8])/revenue))) + ((total_investor_money*0.05))
 			#Money one side invests*share + money other side / total
-			country.TheoreticalInvest = ((total_gov_money*p.TheoreticalInvest*((p.ScienceInvest*country.money[8])/country.money[5])) + ((total_investor_money*0.05*0.1)))/total_money
-			country.PracticalInvest = ((total_gov_money*p.PracticalInvest*((p.ScienceInvest*country.money[8])/country.money[5])) + ((total_investor_money*0.05*0.3)))/total_money
-			country.AppliedInvest = ((total_gov_money*p.AppliedInvest*((p.ScienceInvest*country.money[8])/country.money[5])) + ((total_investor_money*0.05*0.6)))/total_money
+			country.TheoreticalInvest = ((total_gov_money*p.TheoreticalInvest*((p.ScienceInvest*country.money[8])/revenue)) + ((total_investor_money*0.05*0.1)))/total_money
+			country.PracticalInvest = ((total_gov_money*p.PracticalInvest*((p.ScienceInvest*country.money[8])/revenue)) + ((total_investor_money*0.05*0.3)))/total_money
+			country.AppliedInvest = ((total_gov_money*p.AppliedInvest*((p.ScienceInvest*country.money[8])/revenue)) + ((total_investor_money*0.05*0.6)))/total_money
 
 			self.TradeEngine.investment_restrictions[index] = p.investment_restriction
 			#Rebellions

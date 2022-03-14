@@ -153,7 +153,7 @@ def joinGame(request, g):
     for k in gameList:
         if str(k) == g:
             temp = k
-    p = Player.objects.filter(user=request.user, game=temp)
+    p = Player.objects.filter(user=request.user, game=temp, robot=False)
     if len(p) > 0:
         if temp.num_players == 1: 
             return redirect('app-game', g=temp.name, player=temp.name)
@@ -615,6 +615,8 @@ def graph(request, g, p):
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
+    if not os.path.exists('.'+g.GoodsPerCapita.url):
+        g.GameEngine.run_graphs(g)
     def create_wage_graph(country,p):
         fig = px.bar(x=country.HouseProducts + country.CapitalGoods + country.RawGoods + ['Education','Military','Researchers','Entrepreneurs'],y=country.create_wage_array(),title="Wages")
         fig.update_xaxes(title="Jobs")
