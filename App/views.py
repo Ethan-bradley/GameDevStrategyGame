@@ -11,6 +11,7 @@ from django.views.generic.edit import CreateView
 from django.apps import apps
 import json
 from .HexList import HexList
+from .HexList2 import HexList2
 from .PolicyList import PolicyList
 from django.db.models.fields import *
 from django.db.models import Q
@@ -55,13 +56,18 @@ def new_game(request):
         form = NewGameForm(request.POST)
         player_form = JoinGameForm(request.POST)
         if form.is_valid():
+            pf = player_form.save(commit=False)
             #Creates the game object
             f = form.save(commit=False)
             f.host = request.user
             if f.num_players <= 5:
+                if pf.country.large:
+                    messages.warning(request, f'Choose another country. This country is not available for the 5 person map.')
+                    return redirect('app-new_game')
                 f.GameEngine = GameEngine(6, ['UK','Germany','France','Spain','Italy','Neutral'])
             else:
                 f.GameEngine = GameEngine(15, ['UK','Germany','France','Spain','Italy','Poland','Sweden','Egypt','Algeria','Turkey','Ukraine','Russia','Iran','Saudi Arabia','Neutral'])
+                f.board_size = 14
             f.curr_num_players = 1
             f.save()
             #Saves game name in temporary variable
@@ -71,7 +77,6 @@ def new_game(request):
                 if str(k.name) == g:
                     temp = k
             #Creates a player associated with this user and game and makes them the host.
-            pf = player_form.save(commit=False)
             pf.host = True
             pf.user = request.user
             pf.game = temp
@@ -81,11 +86,18 @@ def new_game(request):
             #Creates Map Interface
             MapInterface.objects.create(game=temp,controller=curr_player)
             GraphInterface.objects.create(game=temp,controller=curr_player)
-            GraphCountryInterface.objects.create(game=temp,controller=curr_player, country=curr_player.country)
+            if f.num_players <= 5:
+                GraphCountryInterface.objects.create(game=temp,controller=curr_player, country=curr_player.country)
+            else:
+                GraphCountryInterface.objects.create(game=temp, controller=curr_player, country=curr_player.country, large=True)
             #Creates Hexes
-            h = HexList()
+            if f.num_players <= 5:
+                h = HexList()
+            else:
+                h = HexList2()
             h.apply(temp, curr_player)
             hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
+
             for i in hex_list:
                 i.controller = curr_player
                 i.save()
@@ -135,7 +147,7 @@ def new_game(request):
             messages.success(request, f'New Game created!')
             return redirect('app-game', g=temp.name, player=curr_player.name)
         else:
-            messages.success(request, f'Choose another name. An existing game already has this name.')
+            messages.warning(request, f'Choose another name. An existing game already has this name.')
             return redirect('app-new_game')
     else:
         form = NewGameForm(instance=request.user)
@@ -176,7 +188,10 @@ def joinGame(request, g):
                 form = JoinGameForm(instance=request.user)
                 messages.warning(request, f'A player already has that name.')
                 return render(request, 'App/join_game.html', {'form': form})
-            f.host = False 
+            if temp.num_players <= 5 and f.country.large:
+                messages.warning(request, f'Choose another country. This country is not available for the 5 person map.')
+                return render(request, 'App/join_game.html', {'form': form})
+            f.host = False
             f.user = request.user
             f.game = temp
             f.color = f.country.color
@@ -487,7 +502,7 @@ def map(request, g, p, l, lprev):
     armies = Army.objects.filter(game=g)
     count = 0
     col.append([])
-    info = [0 for i in range(0,49)]
+    info = [0 for i in range(0,g.board_size*g.board_size)]
     row = 0
     #import pdb; pdb.set_trace()
     for hC in hexColor:
@@ -933,7 +948,10 @@ def delete(request, g, p):
         for filename in os.listdir("templates/App/graphs"):
             for p in all_players:
                 if p.name in filename:
-                    os.remove(os.path.join("templates/App/graphs", filename))
+                    try:
+                        os.remove(os.path.join("templates/App/graphs", filename))
+                    except:
+                        print("Error in removing files. File does not exist.")
         g.delete()
     else:
 

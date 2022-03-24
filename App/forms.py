@@ -1,5 +1,5 @@
 from django import forms
-from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface, GraphCountryInterface
+from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface, GraphCountryInterface, Country
 from django.forms import ModelForm
 from django.forms import formset_factory, BaseFormSet
 from django.core.exceptions import ValidationError
@@ -117,6 +117,16 @@ class GraphCountryInterfaceForm(ModelForm):
     class Meta:
         model = GraphCountryInterface
         fields = ['country']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+        if instance:
+            if instance.large:
+                valid_countries = Country.objects.all()
+            else:
+                valid_countries = Country.objects.filter(large=instance.large)
+        self.fields['country'].queryset = valid_countries
 
 class ArmyForm(ModelForm):
     class Meta:

@@ -5,7 +5,7 @@ from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, A
 from .PolicyList import PolicyList
 
 def add_players(temp):
-	all_countries = Country.objects.all()
+	all_countries = Country.objects.filter(large=False)
 	for country in all_countries:
 	    all_players = Player.objects.filter(game=temp)
 	    countryList = []
