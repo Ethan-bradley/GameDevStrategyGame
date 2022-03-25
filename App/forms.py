@@ -8,7 +8,7 @@ from django.forms.widgets import TextInput
 class NewGameForm(ModelForm):
     class Meta:
         model = Game
-        fields = ['name','num_players']
+        fields = ['name','num_players','years_per_turn']
 
     def clean(self):
         super(NewGameForm, self).clean()
@@ -181,15 +181,22 @@ class GovernmentSpendingForm(ModelForm):
         pi = self.cleaned_data.get('PracticalInvest')
         ai = self.cleaned_data.get('AppliedInvest')
 
-        #if total > 1:
-        #    self._errors['IncomeTax'] = self.error_class(['Spending must not be more than 1.'])
-        if it < 0 or ct < 0 or w < 0 or e < 0 or m < 0 or ii < 0 or si < 0:
+        if w + e + m + ii + si >= 1:
             self._errors['IncomeTax'] = self.error_class(['You cannot have negative numbers in spending plan.'])
+            raise ValidationError('Education, Welfare, Science, Infrastructure, and Military values must in total not be more than 1.')
+
+        if it <= 0 or ct <= 0 or w < 0 or e < 0 or m < 0 or ii < 0 or si < 0:
+            self._errors['IncomeTax'] = self.error_class(['You cannot have negative numbers in spending plan.'])
+            raise ValidationError('You cannot have negative numbers in spending plan.')
 
         if ti + pi + ai != 1:
             self._errors['IncomeTax'] = self.error_class(['Theoretical, Practical, and Applied Invest must equal 1.'])
+            raise ValidationError('Theoretical, Practical, and Applied Invest must equal 1.')
 
         return self.cleaned_data
+
+
+
 
 class PolicyForm(ModelForm):
     class Meta:

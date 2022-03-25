@@ -232,7 +232,7 @@ class GameEngine():
 
 			self.TradeEngine.investment_restrictions[index] = p.investment_restriction
 			#Rebellions
-			if country.Resentment > 0.04:
+			if country.Resentment > 0.05:
 				self.rebel(g, p, country.Resentment)
 			#Tarriffs
 			tar = Tariff.objects.filter(game=g, curr_player=p)[0]
@@ -495,7 +495,8 @@ class GameEngine():
 			self.switch_hex(hex_list[0], neutral_player, g)
 			Army.objects.create(game=g, size=hex_list[0].population*res*100,controller=neutral_player, naval=False, location=hex_list[0], name=hex_list[0].name+" Rebel Army")
 			message2 = "In "+p.name+"'s territory a rebel army of size "+str(round(hex_list[0].population*res*100,0))+" rose up in "+hex_list[0].name
-			Notification.objects.create(game=g, message=message2)
+			turn = g.GameEngine.get_country_by_name("UK").time - 17
+			Notification.objects.create(game=g, message=message2,year=turn)
 
 	#Switches control of a hex between two players (doesn't work yet)
 	def switch_hex(self, h, player_to, g):

@@ -4,8 +4,11 @@ from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, Policy
 from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm
 from .PolicyList import PolicyList
 
-def add_players(temp):
-	all_countries = Country.objects.filter(large=False)
+def add_players(temp, type):
+	if type:
+		all_countries = Country.objects.filter(large=False)
+	else:
+		all_countries = Country.objects.all()
 	for country in all_countries:
 	    all_players = Player.objects.filter(game=temp)
 	    countryList = []

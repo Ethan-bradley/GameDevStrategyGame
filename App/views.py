@@ -60,7 +60,7 @@ def new_game(request):
             #Creates the game object
             f = form.save(commit=False)
             f.host = request.user
-            if f.num_players <= 5:
+            if f.num_players <= 5 and f.num_players != -1:
                 if pf.country.large:
                     messages.warning(request, f'Choose another country. This country is not available for the 5 person map.')
                     return redirect('app-new_game')
@@ -86,12 +86,12 @@ def new_game(request):
             #Creates Map Interface
             MapInterface.objects.create(game=temp,controller=curr_player)
             GraphInterface.objects.create(game=temp,controller=curr_player)
-            if f.num_players <= 5:
+            if f.num_players <= 5 and f.num_players != -1:
                 GraphCountryInterface.objects.create(game=temp,controller=curr_player, country=curr_player.country)
             else:
                 GraphCountryInterface.objects.create(game=temp, controller=curr_player, country=curr_player.country, large=True)
             #Creates Hexes
-            if f.num_players <= 5:
+            if f.num_players <= 5 and f.num_players != -1:
                 h = HexList()
             else:
                 h = HexList2()
@@ -138,10 +138,12 @@ def new_game(request):
             #Uncomment for single-player games
             #temp.GameEngine.start_capital(temp)
             if temp.num_players == 1:
-                add_players(temp)
+                add_players(temp, True)
+            elif temp.num_players == -1:
+                add_players(temp, False)
             else:
                 add_neutral(temp)
-            if temp.num_players == temp.curr_num_players:
+            if temp.num_players == temp.curr_num_players or temp.num_players == -1:
                 temp.GameEngine.start_capital(temp)
                 temp.GameEngine.run_start_trade(temp)
             messages.success(request, f'New Game created!')
@@ -329,7 +331,9 @@ def game(request, g, player):
             if govForm2.is_valid():
                 govForm2.save()
             else:
-                messages.warning(request, f'Government spending total must not be more than 1')
+                messages.warning(request, f'Error in Government Form')
+                messages.warning(request, govForm2.errors['IncomeTax'])
+                return redirect('app-game', g=g.name, player=str(player))
             projection(gtemp, ptemp, context)
             #Runs ready form for whether ready for moving onto next turn
             ready = NextTurn(request.POST, instance=player)
@@ -345,6 +349,8 @@ def game(request, g, player):
                         if not p.ready:
                             ready_next_round = False
                 if ready_next_round:
+                    for i in range(0,g.years_per_turn - 1):
+                        g.GameEngine.run_engine(g, False)
                     temp = g.GameEngine.run_engine(g)
                     g.save()
                     #g.GameEngine = temp[0]
@@ -397,7 +403,7 @@ def game(request, g, player):
         'govRevenueGDP':round((player.get_country().money[5]/player.get_country().money[8])*100,1),
         'govSpending':round((player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military)*100, 4),
         'govBalance': round(((player.get_country().money[5]/player.get_country().money[8]) - (player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military))*100, 1),
-        'notifications': Notification.objects.filter(game=g)[::-1]
+        'notifications': Notification.objects.filter(game=g, year__gt=player.get_country().time - 23)[::-1],
     })
     return render(request, 'App/game.html', context)
 
@@ -514,8 +520,11 @@ def map(request, g, p, l, lprev):
             a = ""
         else:
             for army in a:
-                army_size += (army.name+": "+str(army.size)+", ")
-                army_name += army.name + "\n "
+                army_size += (army.name+": "+str(army.size))
+                army_name += "["+army.name
+                if army.moved == False:
+                    army_name += " ✅"
+                army_name += "] \n "
         #import pdb; pdb.set_trace()
         if hC.color != '#3262a8' and t.mode == "RE":
             color =  "#"+str(hex((10 + hC.iron*2 + hC.wheat*4)))[2]+str(hex((10 + hC.iron*2 + hC.wheat*4)))[2]+ str(hex(10+hC.wheat*4+hC.coal))[2] + str(hex(10+hC.wheat*4 + hC.coal))[2] + str(hex(10 + hC.coal*2 + hC.oil*2))[2] + str(hex(10 + hC.coal*2 + hC.oil*2))[2]
@@ -610,7 +619,7 @@ def map(request, g, p, l, lprev):
         'hexmap':hexmap,
         'maintenace':total_size*0.1,
         'resources':t.mode == "RE",
-        'notifications': Notification.objects.filter(game=g)[::-1],
+        'notifications': Notification.objects.filter(game=g, year__gt=player.get_country().time - 23)[::-1],
         'board_size':g.board_size
     }
     return render(request, 'App/map.html', context)
@@ -658,6 +667,8 @@ def graph(request, g, p):
             return redirect('app-graph', gtemp, ptemp)
     else:
         mi = GraphInterfaceForm(instance=t)
+    time = p.get_country().time - 18
+    other = time - 2
     context = {
         'country': p.country,
         'GoodsPerCapita':p.GoodsPerCapita,
@@ -667,7 +678,7 @@ def graph(request, g, p):
         'tradeBalance':p.tradeBalance,
         'GDPPerCapita':p.GDPPerCapita,
         'InterestRate':p.InterestRate,
-        'CurrentYear':p.get_country().time - 18,
+        'CurrentYear':time,
         'Capital':p.Capital,
         'GoodsProduction':p.GoodsProduction,
         'GDP':p.GDP,
@@ -677,7 +688,7 @@ def graph(request, g, p):
         'wageGraph':'App/graphs/'+p.name+'wage.html',
         'jobGraph':'App/graphs/'+p.name+'jobs.html',
         'pricesGraph':'App/graphs/'+p.name+'prices.html',
-        'notifications': Notification.objects.filter(game=g)[::-1],
+        'notifications': Notification.objects.filter(game=g, year__gt=other)[::-1],
         'GraphInterface': mi
     }
     gamegraph(gtemp, ptemp, context, t, g)
@@ -728,7 +739,7 @@ def gamegraph(g, p, context, graphmode, game):
         'Consumption':g.Consumption,
         'game':gtemp,
         'player':ptemp,
-        'notifications': Notification.objects.filter(game=g)[::-1],
+        'notifications': Notification.objects.filter(game=g, year__gt=p.get_country().time - 23)[::-1],
         'budgetGraph': 'templates/App/budget2.html'
     })
     
@@ -837,7 +848,7 @@ def trade(request, g, p):
         'tradeBalance':p.tradeBalance,
         'game':gtemp,
         'player':ptemp,
-        'notifications': Notification.objects.filter(game=g)[::-1],
+        'notifications': Notification.objects.filter(game=g, year__gt=player.get_country().time - 23)[::-1],
         'GraphInterface': mi,
         'data':data3,
         'tariff_titles':tariff_titles,

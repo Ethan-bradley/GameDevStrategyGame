@@ -29,6 +29,7 @@ class Game(models.Model):
 	color = models.CharField(max_length=50, default='#ffffff')
 	neutral = models.CharField(max_length=100,default="Neutral")
 	board_size = models.IntegerField(default=7)
+	years_per_turn = models.IntegerField(default=1)
 	#players = ManyToManyField("Player")
 	#hexes = ManyToManyField("Hexes")
 	#TradeEngine = PickledObjectField()
@@ -280,4 +281,4 @@ class GraphCountryInterface(models.Model):
 class Notification(models.Model):
 	game = models.ForeignKey("Game", on_delete=models.CASCADE)
 	message = models.TextField()
-	
+	year = models.IntegerField(default=0)

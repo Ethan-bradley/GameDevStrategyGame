@@ -20,6 +20,12 @@ class ArmyCombat():
 					fought = True
 			if not fought and a.controller != a.location.controller:
 				self.switch_hex(a.location, a.controller, g)
+		for j in army_list:
+			if j.size < 0:
+				try:
+					j.delete()
+				except:
+					print("No army to delete!")
 		self.doMaintenace(g)
 
 	def doMaintenace(self,g):
@@ -60,26 +66,32 @@ class ArmyCombat():
 			army2_fortification = 2
 		Army1combat = Army1.size*army1_fortification
 		Army2combat = Army2.size*army2_fortification
+		turn = g.GameEngine.get_country_by_name("UK").time - 17
 		if Army1combat > Army2combat:
+			message2 = "A battle occured in " + Army1.location.name + " with the victory of " + Army1.controller.name + "'s " + Army1.name + " of size " + str(
+				Army1.size) + " with casualties of " + str(max((int)(Army2.size * 0.05),
+								 1)) + " over " + Army2.controller.name + "'s " + Army2.name + " of size " + str(Army2.size) + " with casulties of " + str(max((int)(Army1.size * 0.1), 1))
 			Army1.size -= max((int) (Army2.size*0.05), 1)
 			Army2.size -= max((int) (Army1.size*0.1), 1)
 			self.switch_hex(Army1.location, Army1.controller, g)
 			arm2_deleted = self.retreat_army(g, Army2, deleted)
-			message2 = "A battle occured in "+Army1.location.name+" with the victory of "+Army1.controller.name+"'s "+Army1.name+" over "+Army2.controller.name+"'s "+Army2.name
-			Notification.objects.create(game=g, message=message2)
+			Notification.objects.create(game=g, message=message2, year=turn)
 		elif Army2combat > Army1combat:
+			message2 = "A battle occured in " + Army2.location.name + " with the victory of " + Army2.controller.name + "'s " + Army2.name + " of size " + str(
+				Army2.size) + " with casualties of " + \
+					   str(max((int)(Army1.size * 0.05), 1)) + " over " + Army1.controller.name + "'s " + Army1.name
+			" of size " + str(Army1.size) + " with casualties of " + str(max((int)(Army2.size * 0.1), 1))
 			Army1.size -= max((int) (Army2.size*0.1), 1)
 			Army2.size -= max((int) (Army1.size*0.05), 1)
 			self.switch_hex(Army2.location, Army2.controller, g)
 			arm1_deleted = self.retreat_army(g, Army1, deleted)
-			message2 = "A battle occured in "+Army2.location.name+" with the victory of "+Army2.controller.name+"'s "+Army2.name+" over "+Army1.controller.name+"'s "+Army1.name
-			Notification.objects.create(game=g, message=message2)
+			Notification.objects.create(game=g, message=message2, year=turn)
 		else:
 			Army1.size -= max((int) (Army2.size*0.05), 1)
 			Army2.size -= max((int) (Army1.size*0.05), 1)
 			self.switch_hex(Army1.location, Army1.controller, g)
 			message2 = "A battle occured in "+Army1.location.name+" with the victory of "+Army1.controller.name+"'s "+Army1.name+" over "+Army2.controller.name+"'s "+Army2.name
-			Notification.objects.create(game=g, message=message2)
+			Notification.objects.create(game=g, message=message2, year=turn)
 			arm2_deleted = self.retreat_army(g, Army2, deleted)
 		#import pdb; pdb.set_trace()
 		if Army1.size < 0 and arm1_deleted:
