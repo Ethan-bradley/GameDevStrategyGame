@@ -54,6 +54,7 @@ class Player(models.Model):
 	ready = models.BooleanField(default=False)
 	color = models.CharField(max_length=50, default='#ffffff')
 	robot = models.BooleanField(default=False)
+	projection_unloaded = models.BooleanField(default=True)
 	#Country = PickledObjectField()
 	#Government Variables:
 	IncomeTax = models.FloatField(default=0.2)

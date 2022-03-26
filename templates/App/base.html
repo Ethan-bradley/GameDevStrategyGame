@@ -73,7 +73,7 @@
               <ul class="list-group">
                 {% if notifications %}
                   {% for notification in notifications %}
-                    <li class="list-group-item list-group-item-light"> {{ notification.message }} </li>
+                    <li class="list-group-item list-group-item-light"> {{ notification.message }} Year: {{ notification.year }}</li>
                   {% endfor %}
                 {%endif%}
               </ul>

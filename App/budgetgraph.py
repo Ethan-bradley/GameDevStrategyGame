@@ -30,17 +30,17 @@ def budget_graph(country, start, file):
   #print(Corporate_Tax)
   Income_Tax = country.IncomeTaxArr[start:]
   Tarriffs = country.TarriffRevenuArr[start:]
-  revenues = [Corporate_Tax[i] + Income_Tax[i] + Tarriffs[i] for i in range(0,len(Corporate_Tax))]
+  revenues = [Corporate_Tax[i] + Income_Tax[i] + Tarriffs[i] + country.pos_interest_payments[i] for i in range(0,len(Corporate_Tax))]
   
   net = [country.Government_SavingsArr[i] - country.GovDebtArr[i] for i in range(0,len(country.Government_SavingsArr))][start:] #[1000, 1200, 1100, 800]
-  collection = [Corporate_Tax, Income_Tax, Tarriffs]
-  expense = [country.WelfareArr[start:],country.InfrastructureArr[start:],country.ScienceBudgetArr[start:],country.MilitaryArr[start:],country.EducationArr[start:]]
+  collection = [country.pos_interest_payments, Corporate_Tax, Income_Tax, Tarriffs]
+  expense = [country.WelfareArr[start:],country.InfrastructureArr[start:],country.ScienceBudgetArr[start:],country.MilitaryArr[start:],country.EducationArr[start:], country.neg_interest_payments[start:]]
   expenses = [sum([expense[j][i] for j in range(0,len(expense))]) for i in range(0,len(expense[0]))]
   #print(expenses)
   #debt = [1000, -800, -900, -1100]
   fig = go.Figure()
   fig.update_layout(title_text='Debt and Budget', title_x=0.5)
-  collection2(fig, collection, revenues, ['Corporate Tax', 'Income Tax', 'Tarriffs'], net, 255)
+  collection2(fig, collection, revenues, ['Savings Interest','Income Tax','Corporate Tax', 'Tarriffs'], net, 255)
   fig.add_trace(go.Scatter(
       x=[i for i in range(0,len(Corporate_Tax))],
       y=net,
@@ -51,6 +51,7 @@ def budget_graph(country, start, file):
       line=dict(width=10)
       ))
 
-  collection3(fig, expense, expenses, ['Welfare', 'Infrastructure', 'Science', 'Military', 'Education'], net, 255)
+  collection3(fig, expense, expenses, ['Welfare', 'Infrastructure', 'Science', 'Military', 'Education','Debt Interest'], net, 255)
+  fig.update_layout(legend_traceorder="normal")
 
   fig.write_html(file)

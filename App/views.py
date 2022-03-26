@@ -330,11 +330,13 @@ def game(request, g, player):
             govForm2 = GovernmentSpendingForm(request.POST, instance=player)
             if govForm2.is_valid():
                 govForm2.save()
+                projection(gtemp, ptemp, context)
+                player.projection_unloaded = False
+                player.save()
             else:
                 messages.warning(request, f'Error in Government Form')
                 messages.warning(request, govForm2.errors['IncomeTax'])
                 return redirect('app-game', g=g.name, player=str(player))
-            projection(gtemp, ptemp, context)
             #Runs ready form for whether ready for moving onto next turn
             ready = NextTurn(request.POST, instance=player)
             if ready.is_valid():
@@ -348,6 +350,9 @@ def game(request, g, player):
                     for p in all_players:
                         if not p.ready:
                             ready_next_round = False
+                else:
+                    if not player.ready:
+                        ready_next_round = False
                 if ready_next_round:
                     for i in range(0,g.years_per_turn - 1):
                         g.GameEngine.run_engine(g, False)
@@ -380,6 +385,14 @@ def game(request, g, player):
     budget_graph(player.get_country(), 17, "templates/App/graphs/"+player.name+"budgetgraph.html")
     govForm = GovernmentSpendingForm(instance=player)
     next_turn = NextTurn(instance=player)
+    if player.projection_unloaded:
+        projection(gtemp, ptemp, context)
+        player.projection_unloaded = False
+        player.save()
+    else:
+        projection(gtemp, ptemp, context, False)
+    govDebt = round(player.get_country().Government_SavingsArr[player.get_country().time - 1] - player.get_country().GovDebtArr[
+        player.get_country().time - 1], 2)
     context.update({
         'country': player.country,
         'indForms': IFS,
@@ -392,8 +405,8 @@ def game(request, g, player):
         'player':ptemp,
         'govForm':govForm,
         'GovMoney':round(player.get_country().money[5],2),
-        'GovSavings':round(player.get_country().Government_Savings, 2),
-        'GovDebt':round(player.get_country().GovDebt, 2),
+        'GovSavings': govDebt,
+        'GovDebt':round(govDebt/player.get_country().money[8], 2),
         'CurrencyReserves':g.GameEngine.printCurrencyExchange(),
         'graph':player.GoodsPerCapita,
         'govBudget':"App/graphs/"+player.name+"expenditure.html",
@@ -728,6 +741,7 @@ def gamegraph(g, p, context, graphmode, game):
     create_compare_graph("InfrastructureArr", "Infrastructure", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
     create_compare_graph("PopulationArr", "Population", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
     create_compare_graph("GDPPerCapita", "Real_GDP_Per_Capita_in_$US", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
+    create_compare_graph("CapitalArr", "Capital", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
     create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17, game.GameEngine, False)
     context.update({
         'GoodsPerCapita':g.GoodsPerCapita,
@@ -833,7 +847,7 @@ def trade(request, g, p):
         count = 1
         for f in k:
             #v = IndTariffForm(instance=f)
-            tariff_titles[count] = f.key
+            tariff_titles[count] = f.key.country.name+": "+f.key.name
             count += 1
         IFS = IndFormSet(queryset=IndTariff.objects.filter(controller=tar))
     context = {
@@ -971,7 +985,7 @@ def delete(request, g, p):
     messages.success(request, f'Deletion of game was successfull!')
     return render(request, 'App/home.html', context)
 
-def projection(g, p, context):
+def projection(g, p, context, run=True):
     def create_graph(attribute,title,country,start):
         arr = getattr(country, attribute)[start:]
         fig = px.line(y=arr,title=title)
@@ -983,59 +997,60 @@ def projection(g, p, context):
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
-    new_country = copy.deepcopy(p.get_country())
-    country = new_country
-    #Set variables for new_country
-    new_country.IncomeTax = p.IncomeTax
-    new_country.CorporateTax = p.CorporateTax
-    new_country.MoneyPrinting = p.MoneyPrinting
-    welfare = ((p.Welfare + p.AdditionalWelfare)*new_country.money[8])/new_country.money[5]
-    gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*new_country.money[8])/new_country.money[5]
-    gov_goods = ((p.Education + p.Military)*new_country.money[8])/new_country.money[5]
-    if welfare + gov_invest + gov_goods > 1:
-        country.BondWithdrawl = (welfare + gov_invest + gov_goods - 1)*country.money[5]
-        if country.BondWithdrawl > country.money[1]*0.5:
-            #Country is Bankrupt if this occurs.
-            country.BondWithdrawl = country.money[1]*0.5
-        welfare = ((p.Welfare + p.AdditionalWelfare)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
-        gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
-        gov_goods = ((p.Education + p.Military)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
+    if run:
+        new_country = copy.deepcopy(p.get_country())
+        country = new_country
+        #Set variables for new_country
+        new_country.IncomeTax = p.IncomeTax
+        new_country.CorporateTax = p.CorporateTax
+        new_country.MoneyPrinting = p.MoneyPrinting
+        welfare = ((p.Welfare + p.AdditionalWelfare)*new_country.money[8])/new_country.money[5]
+        gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*new_country.money[8])/new_country.money[5]
+        gov_goods = ((p.Education + p.Military)*new_country.money[8])/new_country.money[5]
+        if welfare + gov_invest + gov_goods > 1:
+            country.BondWithdrawl = (welfare + gov_invest + gov_goods - 1)*country.money[5]
+            if country.BondWithdrawl > country.money[1]*0.5:
+                #Country is Bankrupt if this occurs.
+                country.BondWithdrawl = country.money[1]*0.5
+            welfare = ((p.Welfare + p.AdditionalWelfare)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
+            gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
+            gov_goods = ((p.Education + p.Military)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
 
-    if ((p.Education + p.Military) != 0):
-        new_country.EducationSpend = p.Education/(p.Education + p.Military)
-        new_country.MilitarySpend = p.Military/(p.Education + p.Military)
-    else:
-        new_country.EducationSpend = 0
+        if ((p.Education + p.Military) != 0):
+            new_country.EducationSpend = p.Education/(p.Education + p.Military)
+            new_country.MilitarySpend = p.Military/(p.Education + p.Military)
+        else:
+            new_country.EducationSpend = 0
 
-    new_country.GovGoods = gov_goods
-    #country.BondWithdrawl = p.Bonds
-    #country.Bonds = p.Bonds
-    #country.GovWelfare = p.Welfare + p.AdditionalWelfare
-    new_country.GovWelfare = welfare
-    #Investment
-    total_gov_money = new_country.money[5] + new_country.BondWithdrawl
-    total_investor_money = new_country.money[4]*new_country.InvestmentRate
+        new_country.GovGoods = gov_goods
+        #country.BondWithdrawl = p.Bonds
+        #country.Bonds = p.Bonds
+        #country.GovWelfare = p.Welfare + p.AdditionalWelfare
+        new_country.GovWelfare = welfare
+        #Investment
+        total_gov_money = new_country.money[5] + new_country.BondWithdrawl
+        total_investor_money = new_country.money[4]*new_country.InvestmentRate
 
-    country.GovernmentInvest = gov_invest #p.InfrastructureInvest + p.ScienceInvest
-    total_money = country.money[5]*country.GovernmentInvest + total_investor_money
-    new_country.InfrastructureInvest = ((total_gov_money*((p.InfrastructureInvest*new_country.money[8])/new_country.money[5]))/total_money) + ((total_investor_money*0.1)/total_money)
-    new_country.ScienceInvest = ((total_gov_money*((p.ScienceInvest*new_country.money[8])/new_country.money[5]))/total_money) + ((total_investor_money*0.05)/total_money)
-    #country.QuickInvestment = p.CapitalInvestment
-    new_country.TheoreticalInvest = p.TheoreticalInvest
-    new_country.PracticalInvest = p.PracticalInvest
-    new_country.AppliedInvest = p.AppliedInvest
+        country.GovernmentInvest = gov_invest #p.InfrastructureInvest + p.ScienceInvest
+        total_money = country.money[5]*country.GovernmentInvest + total_investor_money
+        new_country.InfrastructureInvest = ((total_gov_money*((p.InfrastructureInvest*new_country.money[8])/new_country.money[5]))/total_money) + ((total_investor_money*0.1)/total_money)
+        new_country.ScienceInvest = ((total_gov_money*((p.ScienceInvest*new_country.money[8])/new_country.money[5]))/total_money) + ((total_investor_money*0.05)/total_money)
+        #country.QuickInvestment = p.CapitalInvestment
+        new_country.TheoreticalInvest = p.TheoreticalInvest
+        new_country.PracticalInvest = p.PracticalInvest
+        new_country.AppliedInvest = p.AppliedInvest
 
-    new_country.run_turn(5)
-    create_graph('InflationTracker','Inflation',new_country,17)
-    create_graph('UnemploymentArr','Unemployment',new_country,17)
-    create_graph('GoodsPerCapita','GoodsPerCapita',new_country,17)
-    create_graph('GDPPerCapita','RealGDPPerCapita',new_country,17)
-    create_graph('ConsumptionArr','ConsumptionPerCapita',new_country,17)
+        new_country.run_turn(5)
+        create_graph('InflationTracker','Inflation',new_country,17)
+        create_graph('UnemploymentArr','Unemployment',new_country,17)
+        create_graph('GoodsPerCapita','GoodsPerCapita',new_country,17)
+        create_graph('GDPPerCapita','RealGDPPerCapita',new_country,17)
+        create_graph('ConsumptionArr','ConsumptionPerCapita',new_country,17)
     context.update({
         'unemployment_graph': "App/graphs/"+p.name+"Unemployment.html",
         'inflation_graph': "App/graphs/"+p.name+"Inflation.html",
         'goodspercapita_graph': "App/graphs/"+p.name+"GoodsPerCapita.html",
-        'gdppercapita_graph': "App/graphs/"+p.name+"GDPPerCapita.html",
+        'gdppercapita_graph': "App/graphs/"+p.name+"RealGDPPerCapita.html",
         'consumptionpercapita_graph': "App/graphs/"+p.name+"ConsumptionPerCapita.html",
         'game':gtemp,
         'player':ptemp,

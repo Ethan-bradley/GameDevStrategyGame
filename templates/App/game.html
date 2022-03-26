@@ -3,6 +3,14 @@
 {% block content %}
 <div class="content-section">
     <legend class="border-bottom mb-4">{{ country }}</legend>
+    {% if inflation_graph %}
+    <h2 class="account-heading">Projection Graphs</h2>
+           {% include inflation_graph %}
+           {% include unemployment_graph %}
+            {% include gdppercapita_graph %}
+           {% include goodspercapita_graph %}
+           {% include consumptionpercapita_graph %}
+    {% endif %}
     <legend class="border-bottom mb-4">Individual Product Forms</legend>
     <form method="POST">
         {% csrf_token %}
@@ -15,8 +23,6 @@
             {% endfor %}
             <div class="media-body">
               <h2 class="account-heading">Data</h2>
-              <p class="ExchangeRates">Currency Exchange Rates: {{ CurrencyReserves }}</p>
-               <img class="thumbnail-img" src="{{ graph.url }}">
                <h2 class="account-heading">Government Budget</h2>
                {% include govBudget %}
                {% include govRevenue %}
@@ -24,9 +30,9 @@
                <p class="text-secondary">Total Government Revenue: {{ GovMoney }}</p>
                <p class="text-secondary">Total Government Revenue as % of GDP: {{ govRevenueGDP }}</p>
                <p class="text-secondary">Government Expenditures as % of GDP: {{ govSpending }}</p>
-               <p class="text-secondary">Government Budget Balance as % of GDP: {{ govBalance }}</p>
-               <p class="text-secondary">Total Government Debt: {{ GovDebt }}</p>
-               <p class="text-secondary">Total Government Savings: {{ GovSavings }}</p>
+               <p class="text-secondary">Projected Government Budget Balance as % of GDP: {{ govBalance }}</p>
+               <p class="text-secondary">Net Government Savings as % of GDP: {{ GovDebt }}</p>
+               <p class="text-secondary">Net Government Savings: {{ GovSavings }}</p>
                <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
             </div>
             <legend class="border-bottom mb-4">Government Spending and Central Bank</legend>
@@ -63,12 +69,5 @@
             <button class="btn btn-outline-info" type="submit">Submit Spending and Tax Plan</button>
         </div>
     </form>
-    {% if inflation_graph %}
-    <h2 class="account-heading">Projection Graphs</h2>
-           {% include inflation_graph %}
-           {% include unemployment_graph %}
-           {% include goodspercapita_graph %}
-           {% include consumptionpercapita_graph %}
-    {% endif %}
 </div>
 {% endblock content %}

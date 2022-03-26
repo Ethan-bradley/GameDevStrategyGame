@@ -48,6 +48,8 @@ class Country():
     self.EducationArr = []
     self.MilitaryArr = []
     self.ScienceBudgetArr = []
+    self.pos_interest_payments = []
+    self.neg_interest_payments = []
     #Tracking Variables
     self.Unemployment = 0
     self.Bonds = 0
@@ -357,6 +359,7 @@ class Country():
         else:
           self.Government_Savings += (1-self.GovWelfare-self.GovGoods-self.GovernmentInvest)*self.money[5]
       self.Government_Savings *= (1+self.interest_rate)
+      self.pos_interest_payments.append(self.Government_Savings*self.interest_rate)
       #Population adding:
       self.Population = self.pop_matrix.sum()#self.Population*self.Population_growth
       
@@ -439,6 +442,7 @@ class Country():
       self.money[5] += self.BondWithdrawl
       self.money[1] -= self.BondWithdrawl
       self.GovDebt *= (1 + self.interest_rate)
+      self.neg_interest_payments.append(self.GovDebt*self.interest_rate)
       if (self.Government_Savings + self.BondWithdrawl) < 1:
         self.GovDebt +=  self.BondWithdrawl
       else:

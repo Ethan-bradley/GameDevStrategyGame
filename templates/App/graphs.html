@@ -18,6 +18,7 @@
         </form>
           <h2 class="account-heading">Multiple Player Graphs</h2>
           <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
+            {% include 'App/Real_GDP_Per_Capita_in_$US.html' %}
            <img class="thumbnail-img" src="{{ GoodsPerCapita.url }}">
            <img class="thumbnail-img" src="{{ Inflation.url }}">
            <img class="thumbnail-img" src="{{ Resentment.url }}">
@@ -30,13 +31,9 @@
            {% include 'App/Education.html' %}
            {% include 'App/Infrastructure.html' %}
            {% include 'App/Population.html' %}
-           {% include 'App/Real_GDP_Per_Capita_in_$US.html' %}
+           {% include 'App/Capital.html' %}
 
            <h2 class="account-heading">Graphs</h2>
-           <img class="thumbnail-img" src="{{ RealGDP.url }}">
-           <img class="thumbnail-img" src="{{ Inflation2.url }}">
-           <img class="thumbnail-img" src="{{ tradeBalance.url }}">
-           <img class="thumbnail-img" src="{{ GDPPerCapita.url }}">
            <img class="thumbnail-img" src="{{ Capital.url }}">
            <img class="thumbnail-img" src="{{ GoodsProduction.url }}">
            <img class="thumbnail-img" src="{{ GDP.url }}">

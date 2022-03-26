@@ -1,6 +1,6 @@
 from .Game import GameEngine
 from .models import Post
-from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface
+from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, Army
 from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm
 from .PolicyList import PolicyList
 
@@ -108,6 +108,7 @@ def add_neutral(temp):
     hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
     for i in hex_list:
         i.controller = curr_player
+        Army.objects.create(game=temp, size=1000, controller=curr_player, naval=False, location=i, name=i.name+" Army", moved=False, max_movement=2)
         i.save()
     #Creates Tariff object associated with player and game.
     formt = AddTariffForm()

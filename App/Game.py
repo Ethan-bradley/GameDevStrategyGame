@@ -50,6 +50,7 @@ class GameEngine():
 				f = ResetTurn(instance=p)
 				pla = f.save(commit=False)
 				pla.ready = False
+				pla.projection_unloaded = True
 				pla.save()
 			neutral_player2 = Player.objects.filter(name="Neutral")[0]
 			neutral_player2.ready = True
