@@ -9,7 +9,6 @@ from django.db.models.fields import *
 import os
 import matplotlib.pyplot as plt
 import matplotlib
-import requests
 
 class GameEngine():
 	def __init__(self, num_players, nameListInput):
