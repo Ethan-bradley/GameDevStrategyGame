@@ -21,6 +21,8 @@ import os
 import copy
 from .budgetgraph import budget_graph
 from .helper import add_players, add_neutral
+import django_rq
+
 
 def home(request):
 	#import pdb; pdb.set_trace()
@@ -66,7 +68,7 @@ def new_game(request):
                     return redirect('app-new_game')
                 f.GameEngine = GameEngine(6, ['UK','Germany','France','Spain','Italy','Neutral'])
             else:
-                f.GameEngine = GameEngine(15, ['UK','Germany','France','Spain','Italy','Poland','Sweden','Egypt','Algeria','Turkey','Ukraine','Russia','Iran','Saudi Arabia','Neutral'])
+                #f.GameEngine = GameEngine(15, ['UK','Germany','France','Spain','Italy','Poland','Sweden','Egypt','Algeria','Turkey','Ukraine','Russia','Iran','Saudi Arabia','Neutral'])
                 f.board_size = 14
             f.curr_num_players = 1
             f.save()
@@ -76,6 +78,14 @@ def new_game(request):
             for k in gameList:
                 if str(k.name) == g:
                     temp = k
+            def create_countries():
+                return GameEngine(15,['UK', 'Germany', 'France', 'Spain', 'Italy', 'Poland', 'Sweden', 'Egypt','Algeria', 'Turkey', 'Ukraine', 'Russia', 'Iran', 'Saudi Arabia', 'Neutral'])
+            def organize_countries(job, connection, result, *args, **kwargs):
+                temp.GameEngine = result
+                temp.GameEngine.start_capital(temp)
+                temp.GameEngine.run_start_trade(temp)
+            if f.num_players > 5 or f.num_players == -1:
+                job = django_rq.enqueue(create_countries, on_success=organize_countries)
             #Creates a player associated with this user and game and makes them the host.
             pf.host = True
             pf.user = request.user
@@ -143,7 +153,7 @@ def new_game(request):
                 add_players(temp, False)
             else:
                 add_neutral(temp)
-            if temp.num_players == temp.curr_num_players or temp.num_players == -1:
+            if temp.num_players == temp.curr_num_players:
                 temp.GameEngine.start_capital(temp)
                 temp.GameEngine.run_start_trade(temp)
             messages.success(request, f'New Game created!')

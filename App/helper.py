@@ -83,8 +83,9 @@ def add_players(temp, type):
 	    temp.save()
 	    #Remove this if game isn't 2 player
 	    #temp.GameEngine.start_capital(temp)
-	temp.GameEngine.start_capital(temp)
-	temp.save()
+	if type:
+		temp.GameEngine.start_capital(temp)
+		temp.save()
 def add_neutral(temp):
     form = JoinGameForm()
     f = form.save(commit=False)
