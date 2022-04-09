@@ -22,7 +22,8 @@ import copy
 from .budgetgraph import budget_graph
 from .helper import add_players, add_neutral
 import django_rq
-
+from rq import Queue
+from worker import conn
 
 def home(request):
 	#import pdb; pdb.set_trace()
@@ -54,6 +55,7 @@ def lobby(request):
 
 @login_required
 def new_game(request):
+    q = Queue(connection=conn)
     if request.method == 'POST':
         form = NewGameForm(request.POST)
         player_form = JoinGameForm(request.POST)
@@ -85,7 +87,7 @@ def new_game(request):
                 temp.GameEngine.start_capital(temp)
                 temp.GameEngine.run_start_trade(temp)
             if f.num_players > 5 or f.num_players == -1:
-                job = django_rq.enqueue(create_countries, on_success=organize_countries)
+                job = q.enqueue(create_countries, on_success=organize_countries)
             #Creates a player associated with this user and game and makes them the host.
             pf.host = True
             pf.user = request.user
