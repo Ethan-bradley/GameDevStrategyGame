@@ -179,13 +179,13 @@ def runNext(request, g):
 @login_required
 def runNext2(request, g):
     temp = Game.objects.filter(name=g)[0]
-    temp.GameEngine.run_start_trade(temp)
+    temp.GameEngine.run_start_trade(temp, 4)
     temp.save()
 
 @login_required
 def runNext3(request, g):
     temp = Game.objects.filter(name=g)[0]
-    temp.GameEngine.run_start_trade(temp)
+    temp.GameEngine.run_start_trade(temp, 3)
     temp.save()
 
 @login_required
