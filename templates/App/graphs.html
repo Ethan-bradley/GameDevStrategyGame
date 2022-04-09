@@ -3,7 +3,9 @@
 {% block content %}
 <div class="content-section">
     <div class="media-body">
+
       <h2 class="account-heading">Budget Graphs</h2>
+
       <legend class="border-bottom mb-4">{{ country }}</legend>
           {% include 'App/budget2.html' %}
            <form method="POST">
@@ -34,16 +36,116 @@
            {% include 'App/Capital.html' %}
 
            <h2 class="account-heading">Graphs</h2>
-           <img class="thumbnail-img" src="{{ Capital.url }}">
-           <img class="thumbnail-img" src="{{ GoodsProduction.url }}">
-           <img class="thumbnail-img" src="{{ GDP.url }}">
-           <img class="thumbnail-img" src="{{ GDPGrowth.url }}">
+        <div id="container" style="width: 75%;">
+      <canvas id="goods-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="gdp-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="growth-chart"></canvas>
+        </div>
+
            {% include wageGraph %}
            {% include jobGraph %}
            {% include pricesGraph %}
-
+           
            
     </div>
 
+
 </div>
 {% endblock content %}
+
+{% block extra_js %}
+
+<script type="text/javascript">
+
+const data = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Capital',
+    data: {{ capital|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var config = {
+  type: 'line',
+  data: data,
+  options: {
+        responsive: true
+      }
+};
+
+const data2 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Goods Production',
+    data: {{ GoodsProduction|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var goods_graph = {
+  type: 'line',
+  data: data2,
+  options: {
+        responsive: true
+      }
+};
+const data3 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Nominal GDP',
+    data: {{ GDP|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var gdp_graph = {
+  type: 'line',
+  data: data3,
+  options: {
+        responsive: true
+      }
+};
+const data4 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Real GDP Growth',
+    data: {{ growth|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var growth2 = {
+  type: 'line',
+  data: data4,
+  options: {
+        responsive: true
+      }
+};
+
+window.onload = function() {
+      var ctx = document.getElementById('goods-chart').getContext('2d');
+      window.goods = new Chart(ctx, goods_graph);
+      var ctx = document.getElementById('gdp-chart').getContext('2d');
+      window.gdp = new Chart(ctx, gdp_graph);
+      var ctx = document.getElementById('growth-chart').getContext('2d');
+      window.growth = new Chart(ctx, growth2);
+    };
+
+</script>
+
+<!--Javascript-->
+
+{% endblock extra_js %}

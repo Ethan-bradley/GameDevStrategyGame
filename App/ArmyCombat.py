@@ -151,6 +151,16 @@ class ArmyCombat():
 		#import pdb; pdb.set_trace()
 		#g.GameEngine.modify_country_by_name(loser.country.name, 'Population', loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8))
 		loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8)
+		loser_country = loser.get_country()
+		#import pdb; pdb.set_trace();
+		subtract = ((h.population*0.8)/loser_country.pop_matrix.sum())*1.4
+		loser_country.money[0] -= loser_country.money[0]*subtract
+		loser_country.money[1] -= loser_country.money[1]*subtract
+		loser_country.money[2] -= loser_country.money[2]*subtract
+		loser_country.money[3] -= loser_country.money[3]*subtract
+		loser_country.money[4] -= loser_country.money[4]*subtract
+		loser_country.money[5] -= loser_country.money[5]*subtract
+		loser.save()
 		g.save()
 		g.GameEngine.modify_country_by_name(loser.country.name, 'capital', loser.get_country().capital - h.capital*0.9)
 		g.save()
