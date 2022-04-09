@@ -1005,25 +1005,28 @@ def Politics(request, g, p):
 
 def delete(request, g, p):
     g = Game.objects.filter(name=g)[0]
-    p = Player.objects.filter(name=p)[0]
-    all_players = Player.objects.filter(game=g)
-    context = {
-        'posts': Post.objects.all()
-        #'posts': posts
-    }
-    if p.host:
-        for filename in os.listdir("templates/App/graphs"):
-            for p in all_players:
-                if p.name in filename:
-                    try:
-                        os.remove(os.path.join("templates/App/graphs", filename))
-                    except:
-                        print("Error in removing files. File does not exist.")
-        g.delete()
-    else:
+    try:
+        p = Player.objects.filter(name=p)[0]
+        all_players = Player.objects.filter(game=g)
+        context = {
+            'posts': Post.objects.all()
+            #'posts': posts
+        }
+        if p.host:
+            for filename in os.listdir("templates/App/graphs"):
+                for p in all_players:
+                    if p.name in filename:
+                        try:
+                            os.remove(os.path.join("templates/App/graphs", filename))
+                        except:
+                            print("Error in removing files. File does not exist.")
+            g.delete()
+        else:
 
-        messages.warning(request, f'Must be host in order to delete!')
-        return render(request, 'App/home.html', context)
+            messages.warning(request, f'Must be host in order to delete!')
+            return render(request, 'App/home.html', context)
+    except:
+        g.delete()
     messages.success(request, f'Deletion of game was successfull!')
     return render(request, 'App/home.html', context)
 
