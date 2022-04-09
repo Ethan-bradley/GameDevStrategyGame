@@ -468,7 +468,7 @@ class Country():
       self.Innovators = sum(self.pop_matrix[len(self.pop_matrix) - 1][20:self.retirement_age]) #self.Innovators_Percentage*self.Population
       
       #Resentment
-      temp_inflation = max(self.Inflation,0)
+      temp_inflation = abs(max(self.Inflation,0))
       if len(self.ConsumptionArr) >= 1:
         consumption_change =  (self.goods[0]/self.Population - self.ConsumptionArr[len(self.ConsumptionArr) - 1])/self.ConsumptionArr[len(self.ConsumptionArr) - 1] 
       else:
