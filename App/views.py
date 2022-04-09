@@ -1005,13 +1005,13 @@ def Politics(request, g, p):
 
 def delete(request, g, p):
     g = Game.objects.filter(name=g)[0]
-    try:
-        p = Player.objects.filter(name=p)[0]
-        all_players = Player.objects.filter(game=g)
-        context = {
+    context = {
             'posts': Post.objects.all()
             #'posts': posts
         }
+    try:
+        p = Player.objects.filter(name=p)[0]
+        all_players = Player.objects.filter(game=g)
         if p.host:
             for filename in os.listdir("templates/App/graphs"):
                 for p in all_players:
@@ -1036,7 +1036,7 @@ def projection(g, p, context, run=True):
         fig = px.line(y=arr,title=title)
         fig.update_xaxes(title="Year")
         fig.update_yaxes(title=title)
-        fig.add_vline(x=p.get_country().time - 17)
+        fig.add_vline(x=p.get_country().time - 18)
         fig.write_html("templates/App/graphs/"+p.name+title+".html")
     gtemp = g
     ptemp = p
