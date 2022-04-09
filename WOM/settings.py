@@ -114,14 +114,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 RQ_QUEUES = {
     'default': {
-        'HOST': 'redis://:pe28c349389b4faa0139bf18f7e543e72208bbb793e38db5359c43f55f3d3d96f@ec2-34-197-122-156.compute-1.amazonaws.com',
+        'HOST': urlparse(os.environ.get("REDIS_URL")),
         'PORT': 11719,
         'DB': 0,
         'PASSWORD': 'Jobs111!',
         'DEFAULT_TIMEOUT': 360,
     },
     'with-sentinel': {
-        'SENTINELS': [('redis://:pe28c349389b4faa0139bf18f7e543e72208bbb793e38db5359c43f55f3d3d96f@ec2-34-197-122-156.compute-1.amazonaws.com', 26736), ('redis://:pe28c349389b4faa0139bf18f7e543e72208bbb793e38db5359c43f55f3d3d96f@ec2-34-197-122-156.compute-1.amazonaws.com', 26737)],
+        'SENTINELS': [(urlparse(os.environ.get("REDIS_URL")), 26736), (urlparse(os.environ.get("REDIS_URL")), 26737)],
         'MASTER_NAME': 'redismaster',
         'DB': 0,
         'PASSWORD': 'secret',
@@ -131,11 +131,11 @@ RQ_QUEUES = {
         },
     },
     'high': {
-        'URL': os.getenv('REDISTOGO_URL', 'redis://:pe28c349389b4faa0139bf18f7e543e72208bbb793e38db5359c43f55f3d3d96f@ec2-34-197-122-156.compute-1.amazonaws.com:11719/0'), # If you're on Heroku
+        'URL': os.getenv('REDISTOGO_URL', urlparse(os.environ.get("REDIS_URL"))), # If you're on Heroku
         'DEFAULT_TIMEOUT': 500,
     },
     'low': {
-        'HOST': 'redis://:pe28c349389b4faa0139bf18f7e543e72208bbb793e38db5359c43f55f3d3d96f@ec2-34-197-122-156.compute-1.amazonaws.com',
+        'HOST': urlparse(os.environ.get("REDIS_URL")),
         'PORT': 11719,
         'DB': 0,
     }
