@@ -114,14 +114,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 RQ_QUEUES = {
     'default': {
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
         'PORT': 6379,
         'DB': 0,
         'PASSWORD': 'Jobs111!',
         'DEFAULT_TIMEOUT': 360,
     },
     'with-sentinel': {
-        'SENTINELS': [('localhost', 26736), ('localhost', 26737)],
+        'SENTINELS': [('127.0.0.1', 26736), ('127.0.0.1', 26737)],
         'MASTER_NAME': 'redismaster',
         'DB': 0,
         'PASSWORD': 'secret',
