@@ -14,9 +14,18 @@ class GameEngine():
 	def __init__(self, num_players, nameListInput):
 		self.nameList = nameListInput
 		self.EconEngines = []
-		for i in range(0,num_players):
-			self.EconEngines.append(Country())
-			self.EconEngines[i].run_turn(13)
+		temp = 0
+		if num_players > 7:
+			for i in range(0,num_players):
+				self.EconEngines.append(Country())
+			temp = num_players - 7
+			num_players2 = 7
+			for i in range(0,num_players2):
+				self.EconEngines[i].run_turn(13)
+		else:
+			for i in range(0,num_players):
+				self.EconEngines.append(Country())
+				self.EconEngines[i].run_turn(13)
 		self.TradeEngine = Trade(self.EconEngines,self.nameList)
 		self.ArmyCombat = ArmyCombat()
 		self.var_list = ['Welfare','Education','Military','Infrastructure','Science']
@@ -28,6 +37,10 @@ class GameEngine():
 		self.SanctionsArr = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
 		self.ForeignAid = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
 		self.MilitaryAid = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
+	def run_more_countries(self, num_players):
+		if num_players > 5:
+			for i in range(7,num_players):
+				self.EconEngines[i].run_turn(13)
 	def run_start_trade(self, g, turn_num=7):
 		for i in range(0,turn_num-1):
 			self.run_engine(g, False)
@@ -76,12 +89,12 @@ class GameEngine():
 			country = self.get_country(index)
 			self.apply_hex_number(g, p, country)
 		if graphs:
-			self.create_graphs(g, all_players)
+			#self.create_graphs(g, all_players)
 			self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 		return [self.EconEngines, self.TradeEngine]
 	def run_graphs(self, g):
 		all_players = Player.objects.filter(game=g)
-		self.create_graphs(g, all_players)
+		#self.create_graphs(g, all_players)
 		self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 	def get_country(self, index):
 		return self.EconEngines[index]
@@ -235,7 +248,8 @@ class GameEngine():
 			if country.Resentment > 0.05:
 				self.rebel(g, p, country.Resentment)
 			#Tarriffs
-			tar = Tariff.objects.filter(game=g, curr_player=p)[0]
+			#import pdb; pdb.set_trace()
+			tar = Tariff.objects.filter(game=g, curr_player=all_players[index])[0]
 			k = IndTariff.objects.filter(controller=tar)
 
 			count = 0
@@ -257,7 +271,7 @@ class GameEngine():
 			#Append variables
 			self.append_variable_list(self.var_list, self.variable_list, index, p)
 			#Product subsidies/restrictions
-			productP = PlayerProduct.objects.filter(game=g, curr_player=p)[0]
+			productP = PlayerProduct.objects.filter(game=g, curr_player=all_players[index])[0]
 			products = Product.objects.filter(controller=productP)
 			for product in products:
 				if product.name in country.HouseProducts:

@@ -83,9 +83,9 @@ def add_players(temp, type):
 	    temp.save()
 	    #Remove this if game isn't 2 player
 	    #temp.GameEngine.start_capital(temp)
-	if type:
-		temp.GameEngine.start_capital(temp)
-		temp.save()
+	#if type:
+	#temp.GameEngine.start_capital(temp)
+	#temp.save()
 def add_neutral(temp):
     form = JoinGameForm()
     f = form.save(commit=False)
@@ -108,9 +108,10 @@ def add_neutral(temp):
     #Adds control to related hexes
     hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
     for i in hex_list:
-        i.controller = curr_player
-        Army.objects.create(game=temp, size=1000, controller=curr_player, naval=False, location=i, name=i.name+" Army", moved=False, max_movement=2)
-        i.save()
+    	if i.water == False:
+	        i.controller = curr_player
+	        Army.objects.create(game=temp, size=1000, controller=curr_player, naval=False, location=i, name=i.name+" Army", moved=False, max_movement=2)
+	        i.save()
     #Creates Tariff object associated with player and game.
     formt = AddTariffForm()
     formt = formt.save(commit=False)

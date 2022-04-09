@@ -912,21 +912,6 @@ class Country():
     plt.clf()
 
     a = []
-    plt.title('GoodsPerCapita')
-    plt.plot(self.GoodsPerCapita[17:])
-    plt.ylabel('Goods')
-    plt.xlabel('Years')
-    plt.savefig(file_path+player_name+'GoodsPerCapita')
-    a.append(file_path+player_name+'GoodsPerCapita')
-    plt.clf()
-
-    plt.title('Inflation')
-    plt.plot(self.InflationTracker[17:])
-    plt.ylabel('Inflation')
-    plt.xlabel('Years')
-    plt.savefig(file_path+player_name+'Inflation')
-    a.append(file_path+player_name+'Inflation')
-    plt.clf()
 
     plt.title('Real GDP Growth')
     plt.plot(self.RealGDPGrowth[17:])
@@ -934,14 +919,6 @@ class Country():
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'RealGDPGrowth')
     a.append(file_path+player_name+'RealGDPGrowth')
-    plt.clf()
-
-    plt.title('Employment')
-    plt.plot(self.EmploymentRate[17:])
-    plt.ylabel('Employment')
-    plt.xlabel('Years')
-    plt.savefig(file_path+player_name+'Employment')
-    a.append(file_path+player_name+'Employment')
     plt.clf()
 
     labels = ['Welfare','Education','Military']
@@ -967,14 +944,6 @@ class Country():
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'GDPPerCapita')
     a.append(file_path+player_name+'GDPPerCapita')
-    plt.clf()
-
-    plt.title('Interest Rate')
-    plt.plot(self.InterestRate[17:])
-    plt.ylabel('Interest Rate')
-    plt.xlabel('Years')
-    plt.savefig(file_path+player_name+'InterestRate')
-    a.append(file_path+player_name+'InterestRate')
     plt.clf()
 
     plt.title('Capital')

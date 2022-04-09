@@ -55,7 +55,6 @@ def lobby(request):
 
 @login_required
 def new_game(request):
-    q = Queue(connection=conn)
     if request.method == 'POST':
         form = NewGameForm(request.POST)
         player_form = JoinGameForm(request.POST)
@@ -73,6 +72,9 @@ def new_game(request):
                 #f.GameEngine = GameEngine(15, ['UK','Germany','France','Spain','Italy','Poland','Sweden','Egypt','Algeria','Turkey','Ukraine','Russia','Iran','Saudi Arabia','Neutral'])
                 f.board_size = 14
             f.curr_num_players = 1
+            if f.num_players > 5 or f.num_players == -1:
+                #job = q.enqueue(create_countries, 'http://heroku.com', on_success=organize_countries)
+                f.GameEngine = GameEngine(15,['UK', 'Germany', 'France', 'Spain', 'Italy', 'Poland', 'Sweden', 'Egypt','Algeria', 'Turkey', 'Ukraine', 'Russia', 'Iran', 'Saudi Arabia', 'Neutral'])
             f.save()
             #Saves game name in temporary variable
             g = f.name
@@ -80,14 +82,6 @@ def new_game(request):
             for k in gameList:
                 if str(k.name) == g:
                     temp = k
-            def create_countries():
-                return GameEngine(15,['UK', 'Germany', 'France', 'Spain', 'Italy', 'Poland', 'Sweden', 'Egypt','Algeria', 'Turkey', 'Ukraine', 'Russia', 'Iran', 'Saudi Arabia', 'Neutral'])
-            def organize_countries(job, connection, result, *args, **kwargs):
-                temp.GameEngine = result
-                temp.GameEngine.start_capital(temp)
-                temp.GameEngine.run_start_trade(temp)
-            if f.num_players > 5 or f.num_players == -1:
-                job = q.enqueue(create_countries, 'http://heroku.com', on_success=organize_countries)
             #Creates a player associated with this user and game and makes them the host.
             pf.host = True
             pf.user = request.user
@@ -153,9 +147,10 @@ def new_game(request):
                 add_players(temp, True)
             elif temp.num_players == -1:
                 add_players(temp, False)
-            else:
-                add_neutral(temp)
-            if temp.num_players == temp.curr_num_players:
+                #add_neutral(temp)
+            #else:
+            add_neutral(temp)
+            if temp.num_players == temp.curr_num_players and temp.num_players < 5 and temp.num_players != -1:
                 temp.GameEngine.start_capital(temp)
                 temp.GameEngine.run_start_trade(temp)
             messages.success(request, f'New Game created!')
@@ -172,6 +167,26 @@ def new_game(request):
         'player_form': player_form
     }
     return render(request, 'App/new_game.html', context)
+
+@login_required
+def runNext(request, g):
+    temp = Game.objects.filter(name=g)[0]
+    temp.GameEngine.run_more_countries(15)
+    temp.GameEngine.start_capital(temp)
+    #temp.GameEngine.run_start_trade(temp)
+    temp.save()
+
+@login_required
+def runNext2(request, g):
+    temp = Game.objects.filter(name=g)[0]
+    temp.GameEngine.run_start_trade(temp)
+    temp.save()
+
+@login_required
+def runNext3(request, g):
+    temp = Game.objects.filter(name=g)[0]
+    temp.GameEngine.run_start_trade(temp)
+    temp.save()
 
 @login_required
 def joinGame(request, g):
@@ -692,6 +707,16 @@ def graph(request, g, p):
             return redirect('app-graph', gtemp, ptemp)
     else:
         mi = GraphInterfaceForm(instance=t)
+
+    def create_single_graph(country,start, var):
+        data = getattr(country, var)[start:]
+        labels = [i for i in range(0,len(data))]
+        return data, labels
+    capital, labels = create_single_graph(p.get_country(),17, 'CapitalArr')
+    GoodsProduction, labels = create_single_graph(p.get_country(),17,'GoodsTotal')
+    GDP, labels = create_single_graph(p.get_country(),17,'GDP')
+    growth, labels = create_single_graph(p.get_country(),17,'RealGDPGrowth')
+    print(labels)
     time = p.get_country().time - 18
     other = time - 2
     context = {
@@ -714,7 +739,12 @@ def graph(request, g, p):
         'jobGraph':'App/graphs/'+p.name+'jobs.html',
         'pricesGraph':'App/graphs/'+p.name+'prices.html',
         'notifications': Notification.objects.filter(game=g, year__gt=other)[::-1],
-        'GraphInterface': mi
+        'GraphInterface': mi,
+        'capital':capital,
+        'labels':labels,
+        'GoodsProduction':GoodsProduction,
+        'GDP':GDP,
+        'growth':growth
     }
     gamegraph(gtemp, ptemp, context, t, g)
     return render(request, 'App/graphs.html', context)
