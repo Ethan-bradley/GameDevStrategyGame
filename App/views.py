@@ -179,7 +179,8 @@ def runNext(request, g):
 @login_required
 def runNext2(request, g):
     temp = Game.objects.filter(name=g)[0]
-    temp.GameEngine.run_start_trade(temp, 2)
+    #temp.GameEngine.run_start_trade(temp, 1)
+    temp.GameEngine.run_start_trade(temp, 4)
     temp.save()
 
 @login_required
@@ -750,11 +751,15 @@ def graph(request, g, p):
     return render(request, 'App/graphs.html', context)
 
 def gamegraph(g, p, context, graphmode, game):
-    def create_compare_graph(attribute,title,trade,countries,start, game=None, econattr=True):
+    def create_compare_graph(attribute,title,trade,countries,start,  graph_dict={}, game=None, econattr=True):
         data = {'Country': [],
         title: [],
         'Year':[]
         }
+        graph_dict['data'].append([])
+        graph_dict['colors'].append([])
+        graph_dict['line_titles'].append([])
+        last_index = len(graph_dict['data']) - 1
         for j in range(0, len(trade.exchangeRateArr)):
             if hasattr(countries[j], attribute) and isinstance(getattr(countries[j], attribute), list):
                 arr = getattr(countries[j], attribute)[start:]
@@ -766,25 +771,44 @@ def gamegraph(g, p, context, graphmode, game):
             data[title] += arr
             data['Year'] += [i for i in range(0,len(arr))]
             data['Country'] += [trade.CountryName[j] for i in range(0,len(arr))]
-        fig = px.line(data,x='Year', y=title,title=title, color="Country")
-        fig.update_xaxes(title="Year")
-        fig.update_yaxes(title=title)
+            graph_dict['data'][last_index].append(arr)
+        graph_dict['line_titles'][last_index] = [trade.CountryName[i] for i in range(0,len(trade.CountryName))]
+        graph_dict['colors'][last_index] = ['rgb('+str(color1)+','+str(color1*50 % 255)+','+str(255 - color1)+')' for color1 in range(0,255,int(255/len(countries)))]
         if econattr:
-            fig.write_html("templates/App/"+title+".html")
+            #fig = px.line(data,x='Year', y=title,title=title, color="Country")
+            #fig.update_xaxes(title="Year")
+            #fig.update_yaxes(title=title)
+            graph_dict['title'].append(title)
         else:
-            fig.write_html("templates/App/budget2.html")
+            graph_dict['title'].append(attribute)
+        #if econattr:
+        #fig.write_html("templates/App/"+title+".html")
+    graph_dict = {
+    'title':[],
+    'data':[],
+    'colors':[],
+    'line_titles':[]
+    }
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
-    create_compare_graph("ScienceArr", "Science", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
-    create_compare_graph("UnemploymentArr", "Unemployment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
-    create_compare_graph("EducationArr2", "Education", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
-    create_compare_graph("InfrastructureArr", "Infrastructure", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
-    create_compare_graph("PopulationArr", "Population", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
-    create_compare_graph("GDPPerCapita", "Real_GDP_Per_Capita_in_$US", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
-    create_compare_graph("CapitalArr", "Capital", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17)
-    create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17, game.GameEngine, False)
+    create_compare_graph("ScienceArr", "Science", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("UnemploymentArr", "Unemployment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("EducationArr2", "Education", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("InfrastructureArr", "Infrastructure", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("PopulationArr", "Population", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("GDPPerCapita", "Real_GDP_Per_Capita_in_$US", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("CapitalArr", "Capital", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("GoodsPerCapita", "GoodsPerCapita", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("InflationTracker", "Inflation", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("ResentmentArr", "Resentment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("EmploymentRate", "Employment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("GoodsBalance", "TradeBalance", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("InterestRate", "Interest_Rate", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("ConsumptionArr", "Consumption_Per_Capita", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict, game.GameEngine, False)
+    
     context.update({
         'GoodsPerCapita':g.GoodsPerCapita,
         'Inflation':g.Inflation,
@@ -796,7 +820,9 @@ def gamegraph(g, p, context, graphmode, game):
         'game':gtemp,
         'player':ptemp,
         'notifications': Notification.objects.filter(game=g, year__gt=p.get_country().time - 23)[::-1],
-        'budgetGraph': 'templates/App/budget2.html'
+        'budgetGraph': 'templates/App/budget2.html',
+        'graphs': graph_dict['title'],
+        'graph_dict': graph_dict,
     })
     
     #return render(request, 'App/gamegraphs.html', context)

@@ -12,6 +12,8 @@ import warnings
 
 #RUN THIS CELL to start
 
+#RUN THIS CELL to start
+
 class Country():
 
   def __init__(self):
@@ -35,6 +37,7 @@ class Country():
     self.Corporate_SavingsArr = []
     self.PercentNPL = []
     self.GoodsBalance = []
+    self.Finance = []
     self.InfrastructureArray = []
     self.ConsumptionArr = []
     self.PhillipsArr = [0,0,0,0,0];
@@ -48,8 +51,6 @@ class Country():
     self.EducationArr = []
     self.MilitaryArr = []
     self.ScienceBudgetArr = []
-    self.pos_interest_payments = []
-    self.neg_interest_payments = []
     #Tracking Variables
     self.Unemployment = 0
     self.Bonds = 0
@@ -66,6 +67,7 @@ class Country():
     self.HouseProducts = ['Food','Consumer Goods']
     self.HouseDemand = [0.1,0.9]
     self.HouseProduction = [0.1,0.9]
+    self.HouseGoods = [[],[]]
     self.HouseLabor = [0.1,0.9]
     self.HousePrices = [0,0]
     self.HouseCapital = [10,10]
@@ -126,6 +128,8 @@ class Country():
     
     #Money Printing
     self.MoneyPrinting = 100
+    self.ReserveRatio = 0
+    self.ExtraReserve = 0
 
     #Population Related vars
     self.Population = 25474
@@ -164,6 +168,7 @@ class Country():
     self.Education = 9
     self.EducationSpend = 0.99
     self.run_first()
+    self.real_interest_rate = 0.02
 
     #Centers and hexes
     self.centers = [10,20,40]
@@ -182,7 +187,7 @@ class Country():
     self.Infrastructure_Real = 0
 
     #Science related
-    self.scienceDivisor = 100
+    self.scienceDivisor = 50
     self.ScienceEff = 0.004
 
     #ScienceArrays
@@ -197,6 +202,9 @@ class Country():
 
     #Runs demography
     self.setup_demography()
+
+    self.pos_interest_payments = []
+    self.neg_interest_payments = []
 
     #Variables, var_list is the name of array, variable_list is variable name.
     #They should be the same.
@@ -213,6 +221,7 @@ class Country():
         getattr(self,var_list[i]).append(getattr(self, variable_list[i][0:len(variable_list[i])-2])[int(variable_list[i][len(variable_list[i])-2])])
       else:
         getattr(self,var_list[i]).append(getattr(self, variable_list[i]))
+
   def run_first(self):
     #Stats:
     #GDP
@@ -229,6 +238,7 @@ class Country():
     #ConsumerPrice = money[2]/goods[2] + money[3]/goods[1]
     self.lastConsumerPrice = self.ConsumerPrice
     self.ConsumerPrice = self.money[2]/self.goods[0] + self.money[3]/((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.goods[1])
+    #self.ConsumerPrice = (self.money[2]/self.goods[0])*(self.money[2]/self.money[8]) + ((self.money[3])/self.goods[1])*(self.money[3]/self.money[8]) + ((self.money[5]*self.GovGoods)/self.goods[2])*((self.money[5]*self.GovGoods)/self.money[8])
     self.Inflation = (self.ConsumerPrice/self.lastConsumerPrice - 1)*100
     print('Inflation: '+str(self.Inflation))
     
@@ -274,19 +284,24 @@ class Country():
 
   def run_turn(self, num):
     for i in range(0,num):
+      #import ipdb
+      #ipdb.set_trace()
+      if len(self.Finance) >= 27:
+        pass
       self.TariffRevenue = 0
       self.TransportRevenue = 0
       self.lastcapital = self.capital
       self.lastPopulation = self.Population
+      #self.Finance.append(self.money[1])
       #Values matrix
       self.transG1 = np.zeros((5,5))
       #Transformation Matrix
       #self.GovernmentInvest
       self.ConsumptionRate = 1 - self.SavingsRate - self.IncomeTax
       self.trans1 = np.array([[0,self.PersonalWithdrawls,0,0,self.Wages,self.GovWelfare,0,0,0,0],
-                        [self.SavingsRate,0,0,0,1-self.Wages-self.CorporateTax-self.InvestmentRate+(self.interest/self.money[4]),0,0,0,0,1],
+                        [self.SavingsRate, self.ReserveRatio+self.ExtraReserve, 0,0,1-self.Wages-self.CorporateTax-self.InvestmentRate+(self.interest/self.money[4]),0,0,0,0,1],
                         [self.ConsumptionRate,1 - self.CorporateDebtRate,0,0,0,0,0,0,0,0],
-                        [0,self.CorporateDebtRate,0,0,self.InvestmentRate,self.GovernmentInvest,0,0,0,0],
+                        [0,self.CorporateDebtRate - self.ReserveRatio+self.ExtraReserve,0,0,self.InvestmentRate,self.GovernmentInvest,0,0,0,0],
                         [0,self.CorporateWithdrawls,1,1,0,self.GovGoods,0,0,0,0],
                         [self.IncomeTax,self.Bonds,0,0,self.CorporateTax,0,0,0,0,0],
                         [0,0,0,0,0,0,0,0,0,0],
@@ -323,6 +338,15 @@ class Country():
       #Run each cycle, creates transformation matrix
       if self.money[1] < 0:
         self.money[1] = 5
+        self.recession(0.9)
+        #self.money[4] += self.money[1]
+        #self.money[1] = self.money[4]*0.3
+        #self.money[4] -= self.money[4]*0.3
+        #self.money[1] = self.money[4]*0.05
+        #self.ExtraReserve = 0.3
+      else:
+        pass
+        #self.ExtraReserve = self.ExtraReserve*0.8
       if self.money[3] < 0:
         self.money[3] = 5
       if self.money[4] < 0:
@@ -343,12 +367,14 @@ class Country():
       #ConsumerPrice = money[2]/goods[2] + money[3]/goods[1]
       self.lastConsumerPrice = self.ConsumerPrice
       self.ConsumerPrice = self.money[2]/self.goods[0] + self.money[3]/((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.goods[1])
+      #self.ConsumerPrice = (self.money[2]/self.goods[0])*(self.money[2]/self.money[8]) + ((self.money[3]*self.QuickInvestment)/self.goods[1])*(self.money[3]/self.money[8]) + ((self.money[5]*self.GovGoods)/self.goods[2])*((self.money[5]*self.GovGoods)/self.money[8])
       self.Inflation = (self.ConsumerPrice/self.lastConsumerPrice - 1)*100
       if self.Inflation < -50 and self.time < 20:
         self.Inflation = -50
       if self.Inflation > 100 and self.time < 20:
         self.Inflation = 100
       print('Inflation: '+str(self.Inflation))
+      self.pos_interest_payments.append(self.Government_Savings*self.interest_rate)
 
       #Savings
       self.Corporate_Savings += (1-self.Wages-self.CorporateTax-self.InvestmentRate+(self.interest/self.money[4]))*self.money[4]
@@ -359,7 +385,6 @@ class Country():
         else:
           self.Government_Savings += (1-self.GovWelfare-self.GovGoods-self.GovernmentInvest)*self.money[5]
       self.Government_Savings *= (1+self.interest_rate)
-      self.pos_interest_payments.append(self.Government_Savings*self.interest_rate)
       #Population adding:
       self.Population = self.pop_matrix.sum()#self.Population*self.Population_growth
       
@@ -429,7 +454,20 @@ class Country():
 
       #Interest Rates:
       self.investment_good_price = self.money[3]/self.goods[1]
-      self.interest_rate = (self.ScienceRate*0.3*pow(self.capital + (self.money[1] - self.BondWithdrawl)/self.investment_good_price, 0.3 - 1)*pow(self.Employable, 0.6))*1 + 0.02 #+ self.Inflation*0.01
+      self.real_interest_rate = (self.ScienceRate*0.3*pow(self.capital + (self.money[1] - self.BondWithdrawl)/self.investment_good_price, 0.3 - 1)*pow(self.Employable, 0.6))*1 + 0.02 #+ self.Inflation*0.01
+      if len(self.InflationTracker) > 10:
+        inflation_expectation = max(min(sum(self.InflationTracker[-8:])/8, 20), -1.5)
+        #avg_inflation = (sum(self.InflationTracker[-3:])/3)*0.01
+        inflation_expectation = inflation_expectation*0.01
+        if inflation_expectation < 0.5 and inflation_expectation > -0.1:
+          self.interest_rate = self.real_interest_rate + inflation_expectation
+        elif inflation_expectation <= -0.1:
+          self.interest_rate = self.real_interest_rate - 0.1
+        else:
+          self.interest_rate = self.real_interest_rate + 0.5
+      else:
+        self.interest_rate = self.real_interest_rate + 0.02
+      
       #-0.7*np.exp(((self.Population*self.ScienceRate - self.capital)*-1)/((self.money[1] - self.BondWithdrawl)/self.investment_good_price))+0.7
       self.interest = self.interest_rate*self.Corporate_Cummalative_Loans
       self.Corporate_Cummalative_Loans += (self.interest_rate*self.money[1]*self.CorporateDebtRate - self.interest)
@@ -439,14 +477,19 @@ class Country():
       print("Interest: "+str(self.interest))
       self.investment_good_price = self.money[3]/self.goods[1]
       self.Bonds *= (1 + self.interest_rate)
-      self.money[5] += self.BondWithdrawl
-      self.money[1] -= self.BondWithdrawl
+      if self.BondWithdrawl < 0.5*self.money[1]:
+        self.money[5] += self.BondWithdrawl
+        self.money[1] -= self.BondWithdrawl
+      else:
+        print("Country went bankrupt!")
+        self.money[5] += self.money[1]*0.5
+        self.money[1] = self.money[1]*0.5
       self.GovDebt *= (1 + self.interest_rate)
-      self.neg_interest_payments.append(self.GovDebt*self.interest_rate)
       if (self.Government_Savings + self.BondWithdrawl) < 1:
         self.GovDebt +=  self.BondWithdrawl
       else:
         self.Government_Savings -= self.BondWithdrawl
+      self.neg_interest_payments.append(self.GovDebt*self.interest_rate)
       #print("InterestRate2: "+str(-0.7*np.exp(((Population*ScienceRate - capital)*-1)/(money[1]/investment_good_price))+0.7))
       #Update Invest
       self.TotalInvest += self.money[3]
@@ -474,7 +517,7 @@ class Country():
       else:
         consumption_change = 0
       if (self.time > 12):
-         temp_resentment = pow(temp_inflation*0.01, 0.3)*pow(consumption_change + 1, -0.4)*pow(self.Unemployment, 0.3)*0.4
+         temp_resentment = pow(abs(temp_inflation)*0.01, 0.3)*pow(consumption_change + 1, -0.4)*pow(self.Unemployment, 0.3)*0.4
          self.Resentment = self.Resentment*0.8 + temp_resentment*0.2
       else:
         self.Resentment = 0
@@ -507,15 +550,16 @@ class Country():
       self.population_distribution = self.create_distribution([0 for i in range(0, len(self.centers))], self.centers, self.Population, self.hexNum)
 
       #Update Investment:
+      #ipdb.set_trace()
       #self.Applied = (-self.Practical*np.exp(-(4/(self.Innovators*0.1))*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[2]*self.ScienceEff)*self.goods[1])+self.Practical)
       #self.Practical = (-self.Theoretical*np.exp(-(4/(self.Researchers*0.1))*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[1]*self.ScienceEff)*self.goods[1])+self.Theoretical)
       #self.Theoretical = (-1*(self.time)*np.exp(-(4/(self.Geniuses+(self.time)))*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[0]*self.ScienceEff)*self.goods[1])+1*self.time)
-      self.Applied = self.ScienceEff*self.Practical*pow(self.Innovators,0.4)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[2]*self.goods[1]),0.6)
-      self.Practical = self.ScienceEff*self.Theoretical*pow(self.Researchers,0.6)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[1]*self.goods[1]),0.4)
-      self.Theoretical = self.ScienceEff*pow(self.time,0.4)*pow(self.Geniuses,0.6)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[0]*self.goods[1]),0.4)
-
+      
+      self.Applied = self.ScienceEff*self.Practical*pow(self.Innovators,0.4)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[2]*self.goods[1]),0.5)
+      self.Practical = self.ScienceEff*self.Theoretical*pow(self.Researchers,0.6)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[1]*self.goods[1]),0.3)
+      self.Theoretical = self.ScienceEff*pow(self.time,0.4)*pow(self.Geniuses,0.6)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[0]*self.goods[1]),0.3)
       lastScience = self.ScienceRate
-      self.ScienceRate += self.Applied/self.scienceDivisor
+      self.ScienceRate = 10 + self.Applied/self.scienceDivisor
 
       #Update Science:
       growth = (self.ScienceRate/lastScience) - 1
@@ -543,7 +587,7 @@ class Country():
       self.WelfareArr.append(self.money[5]*self.GovWelfare)
       self.EducationArr.append(self.money[5]*self.GovGoods*self.EducationSpend)
       self.MilitaryArr.append(self.money[5]*self.GovGoods*(1-self.EducationSpend))
-
+      self.Finance.append(self.money[1])
       #Stats Adding:
       self.append_variable_list(self.var_list, self.variable_list)
       self.GDPPerCapita.append(((self.money[8]*50)/self.ConsumerPrice)/self.pop_matrix.sum())
@@ -575,6 +619,10 @@ class Country():
       #Resets
       self.tradeBalance = 0
 
+  def recession(self, depth):
+    for i in range(0,5):
+      self.money[i] = self.money[i]*depth
+
   def update_science_array(self, percent_array, array, growth):
     for i in range(0,len(array)):
       array[i] *= (1 + growth*percent_array[i]*(len(self.HouseScience)+len(self.CapitalScience)+len(self.RawScience)))
@@ -604,7 +652,6 @@ class Country():
       self.CapitalCapital[j] += capitalChange*(self.CapitalDemand[j])*(self.money[3]*self.InvestmentDirection[4]/self.findMoneyTotal())
       labour = sum(self.pop_matrix[len(self.HouseDemand) + j][20:self.retirement_age])/self.pop_matrix.sum()
       capital_goods += self.production_function(self.CapitalDemand[j], self.CapitalCapital[j], self.CapitalScienceAm[j], labour, raw_goods[0]*raw_goods[2]*0.1*self.CapitalProduction[i]*0.01)
-    
     GovDemand = [0 for i in range(0, len(self.GovCapital))]
     GovDemand[0] = self.EducationSpend*self.GovGoods
     GovDemand[1] = self.MilitarySpend*self.GovGoods
@@ -740,6 +787,12 @@ class Country():
     plt.plot(self.GDP[5:])
     plt.title('GDP')
     plt.ylabel('GDP')
+    plt.show()
+
+    self.create_graph(self.var_list, 15)
+    plt.plot(self.Finance[5:])
+    plt.title('Finance')
+    plt.ylabel('Finance')
     plt.show()
 
     plt.plot(self.UnemploymentArr[20:])
@@ -903,7 +956,6 @@ class Country():
     return plt.savefig(file)
 
   def save_graphs(self, file_path, player_name):
-    warnings.filterwarnings("ignore")
     matplotlib.use('Agg')
     plt.title('GoodsPerCapita')
     plt.plot(self.GoodsPerCapita[17:])
@@ -912,6 +964,21 @@ class Country():
     plt.clf()
 
     a = []
+    plt.title('GoodsPerCapita')
+    plt.plot(self.GoodsPerCapita[17:])
+    plt.ylabel('Goods')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'GoodsPerCapita')
+    a.append(file_path+player_name+'GoodsPerCapita')
+    plt.clf()
+
+    plt.title('Inflation')
+    plt.plot(self.InflationTracker[17:])
+    plt.ylabel('Inflation')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'Inflation')
+    a.append(file_path+player_name+'Inflation')
+    plt.clf()
 
     plt.title('Real GDP Growth')
     plt.plot(self.RealGDPGrowth[17:])
@@ -919,6 +986,14 @@ class Country():
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'RealGDPGrowth')
     a.append(file_path+player_name+'RealGDPGrowth')
+    plt.clf()
+
+    plt.title('Employment')
+    plt.plot(self.EmploymentRate[17:])
+    plt.ylabel('Employment')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'Employment')
+    a.append(file_path+player_name+'Employment')
     plt.clf()
 
     labels = ['Welfare','Education','Military']
@@ -944,6 +1019,14 @@ class Country():
     plt.xlabel('Years')
     plt.savefig(file_path+player_name+'GDPPerCapita')
     a.append(file_path+player_name+'GDPPerCapita')
+    plt.clf()
+
+    plt.title('Interest Rate')
+    plt.plot(self.InterestRate[17:])
+    plt.ylabel('Interest Rate')
+    plt.xlabel('Years')
+    plt.savefig(file_path+player_name+'InterestRate')
+    a.append(file_path+player_name+'InterestRate')
     plt.clf()
 
     plt.title('Capital')
@@ -997,3 +1080,4 @@ class Country():
     multiplier = totalCapital
     finalCapital = [i*multiplier for i in a]
     return finalCapital
+  

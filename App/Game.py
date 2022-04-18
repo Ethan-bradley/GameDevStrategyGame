@@ -42,7 +42,8 @@ class GameEngine():
 			for i in range(7,num_players):
 				self.EconEngines[i].run_turn(13)
 	def run_start_trade(self, g, turn_num=7):
-		for i in range(0,turn_num-1):
+		self.run_engine(g)
+		for i in range(0,turn_num-2):
 			self.run_engine(g, False)
 		self.run_engine(g)
 	def start_capital(self, g):
@@ -56,7 +57,8 @@ class GameEngine():
 	def run_engine(self, g, graphs=True):
 		#Resetting model variables
 		all_players = Player.objects.filter(game=g)
-		self.set_vars(g, all_players)
+		if graphs:
+			self.set_vars(g, all_players)
 		if g.num_players > 1:
 			for p in all_players:
 				f = ResetTurn(instance=p)
@@ -89,8 +91,9 @@ class GameEngine():
 			country = self.get_country(index)
 			self.apply_hex_number(g, p, country)
 		if graphs:
+			pass
 			#self.create_graphs(g, all_players)
-			self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
+			#self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 		return [self.EconEngines, self.TradeEngine]
 	def run_graphs(self, g):
 		all_players = Player.objects.filter(game=g)

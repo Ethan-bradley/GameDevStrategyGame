@@ -7,7 +7,7 @@
       <h2 class="account-heading">Budget Graphs</h2>
 
       <legend class="border-bottom mb-4">{{ country }}</legend>
-          {% include 'App/budget2.html' %}
+           <canvas id={{ graphs.14 }}></canvas>
            <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
@@ -20,20 +20,12 @@
         </form>
           <h2 class="account-heading">Multiple Player Graphs</h2>
           <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
-            {% include 'App/Real_GDP_Per_Capita_in_$US.html' %}
-           <img class="thumbnail-img" src="{{ GoodsPerCapita.url }}">
-           <img class="thumbnail-img" src="{{ Inflation.url }}">
-           <img class="thumbnail-img" src="{{ Resentment.url }}">
-           <img class="thumbnail-img" src="{{ Employment.url }}">
-           <img class="thumbnail-img" src="{{ GoodsBalance.url }}">
-           <img class="thumbnail-img" src="{{ InterestRate.url }}">
-           <img class="thumbnail-img" src="{{ Consumption.url }}">
-           {% include 'App/Science.html' %}
-           {% include 'App/Unemployment.html' %}
-           {% include 'App/Education.html' %}
-           {% include 'App/Infrastructure.html' %}
-           {% include 'App/Population.html' %}
-           {% include 'App/Capital.html' %}
+
+          {% for name in graphs %}
+            
+          <canvas id={{ name }}></canvas>
+        
+          {% endfor %}
 
            <h2 class="account-heading">Graphs</h2>
         <div id="container" style="width: 75%;">
@@ -127,12 +119,61 @@ const data4 = {
   }]
 };
 
+
 var growth2 = {
   type: 'line',
   data: data4,
   options: {
-        responsive: true
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Real GDP Growth'
+            }
+        },
+      },
+};
+
+var graph_dict = {{graph_dict|safe}};
+var graph_array = [];
+var index = 0;
+for (const title of graph_dict['title']) {
+  var dataset = [];
+  for (var i=0; i < graph_dict['line_titles'][index].length; i++) {
+    const temp = {
+      label: graph_dict['line_titles'][index][i],
+      data: graph_dict['data'][index][i],
+      fill: false,
+      borderColor: graph_dict['colors'][index][i],
+      tension: 0.1
+    };
+    dataset.push(temp);
+  };
+  var data5 = {
+  labels: {{ labels|safe }},
+  datasets: dataset
+  };
+  var graph = {
+  type: 'line',
+  data: data5,
+  options: {
+        responsive: true,
+        title: {
+            display: true,
+            text: title
+        },
+        legend: {
+                display: true,
+                position:'right',
+                labels: {
+                  boxWidth: 10,
+                }
+        },
+        
       }
+  };
+  graph_array.push(graph);
+  index += 1;
 };
 
 window.onload = function() {
@@ -142,6 +183,12 @@ window.onload = function() {
       window.gdp = new Chart(ctx, gdp_graph);
       var ctx = document.getElementById('growth-chart').getContext('2d');
       window.growth = new Chart(ctx, growth2);
+      var index = 0;
+      for (const graph of graph_array) {
+        var ctx = document.getElementById(graph_dict['title'][index]).getContext('2d');
+        window.goods = new Chart(ctx, graph);
+        index += 1;
+      };
     };
 
 </script>

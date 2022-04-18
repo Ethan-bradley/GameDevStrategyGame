@@ -67,7 +67,7 @@ class Trade():
     total_gdp = 0
     global_price = 0
     for i in range(0,len(Country)):
-      equil_rate += Country[i].interest_rate*Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
+      equil_rate += Country[i].real_interest_rate*Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
       total_gdp += Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
       global_price += Country[i].ConsumerPrice*Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
     equil_rate = equil_rate / total_gdp
@@ -81,7 +81,7 @@ class Trade():
       #print("balance money", t)
       if (Country[i].money[1] < 0):
         Country[i].money[1] = 10
-      savings_money_flow = 0.166*t - 8.333*(Country[i].interest_rate - equil_rate)+np.exp(-Country[i].money[1]*0.5)
+      savings_money_flow = 0.166*t - 8.333*(Country[i].real_interest_rate - equil_rate)+np.exp(-Country[i].money[1]*0.5)
       #print("savings money", savings_money_flow)
       new_rate = np.exp(-0.02*(savings_money_flow - t))
       if abs(self.exchangeRates[i] - new_rate) < 7:
