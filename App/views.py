@@ -699,7 +699,7 @@ def graph(request, g, p):
         fig.write_html("templates/App/graphs/"+p.name+"prices.html")
     create_wage_graph(p.get_country(),p)
     create_job_graph(p.get_country(),p)
-    create_prices_graph(p.get_country(), p)
+    #create_prices_graph(p.get_country(), p)
     t = GraphInterface.objects.filter(game=g,controller=p)[0]
     if request.method == 'POST':
         mi2 = GraphInterfaceForm(request.POST, instance=t)
