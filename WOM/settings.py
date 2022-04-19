@@ -114,35 +114,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-RQ_QUEUES = {
-    'default': {
-        'HOST': urlparse(os.environ.get("REDIS_URL")),
-        'PORT': 11719,
-        'DB': 0,
-        'PASSWORD': 'Jobs111!',
-        'DEFAULT_TIMEOUT': 360,
-    },
-    'with-sentinel': {
-        'SENTINELS': [(urlparse(os.environ.get("REDIS_URL")), 26736), (urlparse(os.environ.get("REDIS_URL")), 26737)],
-        'MASTER_NAME': 'redismaster',
-        'DB': 0,
-        'PASSWORD': 'secret',
-        'SOCKET_TIMEOUT': None,
-        'CONNECTION_KWARGS': {
-            'socket_connect_timeout': 0.3
-        },
-    },
-    'high': {
-        'URL': os.getenv('REDISTOGO_URL', urlparse(os.environ.get("REDIS_URL"))), # If you're on Heroku
-        'DEFAULT_TIMEOUT': 500,
-    },
-    'low': {
-        'HOST': urlparse(os.environ.get("REDIS_URL")),
-        'PORT': 11719,
-        'DB': 0,
-    }
-}
-
 #RQ_EXCEPTION_HANDLERS = ['path.to.my.handler'] # If you need custom exception handlers
 
 
