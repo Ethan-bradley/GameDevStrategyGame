@@ -15,6 +15,7 @@ from .HexList2 import HexList2
 from .PolicyList import PolicyList
 from django.db.models.fields import *
 from django.db.models import Q
+import django
 import plotly.graph_objects as go
 import plotly.express as px
 import os
@@ -22,8 +23,9 @@ import copy
 from .budgetgraph import budget_graph
 from .helper import add_players, add_neutral
 #import django_rq
-from rq import Queue
-from worker import conn
+#from rq import Queue
+#from worker import conn
+import tracemalloc
 
 def home(request):
 	#import pdb; pdb.set_trace()
@@ -55,6 +57,7 @@ def lobby(request):
 
 @login_required
 def new_game(request):
+    #tracemalloc.start()
     if request.method == 'POST':
         form = NewGameForm(request.POST)
         player_form = JoinGameForm(request.POST)
@@ -166,6 +169,7 @@ def new_game(request):
         'form': form,
         'player_form': player_form
     }
+    django.db.reset_queries()
     return render(request, 'App/new_game.html', context)
 
 @login_required
@@ -316,6 +320,7 @@ def joinGame(request, g):
     return render(request, 'App/Game.html', context)"""
 @login_required
 def game(request, g, player):
+    django.db.reset_queries()
     neutral_player2 = Player.objects.filter(name="Neutral")[0]
     neutral_player2.ready = True
     neutral_player2.save()
@@ -451,10 +456,11 @@ def game(request, g, player):
 #loads the army map
 @login_required
 def map(request, g, p, l, lprev):
+    django.db.reset_queries()
     #Col used for storing the map colors in a 2d array
     col = []
     #one side of 2d side
-    
+    django.db.reset_queries()
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
@@ -676,6 +682,7 @@ def create_map(hex_list):
     return message
 
 def graph(request, g, p):
+    django.db.reset_queries()
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
@@ -748,6 +755,7 @@ def graph(request, g, p):
         'growth':growth
     }
     gamegraph(gtemp, ptemp, context, t, g)
+    #django.db.reset_queries()
     return render(request, 'App/graphs.html', context)
 
 def gamegraph(g, p, context, graphmode, game):
@@ -824,10 +832,10 @@ def gamegraph(g, p, context, graphmode, game):
         'graphs': graph_dict['title'],
         'graph_dict': graph_dict,
     })
-    
     #return render(request, 'App/gamegraphs.html', context)
 
 def trade(request, g, p):
+    #django.db.reset_queries()
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
@@ -936,6 +944,7 @@ def trade(request, g, p):
         'tariff_titles':tariff_titles,
         'titles':titles,
     }
+    #django.db.reset_queries()
     return render(request, 'App/tradegraphs.html', context)
     #return render(request, 'App/trade.html')
 
@@ -1031,6 +1040,12 @@ def Politics(request, g, p):
 
 def delete(request, g, p):
     g = Game.objects.filter(name=g)[0]
+
+    #snapshot = tracemalloc.take_snapshot()
+    #top_stats = snapshot.statistics("lineno")
+
+    #for stat in top_stats[:10]:
+    #print(stat)
     context = {
             'posts': Post.objects.all()
             #'posts': posts

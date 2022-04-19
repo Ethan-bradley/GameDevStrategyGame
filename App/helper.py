@@ -106,12 +106,12 @@ def add_neutral(temp):
     p2 = PolicyList()
     p2.add_policies(curr_player, temp)
     #Adds control to related hexes
-    hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
+    """hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
     for i in hex_list:
     	if i.water == False:
 	        i.controller = curr_player
 	        Army.objects.create(game=temp, size=1000, controller=curr_player, naval=False, location=i, name=i.name+" Army", moved=False, max_movement=2)
-	        i.save()
+	        i.save()"""
     #Creates Tariff object associated with player and game.
     formt = AddTariffForm()
     formt = formt.save(commit=False)
