@@ -12,5 +12,3 @@ boto3
 plotly
 statistics
 pandas
-rq
-django_rq

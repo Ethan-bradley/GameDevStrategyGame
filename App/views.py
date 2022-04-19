@@ -146,6 +146,7 @@ def new_game(request):
             #game_name = form.cleaned_data.get('game_name')
             #Uncomment for single-player games
             #temp.GameEngine.start_capital(temp)
+
             if temp.num_players == 1:
                 add_players(temp, True)
             elif temp.num_players == -1:
@@ -153,9 +154,11 @@ def new_game(request):
                 #add_neutral(temp)
             #else:
             add_neutral(temp)
+            #import pdb; pdb.set_trace();
             if temp.num_players == temp.curr_num_players and temp.num_players < 5 and temp.num_players != -1:
                 temp.GameEngine.start_capital(temp)
                 temp.GameEngine.run_start_trade(temp)
+                temp.save()
             messages.success(request, f'New Game created!')
             return redirect('app-game', g=temp.name, player=curr_player.name)
         else:

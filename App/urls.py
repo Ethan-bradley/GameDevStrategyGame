@@ -3,7 +3,6 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 from users import views as user_views
-from django.conf.urls import include
 
 urlpatterns = [
     path('', views.home, name='app-home'),
@@ -30,9 +29,6 @@ urlpatterns = [
 ] + static(settings.STATIC_URL,document_root = settings.STATIC_ROOT)
 
 # For Django >= 2.0
-urlpatterns += [
-    path('django-rq/', include('django_rq.urls'))
-]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
