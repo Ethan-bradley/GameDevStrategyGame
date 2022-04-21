@@ -24,7 +24,7 @@ def collection3(fig, collection, total, labels, net,color):
     add_trace(fig, sum, net,'green',labels[i], (80*(i)) % 160, 255, (80*(i)) % 160,-1)
 
 
-def budget_graph(country, start, file):
+def budget_graph(country, start, file, add_line=False):
   
   Corporate_Tax = country.CorporateTaxArr[start:]
   #print(Corporate_Tax)
@@ -53,5 +53,6 @@ def budget_graph(country, start, file):
 
   collection3(fig, expense, expenses, ['Welfare', 'Infrastructure', 'Science', 'Military', 'Education','Debt Interest'], net, 255)
   fig.update_layout(legend_traceorder="normal")
-
+  if add_line:
+    fig.add_vline(x=country.time - 23)
   fig.write_html(file)

@@ -14,18 +14,17 @@ from .HexList import HexList
 from .HexList2 import HexList2
 from .PolicyList import PolicyList
 from django.db.models.fields import *
-from django.db.models import Q
-import django
+#from django.db.models import Q
+#import django
 import plotly.graph_objects as go
 import plotly.express as px
-import os
-import copy
 from .budgetgraph import budget_graph
 from .helper import add_players, add_neutral
+from django.db import reset_queries
 #import django_rq
 #from rq import Queue
 #from worker import conn
-import tracemalloc
+#import tracemalloc
 
 def home(request):
 	#import pdb; pdb.set_trace()
@@ -172,7 +171,7 @@ def new_game(request):
         'form': form,
         'player_form': player_form
     }
-    django.db.reset_queries()
+    reset_queries()
     return render(request, 'App/new_game.html', context)
 
 @login_required
@@ -202,7 +201,7 @@ def joinGame(request, g):
     for k in gameList:
         if str(k) == g:
             temp = k
-    p = Player.objects.filter(user=request.user, game=temp, robot=False)
+    p = Player.objects.filter(user=request.user, game=temp)
     if len(p) > 0:
         if temp.num_players == 1: 
             return redirect('app-game', g=temp.name, player=temp.name)
@@ -323,7 +322,7 @@ def joinGame(request, g):
     return render(request, 'App/Game.html', context)"""
 @login_required
 def game(request, g, player):
-    django.db.reset_queries()
+    reset_queries()
     neutral_player2 = Player.objects.filter(name="Neutral")[0]
     neutral_player2.ready = True
     neutral_player2.save()
@@ -429,6 +428,7 @@ def game(request, g, player):
         projection(gtemp, ptemp, context, False)
     govDebt = round(player.get_country().Government_SavingsArr[player.get_country().time - 1] - player.get_country().GovDebtArr[
         player.get_country().time - 1], 2)
+    
     context.update({
         'country': player.country,
         'indForms': IFS,
@@ -459,11 +459,10 @@ def game(request, g, player):
 #loads the army map
 @login_required
 def map(request, g, p, l, lprev):
-    django.db.reset_queries()
+    reset_queries()
     #Col used for storing the map colors in a 2d array
     col = []
     #one side of 2d side
-    django.db.reset_queries()
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
@@ -685,13 +684,13 @@ def create_map(hex_list):
     return message
 
 def graph(request, g, p):
-    django.db.reset_queries()
+    reset_queries()
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
-    if not os.path.exists('.'+g.GoodsPerCapita.url):
-        g.GameEngine.run_graphs(g)
+    #if not os.path.exists('.'+g.GoodsPerCapita.url):
+    #g.GameEngine.run_graphs(g)
     def create_wage_graph(country,p):
         fig = px.bar(x=country.HouseProducts + country.CapitalGoods + country.RawGoods + ['Education','Military','Researchers','Entrepreneurs'],y=country.create_wage_array(),title="Wages")
         fig.update_xaxes(title="Jobs")
@@ -718,7 +717,6 @@ def graph(request, g, p):
             return redirect('app-graph', gtemp, ptemp)
     else:
         mi = GraphInterfaceForm(instance=t)
-
     def create_single_graph(country,start, var):
         data = getattr(country, var)[start:]
         labels = [i for i in range(0,len(data))]
@@ -758,7 +756,7 @@ def graph(request, g, p):
         'growth':growth
     }
     gamegraph(gtemp, ptemp, context, t, g)
-    #django.db.reset_queries()
+    reset_queries()
     return render(request, 'App/graphs.html', context)
 
 def gamegraph(g, p, context, graphmode, game):
@@ -838,7 +836,7 @@ def gamegraph(g, p, context, graphmode, game):
     #return render(request, 'App/gamegraphs.html', context)
 
 def trade(request, g, p):
-    #django.db.reset_queries()
+    reset_queries()
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
@@ -947,7 +945,7 @@ def trade(request, g, p):
         'tariff_titles':tariff_titles,
         'titles':titles,
     }
-    #django.db.reset_queries()
+    reset_queries()
     return render(request, 'App/tradegraphs.html', context)
     #return render(request, 'App/trade.html')
 
@@ -1042,13 +1040,14 @@ def Politics(request, g, p):
     return render(request, 'App/policies.html', context)
 
 def delete(request, g, p):
+    import os
     g = Game.objects.filter(name=g)[0]
 
-    #snapshot = tracemalloc.take_snapshot()
-    #top_stats = snapshot.statistics("lineno")
+    """snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.statistics("lineno")
 
-    #for stat in top_stats[:10]:
-    #print(stat)
+    for stat in top_stats[:10]:
+        print(stat)"""
     context = {
             'posts': Post.objects.all()
             #'posts': posts
@@ -1075,6 +1074,7 @@ def delete(request, g, p):
     return render(request, 'App/home.html', context)
 
 def projection(g, p, context, run=True):
+    import copy
     def create_graph(attribute,title,country,start):
         arr = getattr(country, attribute)[start:]
         fig = px.line(y=arr,title=title)
@@ -1082,11 +1082,16 @@ def projection(g, p, context, run=True):
         fig.update_yaxes(title=title)
         fig.add_vline(x=p.get_country().time - 18)
         fig.write_html("templates/App/graphs/"+p.name+title+".html")
+    def create_single_graph(country,start, var):
+        data = getattr(country, var)[start:]
+        labels = [i for i in range(0,len(data))]
+        return data, labels
+
     gtemp = g
     ptemp = p
     g = Game.objects.filter(name=g)[0]
     p = Player.objects.filter(name=p)[0]
-    if run:
+    if True:
         new_country = copy.deepcopy(p.get_country())
         country = new_country
         #Set variables for new_country
@@ -1135,15 +1140,24 @@ def projection(g, p, context, run=True):
         create_graph('GoodsPerCapita','GoodsPerCapita',new_country,17)
         create_graph('GDPPerCapita','RealGDPPerCapita',new_country,17)
         create_graph('ConsumptionArr','ConsumptionPerCapita',new_country,17)
+        budget_graph(new_country, 17, "templates/App/graphs/"+p.name+"budgetgraphprojections.html", True)
+        inflation, labels = create_single_graph(new_country,17, 'InflationTracker')
+        unemployment, labels = create_single_graph(new_country,17,'UnemploymentArr')
+        GoodsPerCapita, labels = create_single_graph(new_country,17,'GoodsPerCapita')
+        GDPPerCapita, labels = create_single_graph(new_country,17,'GDPPerCapita')
+        Consumption, labels = create_single_graph(new_country,17,'ConsumptionArr')
     context.update({
-        'unemployment_graph': "App/graphs/"+p.name+"Unemployment.html",
-        'inflation_graph': "App/graphs/"+p.name+"Inflation.html",
-        'goodspercapita_graph': "App/graphs/"+p.name+"GoodsPerCapita.html",
-        'gdppercapita_graph': "App/graphs/"+p.name+"RealGDPPerCapita.html",
-        'consumptionpercapita_graph': "App/graphs/"+p.name+"ConsumptionPerCapita.html",
+        'unemployment_graph': unemployment,
+        'inflation_graph': inflation,
+        'goodspercapita_graph': GoodsPerCapita,
+        'gdppercapita_graph': GDPPerCapita,
+        'consumptionpercapita_graph': Consumption,
         'game':gtemp,
         'player':ptemp,
-        'notifications': Notification.objects.filter(game=g)[::-1]
+        'notifications': Notification.objects.filter(game=g)[::-1],
+        'labels':labels,
+        'curr_year': new_country.time - 23,
+        'budget_projections': "App/graphs/"+p.name+"budgetgraphprojections.html",
         #'posts': posts
     })
 

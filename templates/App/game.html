@@ -5,11 +5,23 @@
     <legend class="border-bottom mb-4">{{ country }}</legend>
     {% if inflation_graph %}
     <h2 class="account-heading">Projection Graphs</h2>
-           {% include inflation_graph %}
-           {% include unemployment_graph %}
-            {% include gdppercapita_graph %}
-           {% include goodspercapita_graph %}
-           {% include consumptionpercapita_graph %}
+           <h2 class="account-heading">Graphs</h2>
+           {% include budget_projections %}
+        <div id="container" style="width: 75%;">
+      <canvas id="goods-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="unemployment-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="gdp-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="gdp-per-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="growth-chart"></canvas>
+        </div>
     {% endif %}
     <legend class="border-bottom mb-4">Individual Product Forms</legend>
     <form method="POST">
@@ -71,3 +83,160 @@
     </form>
 </div>
 {% endblock content %}
+
+{% block extra_js %}
+
+<script type="text/javascript">
+
+  const verticalLinePlugin = {
+  getLinePosition: function (chart, pointIndex) {
+      const meta = chart.getDatasetMeta(0); // first dataset is used to discover X coordinate of a point
+      const data = meta.data;
+      return data[pointIndex]._model.x;
+  },
+  renderVerticalLine: function (chartInstance, pointIndex) {
+      const lineLeftOffset = this.getLinePosition(chartInstance, pointIndex);
+      const scale = chartInstance.scales['y-axis-0'];
+      const context = chartInstance.chart.ctx;
+
+      // render vertical line
+      context.beginPath();
+      context.strokeStyle = '#ff0000';
+      context.moveTo(lineLeftOffset, scale.top);
+      context.lineTo(lineLeftOffset, scale.bottom);
+      context.stroke();
+
+      // write label
+      context.fillStyle = "#ff0000";
+      context.textAlign = 'top';
+      context.fillText(' Current Year', lineLeftOffset, (scale.bottom - scale.top) / 2 + scale.top);
+  },
+
+  afterDatasetsDraw: function (chart, easing) {
+      if (chart.config.lineAtIndex) {
+          chart.config.lineAtIndex.forEach(pointIndex => this.renderVerticalLine(chart, pointIndex));
+      }
+  }
+  };
+
+  Chart.plugins.register(verticalLinePlugin);
+
+const data = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Unemployment',
+    data: {{ unemployment_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var config = {
+  type: 'line',
+  data: data,
+  options: {
+        responsive: true
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+
+const data2 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Inflation',
+    data: {{ inflation_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var goods_graph = {
+  type: 'line',
+  data: data2,
+  options: {
+        responsive: true
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+const data3 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'GoodsPerCapita',
+    data: {{ gdppercapita_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var gdp_graph = {
+  type: 'line',
+  data: data3,
+  options: {
+        responsive: true
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+
+const data5 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'GDP Per Capita',
+    data: {{ gdppercapita_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+
+var growth3 = {
+  type: 'line',
+  data: data5,
+  options: {
+        responsive: true,
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+
+const data4 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Consumtpion Per Capita',
+    data: {{ consumptionpercapita_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+
+var growth2 = {
+  type: 'line',
+  data: data4,
+  options: {
+        responsive: true,
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+
+window.onload = function() {
+  var ctx = document.getElementById('unemployment-chart').getContext('2d');
+      window.unemployment = new Chart(ctx, config);
+      var ctx = document.getElementById('goods-chart').getContext('2d');
+      window.goods = new Chart(ctx, goods_graph);
+      var ctx = document.getElementById('gdp-chart').getContext('2d');
+      window.gdp = new Chart(ctx, gdp_graph);
+      var ctx = document.getElementById('gdp-per-chart').getContext('2d');
+      window.growth = new Chart(ctx, growth3);
+      var ctx = document.getElementById('growth-chart').getContext('2d');
+      window.growth = new Chart(ctx, growth2);
+    };
+
+</script>
+
+<!--Javascript-->
+
+{% endblock extra_js %}

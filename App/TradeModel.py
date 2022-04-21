@@ -13,6 +13,7 @@ class Trade():
     self.CountryName = CountryNameInput
     self.Tariffs = []
     self.Sanctions = []
+    self.dead = []
     self.currencyReserves = []
     self.exchangeRates = []
     self.currencyChangeReserves = []
@@ -124,7 +125,7 @@ class Trade():
     self.calculateForeignInvestment(trade_balance)
     print("Good Balance: ", good_balance)
     print("Trade Balanace: ", trade_balance)
-    trade_diagram(self.CountryName, total_flow)
+    trade_diagram(self.CountryName, total_flow, self.dead)
     return a
   
   def calculateForeignInvestment(self, trade_balance):
@@ -317,11 +318,14 @@ def get_flows(Countries, flows, price, trade_flows, tarriffs, price_index, price
       #Adding trade flow
       trade_flows[j - len(Countries) - 2][i - 2] += value
   
-def trade_diagram(CountryNames, tradeBalance):
+def trade_diagram(CountryNames, tradeBalance, dead):
   new_trade_balance = []
   for i in range(0,len(tradeBalance)):
     for j in range(0,len(tradeBalance[i])):
-      new_trade_balance.append(tradeBalance[i][j])
+      if i != j and (i not in dead) and (j not in dead):
+        new_trade_balance.append(tradeBalance[i][j])
+      else:
+        new_trade_balance.append(0)
   print(new_trade_balance)
   #b.reverse()
   labels =  CountryNames*2
