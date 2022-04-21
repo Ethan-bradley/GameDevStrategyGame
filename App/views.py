@@ -792,7 +792,7 @@ def gamegraph(g, p, context, graphmode, game):
             #fig.update_yaxes(title=title)
             graph_dict['title'].append(title)
         else:
-            graph_dict['title'].append(attribute)
+            graph_dict['title'].append("Budget:_"+str(attribute))
         #if econattr:
         #fig.write_html("templates/App/"+title+".html")
     graph_dict = {
@@ -819,6 +819,7 @@ def gamegraph(g, p, context, graphmode, game):
     create_compare_graph("GoodsBalance", "TradeBalance", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("InterestRate", "Interest_Rate", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("ConsumptionArr", "Consumption_Per_Capita", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("Finance", "Bank_Reserves", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict, game.GameEngine, False)
     
     context.update({
@@ -1136,6 +1137,11 @@ def projection(g, p, context, run=True):
         new_country.TheoreticalInvest = p.TheoreticalInvest
         new_country.PracticalInvest = p.PracticalInvest
         new_country.AppliedInvest = p.AppliedInvest
+
+        """t = GraphCountryInterface.objects.filter(game=g,controller=p)[0]
+        other_player = Player.objects.filter(country=t.country)[0]
+        new_country2 = copy.deepcopy(p.get_country())
+        country = new_country"""
 
         new_country.run_turn(5)
         create_graph('InflationTracker','Inflation',new_country,17)

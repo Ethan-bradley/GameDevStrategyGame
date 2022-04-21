@@ -9,6 +9,7 @@ from django.db.models.fields import *
 import os
 import matplotlib.pyplot as plt
 import matplotlib
+import math
 
 class GameEngine():
 	def __init__(self, num_players, nameListInput):
@@ -83,7 +84,7 @@ class GameEngine():
 		#Running engine
 		for e in self.EconEngines:
 			e.run_turn(1)
-			e.save_GoodsPerCapita('default_graph.png')
+			#e.save_GoodsPerCapita('default_graph.png')
 		self.TradeEngine.trade(self.EconEngines, [[0.0 for i in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))], [[0.0 for i in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))])
 		print('running engine')
 		for p in all_players:
@@ -452,8 +453,10 @@ class GameEngine():
 		#e.lastPopulation = e.Population
 		for h in range(0, len(hex_list)):
 			print(capital_list[h])
-			hex_list[h].capital += int(capital_list[h])
-			hex_list[h].population += int(population_list[h])
+			if not math.isnan(int(capital_list[h])):
+				hex_list[h].capital += int(capital_list[h])
+			if not math.isnan(int(population_list[h])):
+				hex_list[h].population += int(population_list[h])
 			hex_list[h].save()
 			print(hex_list[h].capital)
 

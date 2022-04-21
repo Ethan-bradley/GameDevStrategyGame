@@ -180,6 +180,7 @@ class GovernmentSpendingForm(ModelForm):
         ti = self.cleaned_data.get('TheoreticalInvest')
         pi = self.cleaned_data.get('PracticalInvest')
         ai = self.cleaned_data.get('AppliedInvest')
+        mp = self.cleaned_data.get('MoneyPrinting')
 
         if w + e + m + ii + si >= 1:
             self._errors['IncomeTax'] = self.error_class(['You cannot have negative numbers in spending plan.'])
@@ -192,6 +193,9 @@ class GovernmentSpendingForm(ModelForm):
         if ti + pi + ai != 1:
             self._errors['IncomeTax'] = self.error_class(['Theoretical, Practical, and Applied Invest must equal 1.'])
             raise ValidationError('Theoretical, Practical, and Applied Invest must equal 1.')
+        if mp > 10000 or mp < -200:
+            self._errors['IncomeTax'] = self.error_class(['Money Printing must be less than 10,000 or more than -200.'])
+            raise ValidationError('Money Printing must be less than 10,000 or more than -200.')
 
         return self.cleaned_data
 

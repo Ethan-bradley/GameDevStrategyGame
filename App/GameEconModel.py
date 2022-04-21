@@ -188,7 +188,7 @@ class Country():
 
     #Science related
     self.scienceDivisor = 50
-    self.ScienceEff = 0.004
+    self.ScienceEff = 0.01
 
     #ScienceArrays
     self.HouseScience = [0.125, 0.125]
@@ -336,6 +336,9 @@ class Country():
         #self.goods[2] *= ((self.money[5]*self.GovGoods/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*Total)/self.goods[2]
       #self.goods[3] *= ((self.money[3]*self.RawInvestment/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*Total)
       #Run each cycle, creates transformation matrix
+      for i in range(0,5):
+        if math.isnan(self.money[i]):
+          self.money[i] = 800
       if self.money[1] < 0:
         self.money[1] = 5
         self.recession(0.9)
@@ -389,8 +392,10 @@ class Country():
       self.Population = self.pop_matrix.sum()#self.Population*self.Population_growth
       
       #Structural Unemployment and Education
-      self.Education = (self.GovernmentGoods[0]*self.EducationSpend)/self.Education_Divisor
-      self.Military += (self.GovernmentGoods[1]*self.MilitarySpend)
+      if self.GovernmentGoods[0] > 0:
+        self.Education = (self.GovernmentGoods[0]*self.EducationSpend)/self.Education_Divisor
+      if self.GovernmentGoods[1] > 0:
+        self.Military += (self.GovernmentGoods[1]*self.MilitarySpend)
       #print(goods[2]/(goods[0]+goods[1]+goods[2]))
       #1 - (self.employment)/self.Population
       print("Unemployment:"+str(self.Unemployment))
@@ -555,9 +560,10 @@ class Country():
       #self.Practical = (-self.Theoretical*np.exp(-(4/(self.Researchers*0.1))*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[1]*self.ScienceEff)*self.goods[1])+self.Theoretical)
       #self.Theoretical = (-1*(self.time)*np.exp(-(4/(self.Geniuses+(self.time)))*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[0]*self.ScienceEff)*self.goods[1])+1*self.time)
       
-      self.Applied = self.ScienceEff*self.Practical*pow(self.Innovators,0.4)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[2]*self.goods[1]),0.5)
-      self.Practical = self.ScienceEff*self.Theoretical*pow(self.Researchers,0.6)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[1]*self.goods[1]),0.3)
-      self.Theoretical = self.ScienceEff*pow(self.time,0.4)*pow(self.Geniuses,0.6)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[0]*self.goods[1]),0.3)
+      cost = 0.03*pow(self.ScienceRate,1.4) + 1/(self.ScienceRate)
+      self.Applied = (self.ScienceEff*self.Practical*pow(self.Innovators,0.7)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[2]*self.goods[1]),0.2))/cost
+      self.Practical = (self.ScienceEff*self.Theoretical*pow(self.Researchers,0.8)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[1]*self.goods[1]),0.2))/cost
+      self.Theoretical = (self.ScienceEff*pow(self.time,0.4)*pow(self.Geniuses,0.8)*pow(0.01*((self.money[3]/(self.money[2]+self.money[3]+self.money[5]*self.GovGoods))*self.InvestmentDirection[0]*self.goods[1]),0.2))/cost
       lastScience = self.ScienceRate
       self.ScienceRate = 10 + self.Applied/self.scienceDivisor
 
