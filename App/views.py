@@ -203,6 +203,9 @@ def joinGame(request, g):
             temp = k
     p = Player.objects.filter(user=request.user, game=temp)
     if len(p) > 0:
+        if len(p) > 1:
+            p = Player.objects.filter(user=request.user, game=temp, robot=False)
+            return redirect('app-game', g=temp.name, player=temp.name)
         if temp.num_players == 1: 
             return redirect('app-game', g=temp.name, player=temp.name)
         else:
