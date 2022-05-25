@@ -15,8 +15,8 @@
     <script type="text/javascript" src="{% static 'App/stuquery.js' %}"></script>
     <script type="text/javascript" src="{% static 'App/stuquery.hexmap.js' %}"></script>
     <link rel="stylesheet" href="{% static 'App/stuquery.hexmap.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
-
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
 
     {% if title %}
         <title>WOM - {{ title }}</title>
@@ -63,8 +63,8 @@
             <h3>Sidebar</h3>
             <p class='text-muted'>Tabs
               <ul class="list-group">
-                <li class="list-group-item list-group-item-light"><a href="{% url 'app-game' g=game player=player %}">Tariffs and Government Budget</a> </li>
-                <li class="list-group-item list-group-item-light"><a href="{% url 'map' g=game p=player l='null' lprev='null' %}">Army Map</a></li>
+                <li class="list-group-item list-group-item-light"><a href="{% url 'app-game' g=game player=player %}">Government Budget</a> </li>
+                <li class="list-group-item list-group-item-light"><a href="{% url 'map' g=game p=player l='null' lprev='null' %}">Map</a></li>
                 <li class="list-group-item list-group-item-light"><a href="{% url 'app-graph' g=game p=player %}">Graphs</a></li>
                 <li class="list-group-item list-group-item-light"><a href="{% url 'app-trade' g=game p=player %}">Trade</a></li>
                 <li class="list-group-item list-group-item-light"><a href="{% url 'app-delete' g=game p=player %}">Delete</a></li>

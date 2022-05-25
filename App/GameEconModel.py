@@ -393,9 +393,9 @@ class Country():
       
       #Structural Unemployment and Education
       if self.GovernmentGoods[0] > 0:
-        self.Education = (self.GovernmentGoods[0]*self.EducationSpend)/self.Education_Divisor
+        self.Education = (self.GovernmentGoods[0])/self.Education_Divisor
       if self.GovernmentGoods[1] > 0:
-        self.Military += (self.GovernmentGoods[1]*self.MilitarySpend)
+        self.Military += (self.GovernmentGoods[1])
       #print(goods[2]/(goods[0]+goods[1]+goods[2]))
       #1 - (self.employment)/self.Population
       print("Unemployment:"+str(self.Unemployment))
