@@ -1,6 +1,6 @@
 from .Game import GameEngine
 from .models import Post
-from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, Army
+from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, Army, GraphCountryInterface
 from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm
 from .PolicyList import PolicyList
 
@@ -30,6 +30,10 @@ def add_players(temp, type):
 	    f.save()
 	    curr_player = Player.objects.filter(name=f.name, game=temp)[0]
 	    #Creates Map Interface
+	    if type:
+	    	GraphCountryInterface.objects.create(game=temp,controller=curr_player, country=curr_player.country)
+	    else:
+	    	GraphCountryInterface.objects.create(game=temp, controller=curr_player, country=curr_player.country, large=True)
 	    MapInterface.objects.create(game=temp,controller=curr_player)
 	    GraphInterface.objects.create(game=temp,controller=curr_player)
 	    #Creates Policies

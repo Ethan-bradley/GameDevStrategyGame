@@ -119,7 +119,7 @@
   }
   };
 
-  Chart.plugins.register(verticalLinePlugin);
+  Chart.register({id: 'verticallineplugin', verticalLinePlugin});
 
 const data = {
   labels: {{ labels|safe }},

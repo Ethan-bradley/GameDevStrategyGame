@@ -52,6 +52,42 @@
 
 <script type="text/javascript">
 
+function handleClick(e, legendItem, legend) {
+    const index = legendItem.datasetIndex;
+    const ci = legend.chart;
+    var count = 0
+    for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+            if (!ci.isDatasetVisible(i)) {
+              count++;
+            }
+        }
+    if (ci.isDatasetVisible(index) && count == legend.chart.data.datasets.length - 1) {
+      for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+            ci.show(i);
+        }
+        legendItem.hidden = false;
+    } else if (ci.isDatasetVisible(index)) {
+        for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+          if (i != legendItem.datasetIndex) {
+            ci.hide(i);
+          }
+        }
+        legendItem.hidden = true;
+    } else {
+        ci.show(index);
+        legendItem.hidden = false;
+    }
+}
+
+
+// Removes the alpha channel from background colors
+function handleLeave(evt, item, legend) {
+  for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+    legend.chart.show(i) //.data.datasets[i].borderColor = legend.chart.data.datasets[i].borderColor.replace(/[^,]+(?=\))/, '1.0')
+  }
+  legend.chart.update();
+}
+
 const data = {
   labels: {{ labels|safe }},
   datasets: [{
@@ -163,11 +199,12 @@ for (const title of graph_dict['title']) {
   data: data5,
   options: {
         responsive: true,
-        title: {
+        
+        plugins: {
+          title: {
             display: true,
             text: title
         },
-        plugins: {
         legend: {
                 labels: {
                   font: {
@@ -175,6 +212,7 @@ for (const title of graph_dict['title']) {
                     }
                 },
                 position:'right',
+                onClick: handleClick
               },
       },
         
