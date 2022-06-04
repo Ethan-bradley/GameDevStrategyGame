@@ -40,6 +40,7 @@ class Country():
     self.Finance = []
     self.InfrastructureArray = []
     self.ConsumptionArr = []
+    self.ConsumptionArr2 = []
     self.PhillipsArr = [0,0,0,0,0];
     self.capitalChange2 = 2
     self.ResentmentArr = []
@@ -611,6 +612,7 @@ class Country():
       self.Investment.append(self.money[3]);
       self.EmploymentRate.append(self.employment/self.pop_matrix.sum())
       self.ConsumptionArr.append(self.goods[0]/self.pop_matrix.sum())
+      self.ConsumptionArr2.append((self.goods[0]/self.pop_matrix.sum())*25)
       self.AppliedArr.append(self.Applied)
       self.CapitalArr.append(self.capital)
       self.ScienceArr.append(self.ScienceRate)

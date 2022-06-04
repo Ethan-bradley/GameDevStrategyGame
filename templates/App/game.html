@@ -7,7 +7,7 @@
     <h2 class="account-heading">Projection Graphs</h2>
            <h2 class="account-heading">Graphs</h2>
            {% include budget_projections %}
-        <div id="container" style="width: 75%;">
+        <!-- <div id="container" style="width: 75%;">
       <canvas id="goods-chart"></canvas>
         </div>
         <div id="container" style="width: 75%;">
@@ -21,7 +21,7 @@
         </div>
         <div id="container" style="width: 75%;">
       <canvas id="growth-chart"></canvas>
-        </div>
+        </div>-->
     {% endif %}
     <legend class="border-bottom mb-4">Individual Product Forms</legend>
     <form method="POST">
@@ -175,7 +175,7 @@ var gdp_graph = {
   type: 'line',
   data: data3,
   options: {
-        responsive: true
+        responsive: true,
       },
   lineAtIndex: [{{curr_year}}],
 };
