@@ -5,11 +5,13 @@
     <div class="media-body">
       <legend class="border-bottom mb-4">{{ country }}</legend>
       <h2 class="account-heading">Country Trade Graphs</h2>
-      <p class="text-secondary">Graphs show the rates that are being placed on you by the countries in the legend.</p>
+      <p class="text-secondary">Graphs show the rates that are being placed on you by the countries in the legend. <span style="float:right;" data-toggle="tooltip" title="We also show you the tariffs and other economic foreign policies other country have on a country. You can choose which country to look at with the same selector from the Country-Based Debt and Budget Graph.">ℹ️ </span></p>
           {% include tarriffgraph %}
           {% include Sanctionsgraph %}
           {% include MilitaryAidgraph %}
           {% include ForeignAidgraph %}
+          <span style="float:right;" data-toggle="tooltip" title="This is a replica of the graph you can see on your own Government Budget page, except you can change which country to look at. Simply select a country in the selector at the bottom of this graph.">ℹ️ </span>
+<br>
           {% include Budgetgraph %}
            <form method="POST">
             {% csrf_token %}
@@ -21,7 +23,13 @@
                 <button class="btn btn-outline-info" type="submit" id="submit">Change Graph Mode</button>
             </div>
         </form>
-      <legend class="border-bottom mb-4">Tariffs</legend>
+      <legend class="border-bottom mb-4">Tariffs <span style="float:right;" data-toggle="tooltip" title="This wouldn't be War by Other Means, without those other means, so here they are. Although I should not that because of trade, even domestic economic developments can and have an effect on other players, although not quite as large and certainly not quite as closely targeted as these policies. Which are:
+
+- Import Tariffs (TariffAm) levy a tax on all goods imported from a given country. That tax is added on top of the good's price, so a 50% tariff would multiply the price by 1.5
+- Export Tariffs (SanctionAm) are the same as Import Tariffs, only the tax is put on goods leaving your country and going to that other country
+- Sending Money (SendMoney) is pretty straightforward, although note that you send money at current exchange rates. To get the exchange rate, multiply how many $ you get per unit of your currency (you can see that in the exchange rate chart), and then divide by the other player's exchange rate. The money you're sending is listed in your currency
+- Sending Military Equipment (MilitarySend) is actually pretty straightforward. You just send it, and the other player can use it in the same turn as the one where you sent it
+- Nationalization will take some or all of the say  French-owned capital (i.e. investment goods) in your country, to citizens of your own country. That is, if you select the Nationalization policy in regards to France of course. If the value you enter is 100% (default), nothing is nationalized. If it's 90%, then 90% will remain after this year (i.e. 10% is nationalized every year), etc, all the way to 0% nationalizing everything.">ℹ️ </span></legend>
       <form method="POST">
     {% csrf_token %}
     {{ indForms.management_form }}
@@ -37,8 +45,14 @@
           <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
     </div>
   </form>
+  <span style="float:right;" data-toggle="tooltip" title="This graph shows you the exports, as well as imports of each country. For example take a look at France: It exports a bit more than Germany but less than Spain, and the vast majority of its exports go to Spain, some to Italy, and a few to Neutral and Germany. You can also read the graph the other way around: Italy imports a bit less than Neutral but more than Spain, and gets most of its imports from Spain, and some from France. Important: Note that countries also trade within their own borders, in fact about 98% of trade happens domestically.">ℹ️ </span>
+  <br>
     {% include 'App/trade.html' %}
+    <span style="float:right;" data-toggle="tooltip" title="Here you can see the exchange rates of each country, relative to a fictional country outside of the map. To figure out how many British Pounds you can get per German Mark, simply divide how many $ you can get per German Mark (that's the value that's shown on the graph) , and divide it by how many $ it takes to buy one British Pound.">ℹ️ </span>
+    <br>
     {% include 'App/exchange.html' %}
+    <span style="float:right;" data-toggle="tooltip" title="While the Foreign Investment Abroad graph shows you where your citizens' have invested the money they've invested outside of your borders, they have invested in which country. Foreign Investment Domestic shows you which foreign countries have invested how much in your borders.">ℹ️ </span>
+    <br>
     {% include 'App/foreign_investment.html' %}
     {% include 'App/foreign_investment_domestic.html' %}
     {% for title in titles %}
@@ -50,3 +64,13 @@
 
 </div>
 {% endblock content %}
+
+{% block extra_js %}
+<script type="text/javascript">
+  
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+
+</script>
+{% endblock extra_js %}

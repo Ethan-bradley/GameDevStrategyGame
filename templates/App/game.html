@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <div class="content-section">
-    <legend class="border-bottom mb-4">{{ country }}</legend>
+    <legend class="border-bottom mb-4">{{ country }} <span style="float:right;" data-toggle="tooltip" title="On the Government Budget page, you can change your domestic policies, however you can also just keep the orders as is. Note that Money Printing is not a revenue source. When you are ready, you can submit your current domestic policies by clicking Submit Spending and Tax Plan. If you also want to run the next turn, you can/ need to select the Ready ✅ at the bottom of the page">ℹ️ </span> </legend>
     {% if inflation_graph %}
     <h2 class="account-heading">Projection Graphs</h2>
            <h2 class="account-heading">Graphs</h2>
@@ -23,7 +23,10 @@
       <canvas id="growth-chart"></canvas>
         </div>-->
     {% endif %}
-    <legend class="border-bottom mb-4">Individual Product Forms</legend>
+    <legend class="border-bottom mb-4">Individual Product Forms <span style="float:right;" data-toggle="tooltip" title="Specific to each good, you can also:
+- set an Export Restriction for each good. This limits what percentage of the yearly production of that good can be exported. 100% means all can be exported (but usually won't be), 0% means nothing can be exported
+- divide the (Applied Science) Research Budget (Subsidy) among the 8 production processes. These have to add up to 100% (i.e. 1). It probably usually makes sense to spend 0 in production processes of resources that you do not have within your borders, unless you plan to conquer new hexes at some point !">ℹ️ </span>
+</legend>
     <form method="POST">
         {% csrf_token %}
         <fieldset class="form-group">
@@ -35,9 +38,11 @@
             {% endfor %}
             <div class="media-body">
               <h2 class="account-heading">Data</h2>
-               <h2 class="account-heading">Government Budget</h2>
+               <h2 class="account-heading">Government Budget <span style="float:right;" data-toggle="tooltip" title="These two charts show you the projected budget balance for this next year. You can see the projected total expenditures and revenues in the text-based budget projection further down below">ℹ️ </span></h2>
                {% include govBudget %}
                {% include govRevenue %}
+               <p><span style="float:right;" data-toggle="tooltip" title="Here, the individual budget items are stacked, and shown over time: The thick black line in the middle is your total debt over time. Above that are your revenues, as stacked areas, and below that your expenditures. Below that graph, you can find a text-based budget projection - similarly to the expenditure/revenues pie charts - show you a projection for this next year">ℹ️ </span></p>
+               <br>
                {% include BudgetGraph %}
                <p class="text-secondary">Total Government Revenue: {{ GovMoney }}</p>
                <p class="text-secondary">Total Government Revenue as % of GDP: {{ govRevenueGDP }}</p>
@@ -52,19 +57,19 @@
             <table>
               <tbody>
                 <tr>
-                  <td>{{ govForm.IncomeTax|as_crispy_field }} <td>
-                  <td>{{ govForm.CorporateTax|as_crispy_field }} <td>
-                  <td>{{ govForm.Welfare|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="The Income Tax is simply a flat tax on income">{{ govForm.IncomeTax|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="The Corporate Tax is a tax on the revenues of corporations">{{ govForm.CorporateTax|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="Welfare works via a number of policies, such as pensions, unemployment benefits, etc, which are funded with this welfare budget item">{{ govForm.Welfare|as_crispy_field }} <td>
                 </tr>
                 <tr>
-                  <td>{{ govForm.Education|as_crispy_field }} <td>
-                  <td>{{ govForm.Military|as_crispy_field }} <td>
-                  <td>{{ govForm.InfrastructureInvest|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="Education spending increases how much capital is available for education, as well as the money available for paying educators. Note that basically, a student only gets one year of education, after which they will enter the workforce with the education level of that year (you can see that in the education graph). So if the education graph goes down and up again, that doesn't mean the entire workforce just lost much of its education and regained it">{{ govForm.Education|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="Military spending buys equipment, which you stockpile, and can use at any point to recruit an army. You also need military equipment to sustain your military">{{ govForm.Military|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="Infrastructure spending buys steel and pays money to construction workers, to improve your country's infrastructure. This lowers transport costs for both your domestic and foreign trade. Corporations also invest in infrastructure, always spending 5% of their investments into that">{{ govForm.InfrastructureInvest|as_crispy_field }} <td>
                 </tr>
                 <tr>
-                  <td>{{ govForm.ScienceInvest|as_crispy_field }} <td>
-                    <td>{{ govForm.MoneyPrinting|as_crispy_field }} <td>
-                      <td>{{ govForm.investment_restriction|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="- Science spending (ScienceInvest) improves the efficiency of your country's production processes, by paying scientists. The way it works is that there are 3 kinds of science: Theoretical, Practical and Applied. Applied is what actually determines the efficiency of your production processes; and furthermore you can actually adjust how much of your Applied science should go into which production processes. Meanwhile, you need Practical to boost your Applied, and Theoretical to boost your Practical. You can also determine how much of your Science spending should go into which of the 3 categories">{{ govForm.ScienceInvest|as_crispy_field }} <td>
+                    <td data-toggle="tooltip" title="- Quantitaive Easing (Money Printing) does not give you revenues. What it does is add money to the economy by buying up government debt, held by private investors. Higher Quantitaive Easing leads to more inflation. You can even do negative amounts. Changes to Quantitaive Easing take effect in 2 years, as opposed to the usual 1 year that normal policies take to implement">{{ govForm.MoneyPrinting|as_crispy_field }} <td>
+                      <td data-toggle="tooltip" title="Investment Restrictions are effectively a tariff on foreign investments from the population of other countries. You don't (currently) get revenues from that, though">{{ govForm.investment_restriction|as_crispy_field }} <td>
                 </tr>
                 <tr>
                   <td>{{ govForm.TheoreticalInvest|as_crispy_field }} <td>
@@ -234,7 +239,9 @@ window.onload = function() {
       var ctx = document.getElementById('growth-chart').getContext('2d');
       window.growth = new Chart(ctx, growth2);
     };
-
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
 </script>
 
 <!--Javascript-->

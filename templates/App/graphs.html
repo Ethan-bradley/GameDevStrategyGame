@@ -4,7 +4,7 @@
 <div class="content-section">
     <div class="media-body">
 
-      <h2 class="account-heading">Budget Graphs</h2>
+      <h2 class="account-heading">Budget Graphs <span style="float:right;" data-toggle="tooltip" title="Here you can see each country's budget items (taxes, expenditures), as well as the prices of individual goods over time; each of those graphs compares all countries. You can select which item to look at, via the selector that you can see at the bottom of this graph">ℹ️ </span></h2>
 
       <legend class="border-bottom mb-4">{{ country }}</legend>
            <canvas id={{ graphs.15 }}></canvas>
@@ -18,7 +18,7 @@
                 <button class="btn btn-outline-info" type="submit" id="submit">Change Graph Mode</button>
             </div>
         </form>
-          <h2 class="account-heading">Multiple Player Graphs</h2>
+          <h2 class="account-heading">Multiple Player Graphs <span style="float:right;" data-toggle="tooltip" title="On the Graphs page, we have a ton of charts about everything from Real GDP per capita over time, accounting for purchasing power parity (in $US) which you can see here, to unemployment, science, education, etc. Just look around, there's a lot to see.">ℹ️ </span></h2>
           <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
 
           {% for name in graphs %}
@@ -36,6 +36,9 @@
         </div>
         <div id="container" style="width: 75%;">
       <canvas id="growth-chart"></canvas>
+
+      <span style="float:right;" data-toggle="tooltip" title="Job Market Graphs- Here you can see the wages of different industries in your country, as well as the total number of jobs per industry in your country">ℹ️ </span>
+      <br>
         </div>
 
            {% include wageGraph %}
@@ -237,6 +240,10 @@ window.onload = function() {
         index += 1;
       };
     };
+
+    $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
 
 </script>
 

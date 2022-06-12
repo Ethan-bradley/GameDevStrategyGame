@@ -26,7 +26,7 @@
 		"H":{"n":"North Sea","q":1,"r":2},
 		"I":{"n":"Germany","q":2,"r":2} -->
 <div class="content-section">
-	<legend class="border-bottom mb-4">{{ country }}</legend>
+	<legend class="border-bottom mb-4">{{ country }} <span style="float:right;" data-toggle="tooltip" title="The map, as you can see, consists of a bunch of hexes, divided into land and sea hexes. Each hex has one resource, of which it has 1 unit, or 2 units, etc. You can see this on the resource map. Of all the other resources, it has 0.01 resource units ">ℹ️ </span></legend>
 	<p class="text-secondary">Current Year: {{ CurrentYear }}</p>
 	{% if resources %}
 		<p class="text-secondary">Red=Iron, Yellow=Wheat, Blue=Coal, Purple=Oil</p>
@@ -34,7 +34,7 @@
 	<form method="POST">
 	    {% csrf_token %}
 	    <fieldset class="form-group">
-	        <legend class="border-bottom mb-4">Map Mode</legend>
+	        <legend class="border-bottom mb-4">Map Mode <span style="float:right;" data-toggle="tooltip" title="This is where you can change the map mode between the political and resource map.">ℹ️ </span></legend>
 	        {{ map_form|crispy }}
 	    </fieldset>
 	    <div class="form-group">
@@ -52,7 +52,7 @@
         <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Army</legend>
+                <legend class="border-bottom mb-4">Army <span style="float:right;" data-toggle="tooltip" title="You can create armies on the Army Map page, by clicking a province, and then below specifying how big the army should be and what its name should be. In blue here, you can  see that, the orange shows you how much equipment you have. Armies can only be created in yout land hexes, fleets only in sea hexes that are adjacent to your land hexes. Fleets can only move on water, but armies can move anywhere. If however an army encounters a fleet, the fleet always wins. Fleets however fight other fleets the same way that armies fight other armies. Armies can fight other armies both on land and on the sea, the same rules apply.">ℹ️ </span> </legend>
                 {{ form|crispy }}
             </fieldset>
             <div class="form-group">
@@ -124,6 +124,10 @@ S(document).ready(function(){
 	});
 
 });
+
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
 
 </script>
 {% endblock extra_js %}
