@@ -45,7 +45,7 @@
           <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
     </div>
   </form>
-  <span style="float:right;" data-toggle="tooltip" title="This graph shows you the exports, as well as imports of each country. For example take a look at France: It exports a bit more than Germany but less than Spain, and the vast majority of its exports go to Spain, some to Italy, and a few to Neutral and Germany. You can also read the graph the other way around: Italy imports a bit less than Neutral but more than Spain, and gets most of its imports from Spain, and some from France. Important: Note that countries also trade within their own borders, in fact about 98% of trade happens domestically.">ℹ️ </span>
+  <span style="float:right;" data-toggle="tooltip" title="This graph shows how much each country exports to what country, and how much it imports from what country. On the left you can see the total exports of a given country, on the right the total imports.">ℹ️ </span>
   <br>
     {% include 'App/trade.html' %}
     <span style="float:right;" data-toggle="tooltip" title="Here you can see the exchange rates of each country, relative to a fictional country outside of the map. To figure out how many British Pounds you can get per German Mark, simply divide how many $ you can get per German Mark (that's the value that's shown on the graph) , and divide it by how many $ it takes to buy one British Pound.">ℹ️ </span>

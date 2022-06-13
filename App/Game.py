@@ -202,6 +202,7 @@ class GameEngine():
 			self.get_hex_numbers(g, p, country)
 			prev_revenue = country.IncomeTax*country.money[0] + country.CorporateTax*country.money[4]
 			diff = country.money[5] - prev_revenue
+
 			country.IncomeTax = p.IncomeTax
 			country.CorporateTax = p.CorporateTax
 			#country.GovGoods = p.Education + p.Military
@@ -253,8 +254,10 @@ class GameEngine():
 				self.rebel(g, p, country.Resentment)
 			#Tarriffs
 			#import pdb; pdb.set_trace()
-			try:
-				tar = Tariff.objects.filter(game=g, curr_player=p)[0]
+			#try:
+			tar = Tariff.objects.filter(game=g, curr_player=p)
+			if len(tar) != 0:
+				tar = tar[0]
 				k = IndTariff.objects.filter(controller=tar)
 
 				count = 0
@@ -273,26 +276,29 @@ class GameEngine():
 					#import pdb; pdb.set_trace()
 					self.TradeEngine.foreign_investment[index][count] = self.TradeEngine.foreign_investment[count][index]*t.nationalization
 					count += 1
-				#Append variables
-				self.append_variable_list(self.var_list, self.variable_list, index, p)
-				#Product subsidies/restrictions
-				productP = PlayerProduct.objects.filter(game=g, curr_player=all_players[index])[0]
+			#Append variables
+			self.append_variable_list(self.var_list, self.variable_list, index, p)
+			#Product subsidies/restrictions
+			productP = PlayerProduct.objects.filter(game=g, curr_player=all_players[index])
+			if len(productP) != 0:
+				productP = productP[0]
 				products = Product.objects.filter(controller=productP)
+				country_index = self.nameList.index(p.country.name)
 				for product in products:
 					if product.name in country.HouseProducts:
 						index = country.HouseProducts.index(product.name)
-						self.TradeEngine.restrictions[index]['HouseProduction'][index] = product.exportRestriction
+						self.TradeEngine.restrictions[country_index]['HouseProduction'][index] = product.exportRestriction
 						country.HouseScience[index] = product.subsidy
 					if product.name in country.CapitalGoods:
 						index = country.CapitalGoods.index(product.name)
-						self.TradeEngine.restrictions[index]['CapitalProduction'][index] = product.exportRestriction
+						self.TradeEngine.restrictions[country_index]['CapitalProduction'][index] = product.exportRestriction
 						country.CapitalScience[index] = product.subsidy
 					if product.name in country.RawGoods:
 						index = country.RawGoods.index(product.name)
-						self.TradeEngine.restrictions[index]['RawProduction'][index] = product.exportRestriction
+						self.TradeEngine.restrictions[country_index]['RawProduction'][index] = product.exportRestriction
 						country.RawScience[index] = product.subsidy
-			except:
-				print("Index out of range error!")
+			#except:
+			#	print("Index out of range error!")
 
 		self.TradeEngine.trade_money(self.EconEngines, transfer_array)
 		self.TradeEngine.trade_military_goods(self.EconEngines, military_transfer)
