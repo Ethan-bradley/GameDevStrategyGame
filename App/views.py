@@ -78,6 +78,7 @@ def new_game(request):
                 #job = q.enqueue(create_countries, 'http://heroku.com', on_success=organize_countries)
                 f.GameEngine = GameEngine(15,['UK', 'Germany', 'France', 'Spain', 'Italy', 'Poland', 'Sweden', 'Egypt','Algeria', 'Turkey', 'Ukraine', 'Russia', 'Iran', 'Saudi Arabia', 'Neutral'])
             f.save()
+            import pdb; pdb.set_trace();
             #Saves game name in temporary variable
             g = f.name
             gameList = Game.objects.all()
@@ -429,8 +430,8 @@ def game(request, g, player):
         player.save()
     else:
         projection(gtemp, ptemp, context, False)
-    govDebt = round(player.get_country().Government_SavingsArr[player.get_country().time - 1] - player.get_country().GovDebtArr[
-        player.get_country().time - 1], 2)
+    import pdb; pdb.set_trace();
+    govDebt = round(player.get_country().Government_SavingsArr[player.get_country().time - 1] - player.get_country().GovDebtArr[player.get_country().time - 1], 2)
     
     context.update({
         'country': player.country,
@@ -1143,7 +1144,7 @@ def projection(g, p, context, run=True):
         new_country2 = copy.deepcopy(p.get_country())
         country = new_country"""
 
-        new_country.run_turn(5)
+        #new_country.run_turn(5)
         create_graph('InflationTracker','Inflation',new_country,17)
         create_graph('UnemploymentArr','Unemployment',new_country,17)
         create_graph('GoodsPerCapita','GoodsPerCapita',new_country,17)
