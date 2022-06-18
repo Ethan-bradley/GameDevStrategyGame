@@ -21,6 +21,7 @@ import plotly.express as px
 from .budgetgraph import budget_graph
 from .helper import add_players, add_neutral
 from django.db import reset_queries
+import math
 #import django_rq
 #from rq import Queue
 #from worker import conn
@@ -781,6 +782,9 @@ def gamegraph(g, p, context, graphmode, game):
                 arr = getattr(game, attribute)[j][start:]
                 if len(arr) == 0:
                     continue
+            for i in range(1,len(arr)):
+                if math.isnan(arr[i]):
+                    arr[i] = arr[i-1]
             data[title] += arr
             data['Year'] += [i for i in range(0,len(arr))]
             data['Country'] += [trade.CountryName[j] for i in range(0,len(arr))]

@@ -190,6 +190,10 @@ class GovernmentSpendingForm(ModelForm):
             self._errors['IncomeTax'] = self.error_class(['You cannot have negative numbers in spending plan.'])
             raise ValidationError('You cannot have negative numbers in spending plan.')
 
+        if it >= 0.9 or ct >= 0.9:
+            self._errors['IncomeTax'] = self.error_class(['You cannot have income or corporate taxes by more than 90%.'])
+            raise ValidationError('You cannot have income or corporate taxes by more than 90%.')
+
         if ti + pi + ai != 1:
             self._errors['IncomeTax'] = self.error_class(['Theoretical, Practical, and Applied Invest must equal 1.'])
             raise ValidationError('Theoretical, Practical, and Applied Invest must equal 1.')
