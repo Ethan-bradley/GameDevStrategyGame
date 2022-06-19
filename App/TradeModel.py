@@ -296,6 +296,10 @@ def parse_flows(Countries, good_balance, trade_balance, flows, goods_index, mone
           Countries[i].goods[goods_index] -= flow*0.25*(Countries[i].money[1]/(value*exchangeRates[i]))
           Countries[i].money[money_index] += Countries[i].money[1]
           Countries[i].money[1] = 5
+      elif (math.isnan(Countries[i].money[1])):
+          Countries[i].money[1] = 400
+      elif (math.isnan(Countries[i].goods[goods_index])):
+          Countries[i].goods[goods_index] = 100
       elif value*exchangeRates[i] != 0:
         Countries[i].goods[goods_index] -= flow*0.25*(Countries[i].money[1]/(value*exchangeRates[i]))
         Countries[i].money[money_index] += Countries[i].money[1]
