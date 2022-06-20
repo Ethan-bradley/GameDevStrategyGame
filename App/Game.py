@@ -80,7 +80,7 @@ class GameEngine():
 		all_armies = Army.objects.filter(game=g)
 		for a in all_armies:
 			a.moved = False
-		self.ArmyCombat.doCombat(g)
+		#self.ArmyCombat.doCombat(g)
 		#Running engine
 		for e in self.EconEngines:
 			e.run_turn(1)
@@ -277,6 +277,7 @@ class GameEngine():
 					self.TradeEngine.foreign_investment[index][count] = self.TradeEngine.foreign_investment[count][index]*t.nationalization
 					count += 1
 			#Append variables
+			#import pdb; pdb.set_trace()
 			self.append_variable_list(self.var_list, self.variable_list, index, p)
 			#Product subsidies/restrictions
 			productP = PlayerProduct.objects.filter(game=g, curr_player=all_players[index])
@@ -305,6 +306,7 @@ class GameEngine():
 
 	def save_variable_list(self, var_list, player_num):
 		for i in var_list:
+			#change to 17
 			setattr(self,i,[[0.02 for i in range(0,20)] for i in range(player_num)])
 	def append_variable_list(self, var_list, variable_list, index, player):
 		for i in range(0,len(var_list)):
