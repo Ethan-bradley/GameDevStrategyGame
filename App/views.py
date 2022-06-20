@@ -779,7 +779,11 @@ def gamegraph(g, p, context, graphmode, game):
                 arr = getattr(countries[j], attribute)[start:]
             else:
                 #import pdb; pdb.set_trace()
-                arr = getattr(game, attribute)[j][start:]
+                if j == 14:
+                    arr = getattr(game, attribute)[j][start + 5:]
+                else:
+                    arr = getattr(game, attribute)[j][start + 2:]
+
                 if len(arr) == 0:
                     continue
             for i in range(1,len(arr)):
@@ -825,6 +829,7 @@ def gamegraph(g, p, context, graphmode, game):
     create_compare_graph("InterestRate", "Interest_Rate", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("ConsumptionArr2", "Consumption_Per_Capita", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("Finance", "New_Loanable_Funds", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    #import pdb; pdb.set_trace()
     create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict, game.GameEngine, False)
     
     context.update({

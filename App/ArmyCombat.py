@@ -167,7 +167,8 @@ class ArmyCombat():
 		#loser.get_country().Population -= 
 		#loser.get_country().capital -= 
 		h.controller = player_to
-		h.color = player_to.country.color
+		if not h.water:
+			h.color = player_to.country.color
 		#g.GameEngine.modify_country_by_name(player_to.country.name, 'Population', player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.8))
 		player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.75)
 		g.save()
