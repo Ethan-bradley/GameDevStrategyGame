@@ -780,9 +780,9 @@ def gamegraph(g, p, context, graphmode, game):
             else:
                 #import pdb; pdb.set_trace()
                 if j == 14:
-                    arr = getattr(game, attribute)[j][start + 5:]
+                    arr = getattr(game, attribute)[j][start + 8:]
                 else:
-                    arr = getattr(game, attribute)[j][start + 2:]
+                    arr = getattr(game, attribute)[j][start + 5:]
 
                 if len(arr) == 0:
                     continue
