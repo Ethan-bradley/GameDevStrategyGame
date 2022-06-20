@@ -461,9 +461,9 @@ class GameEngine():
 		#e.lastPopulation = e.Population
 		for h in range(0, len(hex_list)):
 			print(capital_list[h])
-			if not math.isnan(int(capital_list[h])):
+			if not math.isnan(capital_list[h]):
 				hex_list[h].capital += int(capital_list[h])
-			if not math.isnan(int(population_list[h])):
+			if not math.isnan(population_list[h]):
 				hex_list[h].population += int(population_list[h])
 			hex_list[h].save()
 			print(hex_list[h].capital)
