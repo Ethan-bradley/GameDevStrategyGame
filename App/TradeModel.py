@@ -240,6 +240,7 @@ class Trade():
     for j in range(0,len(demand_nodes)):
       if math.isnan(demand_list[j]):
         demand_list[j] = 1
+        demand_nodes[j][1] = int(demand_list[j])
       else:
         demand_nodes[j][1] = int(demand_list[j])
     demand_node = [0 for i in range(0,countries*2 + 2)]
@@ -286,6 +287,8 @@ def parse_flows(Countries, good_balance, trade_balance, flows, goods_index, mone
     flow = flows[1, len(Countries) + 2 + i] + flows[0, i + 2]
     #print(country_names[i],": ",flow)
     good_balance[i] += flow*0.05
+    if math.isnan(price):
+      price = 0.00001
     value = flow*price*0.05
     trade_balance[i] += value
     if not initial:
@@ -304,6 +307,8 @@ def parse_flows(Countries, good_balance, trade_balance, flows, goods_index, mone
           Countries[i].money[1] = 5
       elif (math.isnan(Countries[i].money[1])):
           Countries[i].money[1] = 400
+      elif (math.isnan(value)):
+           value = 1
       elif (math.isnan(Countries[i].goods[goods_index])):
           Countries[i].goods[goods_index] = 100
       elif value*exchangeRates[i] != 0:
