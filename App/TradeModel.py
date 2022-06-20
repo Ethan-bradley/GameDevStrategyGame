@@ -232,7 +232,10 @@ class Trade():
         elif j - countries - 2 == i:
           infra[i][j] = 214748364
         else:
-          infra[i][j] = (int) (Country[i].Infrastructure_Real*10000) #214748364 # # #infrastructure[i]
+          if math.isnan(Country[i].Infrastructure_Real):
+            infra[i][j] = 10
+          else:
+            infra[i][j] = (int) (Country[i].Infrastructure_Real*10000) #214748364 # # #infrastructure[i]
     demand_nodes = [[0 for j in range(0,countries*2 + 2)] for i in range(0,countries)]
     for j in range(0,len(demand_nodes)):
       demand_nodes[j][1] = int(demand_list[j])
