@@ -238,7 +238,10 @@ class Trade():
             infra[i][j] = (int) (Country[i].Infrastructure_Real*10000) #214748364 # # #infrastructure[i]
     demand_nodes = [[0 for j in range(0,countries*2 + 2)] for i in range(0,countries)]
     for j in range(0,len(demand_nodes)):
-      demand_nodes[j][1] = int(demand_list[j])
+      if math.isnan(demand_list[j]):
+        demand_list[j] = 1
+      else:
+        demand_nodes[j][1] = int(demand_list[j])
     demand_node = [0 for i in range(0,countries*2 + 2)]
     print("Demand Node", demand_node)
     matrix = [supply_node] + [demand_node] + infra + demand_nodes
