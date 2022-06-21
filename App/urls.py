@@ -26,6 +26,7 @@ urlpatterns = [
     path('runNext3/<str:g>', views.runNext3, name='app-run-next-3'),
     path('delete/<str:g>/<str:p>', views.delete, name='app-delete'),
     path('projection/<str:g>/<str:p>', views.projection, name='app-projection'),
+    path('runArmy/<str:g>', views.runArmy, name='app-run-army'),
 ] + static(settings.STATIC_URL,document_root = settings.STATIC_ROOT)
 
 # For Django >= 2.0

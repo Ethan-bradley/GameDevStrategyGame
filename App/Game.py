@@ -96,6 +96,10 @@ class GameEngine():
 			#self.create_graphs(g, all_players)
 			#self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 		return [self.EconEngines, self.TradeEngine]
+
+	def game_combat(self, g):
+		self.ArmyCombat.doCombat(g)
+
 	def run_graphs(self, g):
 		all_players = Player.objects.filter(game=g)
 		#self.create_graphs(g, all_players)

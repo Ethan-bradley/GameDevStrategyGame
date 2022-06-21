@@ -460,7 +460,10 @@ def game(request, g, player):
         'notifications': Notification.objects.filter(game=g, year__gt=player.get_country().time - 23)[::-1],
     })
     return render(request, 'App/game.html', context)
-
+def runArmy(request, g):
+    g = Game.objects.filter(name=g)[0]
+    g.GameEngine.game_combat(g)
+    g.save()
 #loads the army map
 @login_required
 def map(request, g, p, l, lprev):
