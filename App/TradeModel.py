@@ -204,11 +204,17 @@ class Trade():
       total_money.append([])
       for j in range(0,len(Country)):
         supply_array[i].append((Country[j].goods[good_index]*getattr(Country[j], supply)[i])*self.restrictions[j][supply][i])
+        if math.isnan(supply_array[i][j]):
+          supply_array[i][j] = 0.01
       for j in range(0,len(Country)):
         total_money[i].append(Country[j].money[money_index]*getattr(Country[j], demand)[i]*self.exchangeRates[i])
       equil_price[i] = sum(total_money[i])/sum(supply_array[i])
+      if math.isnan(equil_price[i]):
+          equil_price[i] = 0.01
       for j in range(0,len(Country)):
-        demand_array[i].append((Country[j].money[money_index]*getattr(Country[j], demand)[i]*self.exchangeRates[i])/equil_price[i]) 
+        demand_array[i].append((Country[j].money[money_index]*getattr(Country[j], demand)[i]*self.exchangeRates[i])/equil_price[i])
+        if math.isnan(demand_array[i][j]):
+          demand_array[i][j] = 0.01
     #print("Total money: ", total_money)
     print("Equilibrium Price: ", equil_price)
     return demand_array, supply_array, equil_price
@@ -288,7 +294,7 @@ def parse_flows(Countries, good_balance, trade_balance, flows, goods_index, mone
     #print(country_names[i],": ",flow)
     good_balance[i] += flow*0.05
     if math.isnan(price):
-      price = 0.00001
+      price = 0.0001
     value = flow*price*0.05
     trade_balance[i] += value
     if not initial:
@@ -314,7 +320,7 @@ def parse_flows(Countries, good_balance, trade_balance, flows, goods_index, mone
       elif value*exchangeRates[i] != 0:
         Countries[i].goods[goods_index] -= flow*0.25*(Countries[i].money[1]/(value*exchangeRates[i]))
         Countries[i].money[money_index] += Countries[i].money[1]
-        Countries[i].money[1] = 5
+        Countries[i].money[1] = 200
   #trade_diagram(country_names, trade_balance)
 
 def get_flows(Countries, flows, price, trade_flows, tarriffs, price_index, price_attr, exchangeRates):
