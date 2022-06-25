@@ -69,9 +69,10 @@ class Trade():
     total_gdp = 0
     global_price = 0
     for i in range(0,len(Country)):
-      equil_rate += Country[i].real_interest_rate*Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
-      total_gdp += Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
-      global_price += Country[i].ConsumerPrice*Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
+      if not math.isnan(Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]):
+        equil_rate += Country[i].real_interest_rate*Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
+        total_gdp += Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
+        global_price += Country[i].ConsumerPrice*Country[i].GoodsTotal[len(Country[i].GoodsTotal) - 1]
     equil_rate = equil_rate / total_gdp
     global_price = global_price/ total_gdp
     self.equil_rate = equil_rate
@@ -81,8 +82,10 @@ class Trade():
       #new_rate = ((Country[i].interest_rate + 0.01*np.exp((trade_balance[i] + self.balance[i]*self.exchangeRates[i] - self.sum_cols(i, self.foreign_investment)*(self.CountryList[i].interest_rate)*self.exchangeRates[i] + self.sum_foreign_investment(i, self.foreign_investment))/Country[i].money[1]) - 0.01)/equil_rate)*price_index
       t = trade_balance[i] + self.balance[i]*self.exchangeRates[i] - self.sum_cols(i, self.foreign_investment)*(self.CountryList[i].interest_rate)*self.exchangeRates[i] + self.sum_foreign_investment(i, self.foreign_investment)
       #print("balance money", t)
-      if (Country[i].money[1] < 0):
-        Country[i].money[1] = 10
+      if (Country[i].money[1] < 0 or math.isnan(Country[i].money[1])):
+        Country[i].money[1] = 20
+      if (math.isnan(Country[i].real_interest_rate)):
+        Country[i].real_interest_rate = 0.1
       savings_money_flow = 0.166*t - 8.333*(Country[i].real_interest_rate - equil_rate)+np.exp(-Country[i].money[1]*0.5)
       #print("savings money", savings_money_flow)
       new_rate = np.exp(-0.02*(savings_money_flow - t))
