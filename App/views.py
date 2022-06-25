@@ -575,10 +575,14 @@ def map(request, g, p, l, lprev):
         army_name = ""
         if not a:
             a = ""
+            army_size = "---"
         else:
             for army in a:
                 army_size += (army.name+": "+str(army.size))
-                army_name += "["+army.name
+                if army.naval:
+                    army_name += "[ ⚓"+army.name
+                else:
+                    army_name += "[ ⚔️"+army.name
                 if army.moved == False:
                     army_name += " ✅"
                 army_name += "] \n "

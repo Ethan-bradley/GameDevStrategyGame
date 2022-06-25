@@ -113,7 +113,7 @@ S(document).ready(function(){
 	
 	hexmap.on('mouseover',function(e){
 
-		S('#message-6').html('Population: '+info[e.i][0]+' Capital: '+info[e.i][1]+' Player: '+info[e.i][2]+' Army Size: '+info[e.i][4]+' Iron: '+info[e.i][6] + ' Wheat: '+info[e.i][7] + ' Coal: '+info[e.i][8] + ' Oil: '+info[e.i][9])
+		S('#message-6').html('👥 '+info[e.i][0]+' |💰 '+info[e.i][1]+' | 👑 '+info[e.i][2]+' | ⚔️ '+info[e.i][4]+' | 🔗 '+info[e.i][6] + ' | 🌾 '+info[e.i][7] + ' |⛏️'+info[e.i][8] + ' | 🛢️ '+info[e.i][9])
 
 	}).on('click',function(e) {
 		S('#message-6').html('You have clicked hex '+e.i+' ('+e.hex.id+')')
