@@ -97,6 +97,27 @@ class GameEngine():
 			#self.create_compare_graph(self.EconEngines, self.nameList, 17, ['GoodsPerCapita','InflationTracker','ResentmentArr','EmploymentRate','ConsumptionArr','InterestRate','GoodsBalance','ScienceArr'],'',g.name, g)
 		return [self.EconEngines, self.TradeEngine]
 
+	def fix_variables(self):
+		for e in self.EconEngines:
+			for i in range(0,len(e.InflationTracker)):
+				if e.InflationTracker[i] > 150: 
+					e.InflationTracker[i] = 150
+				elif e.InflationTracker[i] < -50:
+					e.InflationTracker[i] = -50
+			for i in range(0, len(e.ResentmentArr)):
+				if e.ResentmentArr[i] > 0.15:
+					e.ResentmentArr[i] = 0.15
+			if e.Resentment > 0.15:
+				e.Resentment = 0.15
+			if e.Infrastructure > 100:
+				e.Infrastructure = 100
+			for i in range(0,len(e.goods)):
+				if e.money[i] < 0 or math.isnan(e.money[i]):
+					e.money[i] = 10
+				if e.goods[i] < 0 or math.isnan(e.goods[i]):
+					e.goods[i] = 10
+
+
 	def game_combat(self, g):
 		self.ArmyCombat.doCombat(g)
 
@@ -120,6 +141,8 @@ class GameEngine():
 		index = self.nameList.index(name)
 		country = self.get_country(index)
 		setattr(country, attr, set_am)
+		if getattr(country, attr) < 1:
+			setattr(country, attr, set_am)
 
 	def get_trade(self, index, var):
 		if var == 0:

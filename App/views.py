@@ -464,6 +464,11 @@ def runArmy(request, g):
     g = Game.objects.filter(name=g)[0]
     g.GameEngine.game_combat(g)
     g.save()
+
+def fixVars(request, g):
+    g = Game.objects.filter(name=g)[0]
+    g.GameEngine.fix_variables()
+    g.save()
 #loads the army map
 @login_required
 def map(request, g, p, l, lprev):
