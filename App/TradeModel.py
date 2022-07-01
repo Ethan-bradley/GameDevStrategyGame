@@ -61,6 +61,9 @@ class Trade():
     trade_balance = [0 for i in range(0,len(Country))]
     Tariffs = self.Tariffs
     total_flow = [[0 for j in range(0,len(Country))] for i in range(0,len(Country))]
+    for i in range(0,len(self.exchangeRates)):
+      if math.isnan(self.exchangeRates[i]):
+        self.exchangeRates[i] = 1
     a = self.calculateTrade(Country, Tariffs, trade_balance, good_balance, 'HouseDemand','HouseProduction','HousePrices', cheapest_house_prices, total_flow, 0, 2)
     self.calculateTrade(Country, Tariffs, trade_balance, good_balance, 'CapitalDemand','CapitalProduction','CapitalPrices', cheapest_capital_prices, total_flow, 1, 3)
     self.calculateTrade(Country, Tariffs, trade_balance, good_balance, 'RawDemand','RawProduction', 'RawPrices', cheapest_raw_prices, total_flow, 3, 4)
@@ -86,9 +89,11 @@ class Trade():
         Country[i].money[1] = 20
       if (math.isnan(Country[i].real_interest_rate)):
         Country[i].real_interest_rate = 0.1
+
       savings_money_flow = 0.166*t - 8.333*(Country[i].real_interest_rate - equil_rate)+np.exp(-Country[i].money[1]*0.5)
       #print("savings money", savings_money_flow)
       new_rate = np.exp(-0.02*(savings_money_flow - t))
+
       print("new rates ", new_rate)
       if math.isnan(new_rate):
         new_rate = 1
@@ -104,6 +109,9 @@ class Trade():
       self.exchangeRateArr[i].append(self.exchangeRates[i])
     print("Exchange Rates ", self.exchangeRates)
     self.initial = False
+    for i in range(0,len(self.exchangeRates)):
+      if math.isnan(self.exchangeRates[i]):
+        self.exchangeRates[i] = 1
     return self.second_trade(Country, Tariffs)
   
   def sum_cols(self, index, arr):

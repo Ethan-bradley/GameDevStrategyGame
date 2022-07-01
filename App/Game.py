@@ -117,6 +117,12 @@ class GameEngine():
 					e.money[i] = 500
 				if e.goods[i] < 0 or math.isnan(e.goods[i]):
 					e.goods[i] = 1000
+			if math.isnan(e.interest_rate):
+				e.interest_rate = 0.1
+			if math.isnan(e.real_interest_rate):
+				e.real_interest_rate = 0.12
+			if math.isnan(e.ConsumerPrice):
+				e.ConsumerPrice = 100
 
 
 	def game_combat(self, g):
