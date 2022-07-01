@@ -89,11 +89,20 @@ class Trade():
       savings_money_flow = 0.166*t - 8.333*(Country[i].real_interest_rate - equil_rate)+np.exp(-Country[i].money[1]*0.5)
       #print("savings money", savings_money_flow)
       new_rate = np.exp(-0.02*(savings_money_flow - t))
+      print("new rates ", new_rate)
+      if math.isnan(new_rate):
+        new_rate = 1
+      if math.isnan(self.exchangeRates[i]):
+        self.exchangeRates[i] = 1
+      if abs(self.exchangeRates[i] - new_rate):
+        t = trade_balance[i]
+        new_rate = np.exp(-0.02*(savings_money_flow - t))
       if abs(self.exchangeRates[i] - new_rate) < 7:
         self.exchangeRates[i] = new_rate
       else:
-        self.exchangeRates[i] = self.exchangeRates[i]
+        self.exchangeRates[i] = self.exchangeRates[i] + (new_rate - self.exchangeRates[i])/100
       self.exchangeRateArr[i].append(self.exchangeRates[i])
+    print("Exchange Rates ", self.exchangeRates)
     self.initial = False
     return self.second_trade(Country, Tariffs)
   
@@ -212,7 +221,7 @@ class Trade():
       for j in range(0,len(Country)):
         total_money[i].append(Country[j].money[money_index]*getattr(Country[j], demand)[i]*self.exchangeRates[i])
       equil_price[i] = sum(total_money[i])/sum(supply_array[i])
-      if math.isnan(equil_price[i]):
+      if math.isnan(equil_price[i]) or equil_price[i] == 0:
           equil_price[i] = 0.01
       for j in range(0,len(Country)):
         demand_array[i].append((Country[j].money[money_index]*getattr(Country[j], demand)[i]*self.exchangeRates[i])/equil_price[i])

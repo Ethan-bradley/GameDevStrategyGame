@@ -85,6 +85,7 @@ class GameEngine():
 		for e in self.EconEngines:
 			e.run_turn(1)
 			#e.save_GoodsPerCapita('default_graph.png')
+		self.fix_variables()
 		self.TradeEngine.trade(self.EconEngines, [[0.0 for i in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))], [[0.0 for i in range(0,len(self.EconEngines))] for i in range(0,len(self.EconEngines))])
 		print('running engine')
 		for p in all_players:
@@ -113,9 +114,9 @@ class GameEngine():
 				e.Infrastructure = 100
 			for i in range(0,len(e.goods)):
 				if e.money[i] < 0 or math.isnan(e.money[i]):
-					e.money[i] = 10
+					e.money[i] = 500
 				if e.goods[i] < 0 or math.isnan(e.goods[i]):
-					e.goods[i] = 10
+					e.goods[i] = 1000
 
 
 	def game_combat(self, g):
