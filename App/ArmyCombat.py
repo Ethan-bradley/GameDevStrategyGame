@@ -34,7 +34,7 @@ class ArmyCombat():
 			if a.controller.get_country().Military - a.size*0.1 < 0:
 				self.rebel(g,a)
 			else:
-				g.GameEngine.modify_country_by_name(a.controller.country.name, 'Military', a.controller.get_country().Military - a.size*0.1)
+				g.GameEngine.modify_country_by_name(a.controller.country.name, 'Military', a.controller.get_country().Military - a.size*0.5)
 				g.save()
 
 	def rebel(self,g,a):
@@ -154,29 +154,19 @@ class ArmyCombat():
 		loser_country = loser.get_country()
 		#import pdb; pdb.set_trace();
 		subtract = ((h.population*0.8)/loser_country.pop_matrix.sum())*1.4
-		loser_country.money[0] -= loser_country.money[0]*subtract
+		"""loser_country.money[0] -= loser_country.money[0]*subtract
 		loser_country.money[1] -= loser_country.money[1]*subtract
 		loser_country.money[2] -= loser_country.money[2]*subtract
 		loser_country.money[3] -= loser_country.money[3]*subtract
 		loser_country.money[4] -= loser_country.money[4]*subtract
 		loser_country.money[5] -= loser_country.money[5]*subtract
 		loser.save()
-		g.save()
-		g.GameEngine.modify_country_by_name(loser.country.name, 'capital', loser.get_country().capital - h.capital*0.9)
-		g.save()
+		g.save()"""
 		#loser.get_country().Population -= 
 		#loser.get_country().capital -= 
 		h.controller = player_to
 		if not h.water:
 			h.color = player_to.country.color
-		#g.GameEngine.modify_country_by_name(player_to.country.name, 'Population', player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.8))
-		player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.75)
-		g.save()
-		g.GameEngine.modify_country_by_name(player_to.country.name, 'capital', player_to.get_country().capital + h.capital*0.7)
-		#player_to.get_country().Population += h.population*0.75
-		#player_to.get_country().capital += h.capital*0.75
-		g.save()
-		h.save()
 		player_to.save()
 		loser.save()
 

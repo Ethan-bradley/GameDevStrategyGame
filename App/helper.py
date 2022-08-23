@@ -28,7 +28,7 @@ def add_players(temp, type):
 	    f.color = f.country.color
 	    f.robot = True
 	    f.save()
-	    curr_player = Player.objects.filter(name=f.name, game=temp)[0]
+	    curr_player = Player.objects.filter(game=temp, name=f.name)[0]
 	    #Creates Map Interface
 	    if type:
 	    	GraphCountryInterface.objects.create(game=temp,controller=curr_player, country=curr_player.country)

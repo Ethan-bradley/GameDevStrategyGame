@@ -370,7 +370,6 @@ def game(request, g, player):
             govForm2 = GovernmentSpendingForm(request.POST, instance=player)
             if govForm2.is_valid():
                 govForm2.save()
-                projection(gtemp, ptemp, context)
                 player.projection_unloaded = False
                 player.save()
             else:
@@ -426,12 +425,8 @@ def game(request, g, player):
     govForm = GovernmentSpendingForm(instance=player)
     next_turn = NextTurn(instance=player)
     if player.projection_unloaded:
-        projection(gtemp, ptemp, context)
         player.projection_unloaded = False
         player.save()
-    else:
-        projection(gtemp, ptemp, context, False)
-    #import pdb; pdb.set_trace();
     govDebt = round(player.get_country().Government_SavingsArr[player.get_country().time - 1] - player.get_country().GovDebtArr[player.get_country().time - 1], 2)
     
     context.update({
@@ -448,7 +443,6 @@ def game(request, g, player):
         'GovMoney':round(player.get_country().money[5],2),
         'GovSavings': govDebt,
         'GovDebt':round(govDebt/player.get_country().money[8], 2),
-        'CurrencyReserves':g.GameEngine.printCurrencyExchange(),
         'graph':player.GoodsPerCapita,
         'govBudget':"App/graphs/"+player.name+"expenditure.html",
         'govRevenue':"App/graphs/"+player.name+"revenue.html",
@@ -833,6 +827,7 @@ def gamegraph(g, p, context, graphmode, game):
     create_compare_graph("PopulationArr", "Population", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("GDPPerCapita", "Real_GDP_Per_Capita_in_$US", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("CapitalArr", "Capital", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
+    create_compare_graph("CapitalPerPerson", "Capital_Per_Person", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("GoodsPerCapita", "GoodsPerCapita", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("InflationTracker", "Inflation", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
     create_compare_graph("ResentmentArr", "Resentment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
@@ -1068,12 +1063,6 @@ def Politics(request, g, p):
 def delete(request, g, p):
     import os
     g = Game.objects.filter(name=g)[0]
-
-    """snapshot = tracemalloc.take_snapshot()
-    top_stats = snapshot.statistics("lineno")
-
-    for stat in top_stats[:10]:
-        print(stat)"""
     context = {
             'posts': Post.objects.all()
             #'posts': posts
@@ -1098,101 +1087,6 @@ def delete(request, g, p):
         g.delete()
     messages.success(request, f'Deletion of game was successfull!')
     return render(request, 'App/home.html', context)
-
-def projection(g, p, context, run=True):
-    import copy
-    def create_graph(attribute,title,country,start):
-        arr = getattr(country, attribute)[start:]
-        fig = px.line(y=arr,title=title)
-        fig.update_xaxes(title="Year")
-        fig.update_yaxes(title=title)
-        fig.add_vline(x=p.get_country().time - 18)
-        fig.write_html("templates/App/graphs/"+p.name+title+".html")
-    def create_single_graph(country,start, var):
-        data = getattr(country, var)[start:]
-        labels = [i for i in range(0,len(data))]
-        return data, labels
-
-    gtemp = g
-    ptemp = p
-    g = Game.objects.filter(name=g)[0]
-    p = Player.objects.filter(name=p)[0]
-    if True:
-        new_country = copy.deepcopy(p.get_country())
-        country = new_country
-        #Set variables for new_country
-        new_country.IncomeTax = p.IncomeTax
-        new_country.CorporateTax = p.CorporateTax
-        new_country.MoneyPrinting = p.MoneyPrinting
-        welfare = ((p.Welfare + p.AdditionalWelfare)*new_country.money[8])/new_country.money[5]
-        gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*new_country.money[8])/new_country.money[5]
-        gov_goods = ((p.Education + p.Military)*new_country.money[8])/new_country.money[5]
-        if welfare + gov_invest + gov_goods > 1:
-            country.BondWithdrawl = (welfare + gov_invest + gov_goods - 1)*country.money[5]
-            if country.BondWithdrawl > country.money[1]*0.5:
-                #Country is Bankrupt if this occurs.
-                country.BondWithdrawl = country.money[1]*0.5
-            welfare = ((p.Welfare + p.AdditionalWelfare)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
-            gov_invest = ((p.InfrastructureInvest + p.ScienceInvest)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
-            gov_goods = ((p.Education + p.Military)*new_country.money[8])/(new_country.money[5]+new_country.BondWithdrawl)
-
-        if ((p.Education + p.Military) != 0):
-            new_country.EducationSpend = p.Education/(p.Education + p.Military)
-            new_country.MilitarySpend = p.Military/(p.Education + p.Military)
-        else:
-            new_country.EducationSpend = 0
-
-        new_country.GovGoods = gov_goods
-        #country.BondWithdrawl = p.Bonds
-        #country.Bonds = p.Bonds
-        #country.GovWelfare = p.Welfare + p.AdditionalWelfare
-        new_country.GovWelfare = welfare
-        #Investment
-        total_gov_money = new_country.money[5] + new_country.BondWithdrawl
-        total_investor_money = new_country.money[4]*new_country.InvestmentRate
-
-        country.GovernmentInvest = gov_invest #p.InfrastructureInvest + p.ScienceInvest
-        total_money = country.money[5]*country.GovernmentInvest + total_investor_money
-        new_country.InfrastructureInvest = ((total_gov_money*((p.InfrastructureInvest*new_country.money[8])/new_country.money[5]))/total_money) + ((total_investor_money*0.1)/total_money)
-        new_country.ScienceInvest = ((total_gov_money*((p.ScienceInvest*new_country.money[8])/new_country.money[5]))/total_money) + ((total_investor_money*0.05)/total_money)
-        #country.QuickInvestment = p.CapitalInvestment
-        new_country.TheoreticalInvest = p.TheoreticalInvest
-        new_country.PracticalInvest = p.PracticalInvest
-        new_country.AppliedInvest = p.AppliedInvest
-
-        """t = GraphCountryInterface.objects.filter(game=g,controller=p)[0]
-        other_player = Player.objects.filter(country=t.country)[0]
-        new_country2 = copy.deepcopy(p.get_country())
-        country = new_country"""
-
-        #new_country.run_turn(5)
-        create_graph('InflationTracker','Inflation',new_country,17)
-        create_graph('UnemploymentArr','Unemployment',new_country,17)
-        create_graph('GoodsPerCapita','GoodsPerCapita',new_country,17)
-        create_graph('GDPPerCapita','RealGDPPerCapita',new_country,17)
-        create_graph('ConsumptionArr','ConsumptionPerCapita',new_country,17)
-        budget_graph(new_country, 17, "templates/App/graphs/"+p.name+"budgetgraphprojections.html", True)
-        inflation, labels = create_single_graph(new_country,17, 'InflationTracker')
-        unemployment, labels = create_single_graph(new_country,17,'UnemploymentArr')
-        GoodsPerCapita, labels = create_single_graph(new_country,17,'GoodsPerCapita')
-        GDPPerCapita, labels = create_single_graph(new_country,17,'GDPPerCapita')
-        Consumption, labels = create_single_graph(new_country,17,'ConsumptionArr')
-    context.update({
-        'unemployment_graph': unemployment,
-        'inflation_graph': inflation,
-        'goodspercapita_graph': GoodsPerCapita,
-        'gdppercapita_graph': GDPPerCapita,
-        'consumptionpercapita_graph': Consumption,
-        'game':gtemp,
-        'player':ptemp,
-        'notifications': Notification.objects.filter(game=g)[::-1],
-        'labels':labels,
-        'curr_year': new_country.time - 23,
-        'budget_projections': "App/graphs/"+p.name+"budgetgraphprojections.html",
-        #'posts': posts
-    })
-
-    #return render(request, 'App/projection.html', context)
 
 #Calculates distance between two points
 def calculate_distance(x1, y1, x2, y2):
