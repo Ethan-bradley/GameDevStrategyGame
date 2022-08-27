@@ -56,5 +56,5 @@ Push to your branch on origin
 ```sh
 git push origin branchname
 ```
-Merge changes to master
+Merge changes to master by creating a PR (Pull Request), then merge the pull request after any conflicts are resolved.
 Will then automatically push master changes to heroku
