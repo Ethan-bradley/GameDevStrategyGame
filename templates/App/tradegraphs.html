@@ -10,9 +10,6 @@
           {% include Sanctionsgraph %}
           {% include MilitaryAidgraph %}
           {% include ForeignAidgraph %}
-          <span style="float:right;" data-toggle="tooltip" title="This is a replica of the graph you can see on your own Government Budget page, except you can change which country to look at. Simply select a country in the selector at the bottom of this graph.">ℹ️ </span>
-<br>
-          {% include Budgetgraph %}
            <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
@@ -41,23 +38,8 @@
       <div class="form-group">
           <button class="btn btn-outline-info" type="submit" id="Tarriff" value="Tarriff">Submit Tariff Changes</button>
       </div>
-          <h2 class="account-heading">Multiple Player Graphs</h2>
-          <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
     </div>
   </form>
-  <span style="float:right;" data-toggle="tooltip" title="This graph shows how much each country exports to what country, and how much it imports from what country. On the left you can see the total exports of a given country, on the right the total imports.">ℹ️ </span>
-  <br>
-    {% include 'App/trade.html' %}
-    <span style="float:right;" data-toggle="tooltip" title="Here you can see the exchange rates of each country, relative to a fictional country outside of the map. To figure out how many British Pounds you can get per German Mark, simply divide how many $ you can get per German Mark (that's the value that's shown on the graph) , and divide it by how many $ it takes to buy one British Pound.">ℹ️ </span>
-    <br>
-    {% include 'App/exchange.html' %}
-    <span style="float:right;" data-toggle="tooltip" title="While the Foreign Investment Abroad graph shows you where your citizens' have invested the money they've invested outside of your borders, they have invested in which country. Foreign Investment Domestic shows you which foreign countries have invested how much in your borders.">ℹ️ </span>
-    <br>
-    {% include 'App/foreign_investment.html' %}
-    {% include 'App/foreign_investment_domestic.html' %}
-    {% for title in titles %}
-      <p class="text-secondary">{{ title }}</p>
-    {% endfor %}
     <!-- {% for title in titles %}
       <p class="text-secondary">{{ title }}</p>
     {% endfor %} -->

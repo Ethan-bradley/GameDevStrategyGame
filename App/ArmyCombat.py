@@ -148,25 +148,9 @@ class ArmyCombat():
 	#Switches control of a hex between two players (doesn't work yet)
 	def switch_hex(self, h, player_to, g):
 		loser = h.controller
-		#import pdb; pdb.set_trace()
-		#g.GameEngine.modify_country_by_name(loser.country.name, 'Population', loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8))
-		loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8)
-		loser_country = loser.get_country()
-		#import pdb; pdb.set_trace();
-		subtract = ((h.population*0.8)/loser_country.pop_matrix.sum())*1.4
-		"""loser_country.money[0] -= loser_country.money[0]*subtract
-		loser_country.money[1] -= loser_country.money[1]*subtract
-		loser_country.money[2] -= loser_country.money[2]*subtract
-		loser_country.money[3] -= loser_country.money[3]*subtract
-		loser_country.money[4] -= loser_country.money[4]*subtract
-		loser_country.money[5] -= loser_country.money[5]*subtract
-		loser.save()
-		g.save()"""
-		#loser.get_country().Population -= 
-		#loser.get_country().capital -= 
 		h.controller = player_to
-		if not h.water:
-			h.color = player_to.country.color
+		h.color = player_to.country.color
+		h.save()
 		player_to.save()
 		loser.save()
 

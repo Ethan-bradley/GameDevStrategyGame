@@ -1,6 +1,11 @@
 {% extends "App/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
+<div class="content-section">
+<legend>💰 {{ money }} | ⚔️ {{ MilitaryAm }} | 🔗 {{ iron }} | 🌾 {{ wheat }} |⛏️{{ coal }} | 🛢️ {{ oil }}</legend>
+</div>
+<br>
+<br>
 <div id="message-6">Click or hover on a hex</div>
 <br>
 <br>
@@ -57,6 +62,17 @@
             </fieldset>
             <div class="form-group">
                 <button class="btn btn-outline-info" type="submit" id="ArmyCreate">Build Army</button>
+            </div>
+        </form>
+
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Construction <span style="float:right;" data-toggle="tooltip" title="You can create buildings on the Map page here, each building will increase various resource amounts.">ℹ️ </span> </legend>
+                {{ building_form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit" id="ArmyCreate">Construct</button>
             </div>
         </form>
     </div>

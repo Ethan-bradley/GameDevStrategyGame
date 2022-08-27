@@ -3,47 +3,14 @@
 {% block content %}
 <div class="content-section">
     <legend class="border-bottom mb-4">{{ country }} <span style="float:right;" data-toggle="tooltip" title="On the Government Budget page, you can change your domestic policies, however you can also just keep the orders as is. Note that Money Printing is not a revenue source. When you are ready, you can submit your current domestic policies by clicking Submit Spending and Tax Plan. If you also want to run the next turn, you can/ need to select the Ready ✅ at the bottom of the page">ℹ️ </span> </legend>
-    {% if inflation_graph %}
-    <h2 class="account-heading">Projection Graphs</h2>
-           <h2 class="account-heading">Graphs</h2>
-           {% include budget_projections %}
-        <!-- <div id="container" style="width: 75%;">
-      <canvas id="goods-chart"></canvas>
-        </div>
-        <div id="container" style="width: 75%;">
-      <canvas id="unemployment-chart"></canvas>
-        </div>
-        <div id="container" style="width: 75%;">
-      <canvas id="gdp-chart"></canvas>
-        </div>
-        <div id="container" style="width: 75%;">
-      <canvas id="gdp-per-chart"></canvas>
-        </div>
-        <div id="container" style="width: 75%;">
-      <canvas id="growth-chart"></canvas>
-        </div>-->
-    {% endif %}
-    <legend class="border-bottom mb-4">Individual Product Forms <span style="float:right;" data-toggle="tooltip" title="Specific to each good, you can also:
-- set an Export Restriction for each good. This limits what percentage of the yearly production of that good can be exported. 100% means all can be exported (but usually won't be), 0% means nothing can be exported
-- divide the (Applied Science) Research Budget (Subsidy) among the 8 production processes. These have to add up to 100% (i.e. 1). It probably usually makes sense to spend 0 in production processes of resources that you do not have within your borders, unless you plan to conquer new hexes at some point !">ℹ️ </span>
+
 </legend>
     <form method="POST">
         {% csrf_token %}
         <fieldset class="form-group">
-            <p class="text-secondary">All the subsidy values below must add to 1.</p>
-            {{ PFS.management_form }}
-            {% for form2 in PFS %}
-                <legend class="border-bottom mb-4">{{ product_title|get_item:forloop.counter }}</legend>
-                {{ form2 |crispy }}
-            {% endfor %}
             <div class="media-body">
               <h2 class="account-heading">Data</h2>
                <h2 class="account-heading">Government Budget <span style="float:right;" data-toggle="tooltip" title="These two charts show you the projected budget balance for this next year. You can see the projected total expenditures and revenues in the text-based budget projection further down below">ℹ️ </span></h2>
-               {% include govBudget %}
-               {% include govRevenue %}
-               <p><span style="float:right;" data-toggle="tooltip" title="Here, the individual budget items are stacked, and shown over time: The thick black line in the middle is your total debt over time. Above that are your revenues, as stacked areas, and below that your expenditures. Below that graph, you can find a text-based budget projection - similarly to the expenditure/revenues pie charts - show you a projection for this next year">ℹ️ </span></p>
-               <br>
-               {% include BudgetGraph %}
                <p class="text-secondary">Total Government Revenue: {{ GovMoney }}</p>
                <p class="text-secondary">Total Government Revenue as % of GDP: {{ govRevenueGDP }}</p>
                <p class="text-secondary">Government Expenditures as % of GDP: {{ govSpending }}</p>

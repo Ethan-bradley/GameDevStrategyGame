@@ -30,9 +30,7 @@ class Game(models.Model):
 	neutral = models.CharField(max_length=100,default="Neutral")
 	board_size = models.IntegerField(default=7)
 	years_per_turn = models.IntegerField(default=1)
-	#players = ManyToManyField("Player")
-	#hexes = ManyToManyField("Hexes")
-	#TradeEngine = PickledObjectField()
+	year = models.IntegerField(default=0)
 	GameEngine = PickledObjectField(default="")
 	GoodsPerCapita = models.ImageField(default='default_graph.png', upload_to='graphs')
 	Inflation = models.ImageField(default='default_graph.png', upload_to='graphs')
@@ -55,6 +53,13 @@ class Player(models.Model):
 	color = models.CharField(max_length=50, default='#ffffff')
 	robot = models.BooleanField(default=False)
 	projection_unloaded = models.BooleanField(default=True)
+	money = models.IntegerField(default=0)
+
+	#Resources
+	coal = models.IntegerField(default=0)
+	iron = models.IntegerField(default=0)
+	wheat = models.IntegerField(default=0)
+	oil = models.IntegerField(default=0)
 	#Country = PickledObjectField()
 	#Government Variables:
 	IncomeTax = models.FloatField(default=0.2)
@@ -65,10 +70,9 @@ class Player(models.Model):
 	Military = models.FloatField(default=0.01)
 	Bonds = models.FloatField(default=0)
 	MoneyPrinting = models.IntegerField(default=200)
-
+	MilitaryAm = models.IntegerField(default=0)
 	#Science Investment
 	InfrastructureInvest = models.FloatField(default=0.017)
-	#CapitalInvestment = models.FloatField(default=0.0)
 	ScienceInvest = models.FloatField(default=0.0)
 	TheoreticalInvest = models.FloatField(default=0.1)
 	PracticalInvest = models.FloatField(default=0.3)
@@ -166,6 +170,54 @@ class Economic(models.Model):
 	oil_prod = models.DecimalField(max_digits=70, decimal_places=50)
 	welfare = models.DecimalField(max_digits=70, decimal_places=50)
 	population = models.DecimalField(max_digits=70, decimal_places=50)
+
+class Building(models.Model):
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	location = models.ForeignKey("Hexes", on_delete=models.CASCADE)
+	player_controller = models.ForeignKey("Player", on_delete=models.CASCADE)
+	name = models.CharField(max_length=100)
+	COALMINE = 'CoalMine'
+	IRONMINE = 'IronMine'
+	OILWELL = 'OilWell'
+	FARM = "Farm"
+	SCIENCE = "Science"
+	INFRASTRUCTURE = "Infrastructure"
+	MILITARY = "Military"
+	COMMERCIAL = "Commercial"
+	MODES = [
+	(COALMINE, 'Coal Mine'),
+	(IRONMINE, 'Iron Mine'),
+	(OILWELL, 'Oil Well'),
+	(FARM, 'Farm'),
+	(SCIENCE, 'Science'),
+	(INFRASTRUCTURE, 'Road'),
+	(MILITARY, 'Recruitment Center'),
+	(COMMERCIAL, 'Commercial')
+	]
+	building_type = models.CharField(max_length=20,choices=MODES,default=FARM)
+
+	#Adds the resource production to the player's resources and subtracts maintenance cost
+	def addResources(self):
+		player = self.player_controller
+		buildingDict = {'CoalMine':['coal',1], 'IronMine':['iron',1], 'OilWell':['oil',1], 'Farm':['wheat',1],'Military':['MilitaryAm',1], 'Commercial':['money', 1]}
+		modify = buildingDict[self.building_type]
+		curr_am = getattr(player, modify[0])
+		setattr(player, modify[0], curr_am + modify[1])
+		player.save()
+
+	#Applies the cost of the building towards the player
+	def applyCost(self):
+		player = self.player_controller
+		buildingDict = {'CoalMine':['iron',2], 'IronMine':['iron',3], 'OilWell':['money',3], 'Farm':['iron',1],'Military':['iron',2], 'Commercial':['wheat', 3]}
+		modify = buildingDict[self.building_type]
+		curr_am = getattr(player, modify[0])
+		#Return False if the player doesn't have enough the required resource
+		if curr_am - modify[1] < 0:
+			return False
+		else:
+			setattr(player, modify[0], curr_am - modify[1])
+			player.save()
+			return True
 
 class Army(models.Model):
 	game = models.ForeignKey("Game", on_delete=models.CASCADE)

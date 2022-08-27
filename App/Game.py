@@ -1,7 +1,5 @@
-from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, PlayerProduct, Product, Notification
+from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, PlayerProduct, Product, Notification, Building
 from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, ResetTurn
-from .GameEconModel import Country
-from .TradeModel import Trade
 from django.core.files import File
 from .HexList import HexList
 from .ArmyCombat import ArmyCombat
@@ -41,9 +39,7 @@ class GameEngine():
 	def start_capital(self, g):
 		all_players = Player.objects.filter(game=g)
 		for p in all_players:
-			index = self.nameList.index(p.country.name)
-			country = self.get_country(index)
-			self.start_hex_number(g, p, country)
+			self.start_hex_number(g, p)
 
 	def run_engine(self, g, graphs=True):
 		#Resetting model variables
@@ -66,17 +62,26 @@ class GameEngine():
 			pla.ready = False
 			pla.save()
 		all_armies = Army.objects.filter(game=g)
-		for a in all_armies:
-			a.moved = False
-
+		for army in all_armies:
+			army.moved = False
+		all_buildings = Building.objects.filter(game=g)
+		for building in all_buildings:
+			building.addResources()
+		g.year += 1
+		g.save()
 		print('running engine')
-		for p in all_players:
-			index = self.nameList.index(p.country.name)
-			#country = self.get_country(index)
-			#self.apply_hex_number(g, p, country)
-		if graphs:
-			pass
+		for player in all_players:
+			self.add_resources(player)
 		return
+	def add_resources(self, p):
+		hexlist = Hexes.objects.filter(controller=p)
+		for hex2 in hexlist:
+			p.money += hex2.capital
+			p.coal += hex2.coal
+			p.iron += hex2.iron
+			p.wheat += hex2.wheat
+			p.oil += hex2.oil
+		p.save()
 
 	def game_combat(self, g):
 		self.ArmyCombat.doCombat(g)
@@ -185,7 +190,6 @@ class GameEngine():
 		capital_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.capital - e.lastcapital, len(hex_list))
 		population_list = e.create_distribution([0 for j in range(0, len(centers))], centers, e.Population - e.lastPopulation, len(hex_list))
 
-		#e.lastPopulation = e.Population
 		for h in range(0, len(hex_list)):
 			print(capital_list[h])
 			if not math.isnan(capital_list[h]):
@@ -195,17 +199,15 @@ class GameEngine():
 			hex_list[h].save()
 			print(hex_list[h].capital)
 
-	def start_hex_number(self, g, p, e):
+	def start_hex_number(self, g, p):
 		hex_list = Hexes.objects.filter(game=g, controller=p, water=False)
 		centers = []
 		for h in range(0, len(hex_list)):
 			if hex_list[h].center:
 				centers.append(h)
-		#print(centers)
-		capital_list = [0 for j in range(0, len(centers))] #e.create_distribution([0 for j in range(0, len(centers))], centers, e.capital, len(hex_list))
-		population_list = [0 for j in range(0, len(centers))] #e.create_distribution([0 for j in range(0, len(centers))], centers, e.Population, len(hex_list))
+		capital_list = [0 for j in range(0, len(hex_list))]
+		population_list = [0 for j in range(0, len(hex_list))]
 
-		#e.lastPopulation = e.Population
 		for h in range(0, len(hex_list)):
 			hex_list[h].capital += int(capital_list[h])
 			hex_list[h].population += int(population_list[h])
@@ -214,32 +216,8 @@ class GameEngine():
 	#Switches control of a hex between two players (doesn't work yet)
 	def switch_hex(self, h, player_to, g):
 		loser = h.controller
-		#import pdb; pdb.set_trace()
-		#g.GameEngine.modify_country_by_name(loser.country.name, 'Population', loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8))
-		loser_country = loser.get_country()
-		loser.get_country().add_population(loser.get_country().pop_matrix,-h.population*0.8)
-		"""subtract = ((h.population*0.8)/loser_country.pop_matrix.sum())
-		loser_country.money[0] -= loser_country.money[0]*subtract
-		loser_country.money[1] -= loser_country.money[1]*subtract
-		loser_country.money[2] -= loser_country.money[2]*subtract
-		loser_country.money[3] -= loser_country.money[3]*subtract
-		loser_country.money[4] -= loser_country.money[4]*subtract
-		loser_country.money[5] -= loser_country.money[5]*subtract
-		g.save()"""
-		g.GameEngine.modify_country_by_name(loser.country.name, 'capital', loser.get_country().capital - h.capital*0.9)
-		g.save()
-		#loser.get_country().Population -= 
-		#loser.get_country().capital -= 
 		h.controller = player_to
 		h.color = player_to.country.color
-		#g.GameEngine.modify_country_by_name(player_to.country.name, 'Population', player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.8))
-		player_to.get_country().add_population(loser.get_country().pop_matrix, h.population*0.75)
-		g.save()
-		g.GameEngine.modify_country_by_name(player_to.country.name, 'capital', player_to.get_country().capital + h.capital*0.8)
-		#player_to.get_country().Population += h.population*0.75
-		#player_to.get_country().capital += h.capital*0.75
-		g.save()
-
 		h.save()
 		player_to.save()
 		loser.save()

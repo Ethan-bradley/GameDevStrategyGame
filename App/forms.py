@@ -1,5 +1,5 @@
 from django import forms
-from .models import Game, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface, GraphCountryInterface, Country
+from .models import Game, Building, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface, GraphCountryInterface, Country
 from django.forms import ModelForm
 from django.forms import formset_factory, BaseFormSet
 from django.core.exceptions import ValidationError
@@ -59,11 +59,6 @@ class AddTariffForm(ModelForm):
         model = Tariff
         fields = []
 
-
-"""class WaitGameForm(ModelForm):
-    class Meta:
-        model = Player
-        fields = ['ready']"""
 class AddPlayerProductForm(ModelForm):
     class Meta:
         model = PlayerProduct
@@ -135,21 +130,27 @@ class ArmyForm(ModelForm):
 
     def clean(self):
         super(ArmyForm, self).clean()
-        #c = self.cleaned_data.get('controller')
         s = self.cleaned_data.get('size')
         return self.cleaned_data
 
-    """def save(self, excerpt=None, force_insert=False, force_update=False, commit=True):
-        #object = super(Army, self).save(commit=commit)
-        import pdb; pdb.set_trace()
-        c = self.controller
-        if self._state.adding is True:
-            if c.get_country().Military - s >= 0:
-                c.get_country().Military -= s;
-            else:
-                c.size = 1"""
+class BuildingForm(ModelForm):
+    class Meta:
+        model = Building
+        fields = ['name','location','building_type']
 
-            #self._errors['IncomeTax'] = self.error_class(['You cannot have negative numbers in spending plan.'])
+    #Applies the cost of the building towards the player
+    def applyCost(self, player):
+        buildingDict = {'CoalMine':['iron',2], 'IronMine':['iron',3], 'OilWell':['money',3], 'Farm':['iron',1],'Military':['iron',2], 'Commercial':['wheat', 3]}
+        modify = buildingDict[self.cleaned_data.get('building_type')]
+        curr_am = getattr(player, modify[0])
+        #Return False if the player doesn't have enough the required resource
+        if curr_am - modify[1] < 0:
+            return False
+        else:
+            setattr(player, modify[0], curr_am - modify[1])
+            player.save()
+            return True
+
 
 class GovernmentSpendingForm(ModelForm):
     class Meta:
@@ -222,9 +223,6 @@ class CreateFactionForm(ModelForm):
         fields = ['name']
 
 class PolicyFormSet(BaseFormSet):
-    #def __init__(self, *args, **kwargs):
-    #    super(BaseFormSet, self).__init__(*args, **kwargs)
-
     def clean(self):
         count = 0
         for form in self.forms:

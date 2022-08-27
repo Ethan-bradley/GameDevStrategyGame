@@ -4,7 +4,7 @@ from .models import Player
 from .models import Tariff
 from .models import Hexes
 from .models import Economic
-from .models import Game, IndTariff, Army, Country, Policy, PolicyGroup, PlayerProduct, Product, MapInterface, GraphInterface, Notification, GraphCountryInterface
+from .models import Game, IndTariff, Army, Country, Policy, PolicyGroup, PlayerProduct, Product, MapInterface, GraphInterface, Notification, GraphCountryInterface, Building
 
 admin.site.register(Post)
 admin.site.register(Player)
@@ -23,4 +23,5 @@ admin.site.register(MapInterface)
 admin.site.register(GraphInterface)
 admin.site.register(Notification)
 admin.site.register(GraphCountryInterface)
+admin.site.register(Building)
 # Register your models here.

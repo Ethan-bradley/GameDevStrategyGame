@@ -6,7 +6,7 @@ from django.forms import formset_factory, modelformset_factory
 from .Game import GameEngine
 from .models import Post
 from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, GraphCountryInterface
-from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm, GraphCountryInterfaceForm
+from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm, GraphCountryInterfaceForm, BuildingForm
 from django.views.generic.edit import CreateView
 from django.apps import apps
 import json
@@ -14,24 +14,16 @@ from .HexList import HexList
 from .HexList2 import HexList2
 from .PolicyList import PolicyList
 from django.db.models.fields import *
-#from django.db.models import Q
-#import django
 import plotly.graph_objects as go
 import plotly.express as px
 from .budgetgraph import budget_graph
 from .helper import add_players, add_neutral
 from django.db import reset_queries
 import math
-#import django_rq
-#from rq import Queue
-#from worker import conn
-#import tracemalloc
 
 def home(request):
-	#import pdb; pdb.set_trace()
 	context = {
 		'posts': Post.objects.all()
-		#'posts': posts
 	}
 	return render(request, 'App/home.html', context)
 
@@ -48,16 +40,13 @@ def login(request):
 	return render(request, 'Login.html')
 
 def lobby(request):
-    #import pdb; pdb.set_trace()
     context = {
         'games': Game.objects.all()
-        #'posts': posts
     }
     return render(request, 'App/lobby.html', context)
 
 @login_required
 def new_game(request):
-    #tracemalloc.start()
     if request.method == 'POST':
         form = NewGameForm(request.POST)
         player_form = JoinGameForm(request.POST)
@@ -79,7 +68,6 @@ def new_game(request):
                 #job = q.enqueue(create_countries, 'http://heroku.com', on_success=organize_countries)
                 f.GameEngine = GameEngine(15,['UK', 'Germany', 'France', 'Spain', 'Italy', 'Poland', 'Sweden', 'Egypt','Algeria', 'Turkey', 'Ukraine', 'Russia', 'Iran', 'Saudi Arabia', 'Neutral'])
             f.save()
-            #import pdb; pdb.set_trace();
             #Saves game name in temporary variable
             g = f.name
             gameList = Game.objects.all()
@@ -270,11 +258,6 @@ def joinGame(request, g):
                 if p.curr_player.game == temp:
                     itf = IndTariff(controller=p, key=curr_player, tariffAm=0)
                     itf.save()
-                    """iForm = AddIndTariffForm(request.POST)
-                    itf = iForm.save(commit=False)
-                    itf.controller = p
-                    itf.key = curr_player
-                    itf.save()"""
             formt = AddPlayerProductForm(request.POST)
             formt = formt.save(commit=False)
             formt.curr_player = curr_player
@@ -303,28 +286,6 @@ def joinGame(request, g):
         form = JoinGameForm(instance=request.user)
     return render(request, 'App/join_game.html', {'form': form})
 
-"""def game(request, g, player):
-    g = Game.objects.filter(name=g)[0]
-    player = Player.objects.filter(name=player)[0]
-    tar = Tariff.objects.filter(game=g, curr_player=player)[0]
-    k = IndTariff.objects.filter(controller=tar)
-    if request.method == 'POST':
-        for f in k:
-            v = IndTariffForm(request.POST, instance=f)
-            if v.is_valid():
-                v.save()
-        messages.success(request, f'Tariffs Successfully submitted!')
-        #return redirect('app-lobby')
-    indForms = []
-    players = []
-    IndFormSet = formset_factory(IndTariffForm)
-    for f in k:
-        v = IndTariffForm(instance=f)
-        indForms.append((v, f.key))
-    context = {
-        'indForms': indForms
-    }
-    return render(request, 'App/Game.html', context)"""
 @login_required
 def game(request, g, player):
     reset_queries()
@@ -349,10 +310,8 @@ def game(request, g, player):
     tar = Tariff.objects.filter(game=g, curr_player=player)[0]
     k = IndTariff.objects.filter(controller=tar)
     IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
-    ProductFormSet = modelformset_factory(Product, fields=['exportRestriction','subsidy'], extra=0)
     context = {}
     if request.method == 'POST':
-        #import pdb; pdb.set_trace();
         if 'form-0-tariffAm' in request.POST:
             #Submits the Tariff formset
             IndFormSet = IndFormSet(request.POST, queryset=IndTariff.objects.filter(controller=tar))
@@ -362,10 +321,6 @@ def game(request, g, player):
             messages.success(request, f'Tarriffs succesfully submitted!')
             return redirect('app-game', g=g.name, player=str(player))
         else:
-            ProductFormSet = ProductFormSet(request.POST, queryset=Product.objects.filter(controller=PlayerProduct.objects.filter(game=g, curr_player=player.id)[0]))
-            for f in ProductFormSet:
-                if f.is_valid():
-                    f.save()
             #Government Spending Form
             govForm2 = GovernmentSpendingForm(request.POST, instance=player)
             if govForm2.is_valid():
@@ -397,61 +352,46 @@ def game(request, g, player):
                         g.GameEngine.run_engine(g, False)
                     temp = g.GameEngine.run_engine(g)
                     g.save()
-                    #g.GameEngine = temp[0]
                     messages.success(request, f'Turn succesfully run!')
                     return redirect('app-game', g=g.name, player=str(player))
     #Creates the tariff formset and titles for it.
     IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
-    ProductFormSet = modelformset_factory(Product, fields=['exportRestriction','subsidy'], extra=0)
     titles = {}
     count = 1
     for f in k:
-        #v = IndTariffForm(instance=f)
         titles[count] = f.key
         count += 1
     IFS = IndFormSet(queryset=IndTariff.objects.filter(controller=tar))
-    PFS = ProductFormSet(queryset=Product.objects.filter(controller=PlayerProduct.objects.filter(game=g, curr_player=player.id)[0]))
-    products = Product.objects.filter(controller=PlayerProduct.objects.filter(game=g, curr_player=player.id)[0])
-    product_title = {}
-    count = 1
-    for i in products:
-        product_title[count] = i.name
-        count += 1
-    #for i in IFS:
-    #    print(i.label)
-    create_revenue_pie(player.get_country(),player)
-    create_expenditure_pie(player.get_country(),player)
-    budget_graph(player.get_country(), 17, "templates/App/graphs/"+player.name+"budgetgraph.html")
+    #create_revenue_pie(player.get_country(),player)
+    #create_expenditure_pie(player.get_country(),player)
+    #budget_graph(player.get_country(), 17, "templates/App/graphs/"+player.name+"budgetgraph.html")
     govForm = GovernmentSpendingForm(instance=player)
     next_turn = NextTurn(instance=player)
     if player.projection_unloaded:
         player.projection_unloaded = False
         player.save()
-    govDebt = round(player.get_country().Government_SavingsArr[player.get_country().time - 1] - player.get_country().GovDebtArr[player.get_country().time - 1], 2)
+    govSavings = player.money
+    year = g.year
     
     context.update({
         'country': player.country,
         'indForms': IFS,
-        'PFS':PFS,
         'titles': titles,
-        'product_title':product_title,
         'test': {'a':'new', 'b':'new2'},
         'readyForm':next_turn,
         'game':gtemp,
         'player':ptemp,
         'govForm':govForm,
-        'GovMoney':round(player.get_country().money[5],2),
-        'GovSavings': govDebt,
-        'GovDebt':round(govDebt/player.get_country().money[8], 2),
+        'GovMoney':0,
+        'GovSavings': govSavings,
+        'GovDebt':0,
         'graph':player.GoodsPerCapita,
         'govBudget':"App/graphs/"+player.name+"expenditure.html",
         'govRevenue':"App/graphs/"+player.name+"revenue.html",
         'BudgetGraph':"App/graphs/"+player.name+"budgetgraph.html",
-        'CurrentYear':player.get_country().time - 18,
-        'govRevenueGDP':round((player.get_country().money[5]/player.get_country().money[8])*100,1),
+        'CurrentYear':year,
         'govSpending':round((player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military)*100, 4),
-        'govBalance': round(((player.get_country().money[5]/player.get_country().money[8]) - (player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military))*100, 1),
-        'notifications': Notification.objects.filter(game=g, year__gt=player.get_country().time - 23)[::-1],
+        'notifications': Notification.objects.filter(game=g, year__gt=year)[::-1],
     })
     return render(request, 'App/game.html', context)
 def runArmy(request, g):
@@ -491,6 +431,18 @@ def map(request, g, p, l, lprev):
                 mi2.save()
                 return redirect('map', gtemp, ptemp, 'null', 'null')
         else:
+            if 'building_type' in request.POST:
+                buildingForm = BuildingForm(request.POST)
+                if buildingForm.is_valid():
+                    buildingFormTemp = buildingForm.save(commit=False)
+                    buildingFormTemp.game = g
+                    buildingFormTemp.player_controller = player
+                    if buildingFormTemp.applyCost():
+                        buildingFormTemp.save()
+                        return redirect('map', gtemp, ptemp, 'null', 'null')
+                    else:
+                        messages.warning(request, f'You do not have enough resources to construct this building!')
+                        return redirect('map', gtemp, ptemp, 'null', 'null')
             if l != 'null':
                 h = Hexes.objects.filter(game=g, hexNum=l)[0]
                 v = Army.objects.filter(game=g,location=h, controller=p)
@@ -504,11 +456,6 @@ def map(request, g, p, l, lprev):
             if form.is_valid():
                 f = form.save(commit=False)
                 v = Army.objects.filter(game=g,location=f.location, controller=p)
-                #if l != 'null':
-                    #f.Hexes = l
-                #Creates player object associated with this user and game.
-                #f = form.save(commit=False)
-                #v = Army.objects.filter(game=g,location=f.location)
                 f.controller = p
                 f.game = g
                 s = f.size
@@ -530,12 +477,13 @@ def map(request, g, p, l, lprev):
                         if total_size + s > 1000000:
                             messages.warning(request, f'The total size of all your armies combined cannnot be more than 1m!')
                             return redirect('map', gtemp, ptemp, 'null', 'null')
-                        if p.get_country().Military - s >= 0:
-                            g.GameEngine.modify_country_by_name(p.country.name, 'Military', p.get_country().Military - s)
-                            g.save()
+                        if player.MilitaryAm - s >= 0:
+                            player.MilitaryAm -= s
+                            player.save()
                         else:
-                            f.size = 1
-                        if p.get_country().Military - s - (total_size + s)*0.1 < 0:
+                             messages.warning(request, f'You do not have enough Military resources to build this Army!')
+                             return redirect('map', gtemp, ptemp, 'null', 'null')
+                        if player.MilitaryAm - s - (total_size + s)*0.1 < 0:
                             messages.warning(request, f'Building this army does not leave enough remaining for army maintenace, which puts you at risk of army rebellion.')
 
                     else:
@@ -547,16 +495,18 @@ def map(request, g, p, l, lprev):
                         if total_size + s > 1000000:
                             messages.warning(request, f'The total size of all your armies combined cannnot be more than 1m!')
                             return redirect('map', gtemp, ptemp, 'null', 'null')
-                        if p.get_country().Military - s >= 0:
-                            g.GameEngine.modify_country_by_name(p.country.name, 'Military', p.get_country().Military - s)
-                            g.save()
+                        if player.MilitaryAm - s >= 0:
+                            player.MilitaryAm -= s
+                            player.save()
                         else:
                             f.size = v[0].size
-                        if p.get_country().Military - s - (total_size + s)*0.1 < 0:
-                            messages.warning(request, f'Building this army does not leave enough remaining for army maintenace, which puts you at risk of army rebellion.')
+                            messages.warning(request, f'You do not have enough military resources to expand this Army!')
+                            return redirect('map', gtemp, ptemp, 'null', 'null')
+                        if player.MilitaryAm - s - (total_size + s)*0.1 < 0:
+                            messages.warning(request, f'Expanding this army does not leave enough remaining for army maintenace, which puts you at risk of army rebellion.')
                 else:
-                    p.modify_country('Military', p.get_country().Military - s)
-                    g.save()
+                    player.MilitaryAm -= s
+                    player.save()
                 f.moved = True
                 f.save()
     #Gets the different colors of the hexes and the stats of the hexes
@@ -620,8 +570,6 @@ def map(request, g, p, l, lprev):
         if v.naval and not h2.water:
             messages.warning(request, f'A naval force cannot move on land!')
             return redirect('map', gtemp, ptemp, lprev, 'null')
-        #if not v.naval and h2.water:
-        #    messages.warning(request, f'A land force cannot move on water!')
         #    return redirect('map', gtemp, ptemp, lprev, 'null')
         if calculate_distance(h.xLocation, h.yLocation, h2.xLocation, h2.yLocation) > v.max_movement:
             messages.warning(request, f'This army cannot move that far!')
@@ -629,31 +577,21 @@ def map(request, g, p, l, lprev):
         f = ArmyForm(instance=v)
         form = f.save(commit=False)
         form.location = h2
-        #import pdb; pdb.set_trace()
-        """s = form.size
-        if s < 0:
-            messages.warning(request, f'No negative armies!')
-            return redirect('map', gtemp, ptemp, lprev, 'null')
-        if p.get_country().Military - s >= 0:
-            p.get_country().Military -= s;
-            p.save()
-        else:
-            f.size = 1"""
-        #p.save()
         if h2 != h:
             form.moved = True
 
         form.save()
         return redirect('map', gtemp, ptemp, 'null', 'null')
-    #data = serializers.serialize("json", <col>)
     #If a tiles hasn't been selected load regular army form
     if l == 'null':
         f = ArmyForm()
+        buildingForm = BuildingForm()
     else:
         #If a tiles has been selected, load that particular army if an army is on it, 
         #if not then load a basic Army form with that location defaulted into the form.
         h = Hexes.objects.filter(game=g, hexNum=l)[0]
         v = Army.objects.filter(game=g,location=h)
+        buildingForm = BuildingForm(initial={'location':h})
         if not v:
             f = ArmyForm(initial={'location':h})
         else:
@@ -664,13 +602,20 @@ def map(request, g, p, l, lprev):
                 messages.warning(request, f'You cannot move another players army!')
                 f = ArmyForm()
                 return redirect('map', gtemp, ptemp, 'null', 'null')
+    militaryAm = player.MilitaryAm
+    year = g.year
     context = {
         'country': player.country,
-        'MilitaryAm':p.get_country().Military,
+        'money': player.money,
+        'coal': player.coal,
+        'iron': player.iron,
+        'wheat': player.wheat,
+        'oil':player.oil,
+        'MilitaryAm':militaryAm,
         'ColorMap':json_list,
         'hi':'hello',
         'info':info_list,
-        'CurrentYear':player.get_country().time - 18,
+        'CurrentYear':year,
         'form':f,
         'map_form':mi,
         'game':gtemp,
@@ -679,182 +624,21 @@ def map(request, g, p, l, lprev):
         'hexmap':hexmap,
         'maintenace':total_size*0.1,
         'resources':t.mode == "RE",
-        'notifications': Notification.objects.filter(game=g, year__gt=player.get_country().time - 23)[::-1],
-        'board_size':g.board_size
+        'notifications': Notification.objects.filter(game=g, year__gt=year)[::-1],
+        'board_size':g.board_size,
+        'building_form':buildingForm
     }
     return render(request, 'App/map.html', context)
 
 #Creates a jquery hexmap
 def create_map(hex_list):
-    message = ''#'"hexes": { \n'
+    message = ''
     last = hex_list[len(hex_list) - 1]
     for i in hex_list:
         message += '"'+str(i.hexNum)+'"' + ':{"n":"'+i.name+'","q":'+str(i.xLocation)+',"r":'+str(i.yLocation)+'}'
         if i != last:
             message += ',\n'
     return message
-
-def graph(request, g, p):
-    reset_queries()
-    gtemp = g
-    ptemp = p
-    g = Game.objects.filter(name=g)[0]
-    p = Player.objects.filter(name=p)[0]
-    #if not os.path.exists('.'+g.GoodsPerCapita.url):
-    #g.GameEngine.run_graphs(g)
-    def create_wage_graph(country,p):
-        fig = px.bar(x=country.HouseProducts + country.CapitalGoods + country.RawGoods + ['Education','Military','Researchers','Entrepreneurs'],y=country.create_wage_array(),title="Wages")
-        fig.update_xaxes(title="Jobs")
-        fig.update_yaxes(title="Pay")
-        fig.write_html("templates/App/graphs/"+p.name+"wage.html")
-    def create_job_graph(country, p):
-        fig = px.bar(x=country.HouseProducts + country.CapitalGoods + country.RawGoods + ['Education','Military','Researchers','Entrepreneurs'],y=[sum(country.pop_matrix[i][20:70]) for i in range(0, len(country.pop_matrix))],title="Jobs")
-        fig.update_xaxes(title="Jobs")
-        fig.update_yaxes(title="Workers")
-        fig.write_html("templates/App/graphs/"+p.name+"jobs.html")
-    def create_prices_graph(country, p):
-        fig = px.bar(x=country.HouseProducts + country.CapitalGoods + country.RawGoods,y=country.HousePrices + country.CapitalPrices + country.RawPrices,title="Prices")
-        fig.update_xaxes(title="Products")
-        fig.update_yaxes(title="Price")
-        fig.write_html("templates/App/graphs/"+p.name+"prices.html")
-    create_wage_graph(p.get_country(),p)
-    create_job_graph(p.get_country(),p)
-    #create_prices_graph(p.get_country(), p)
-    t = GraphInterface.objects.filter(game=g,controller=p)[0]
-    if request.method == 'POST':
-        mi2 = GraphInterfaceForm(request.POST, instance=t)
-        if mi2.is_valid():
-            mi2.save()
-            return redirect('app-graph', gtemp, ptemp)
-    else:
-        mi = GraphInterfaceForm(instance=t)
-    def create_single_graph(country,start, var):
-        data = getattr(country, var)[start:]
-        labels = [i for i in range(0,len(data))]
-        return data, labels
-    capital, labels = create_single_graph(p.get_country(),17, 'CapitalArr')
-    GoodsProduction, labels = create_single_graph(p.get_country(),17,'GoodsTotal')
-    GDP, labels = create_single_graph(p.get_country(),17,'GDP')
-    growth, labels = create_single_graph(p.get_country(),17,'RealGDPGrowth')
-    print(labels)
-    time = p.get_country().time - 18
-    other = time - 2
-    context = {
-        'country': p.country,
-        'GoodsPerCapita':p.GoodsPerCapita,
-        'Inflation':p.Inflation,
-        'RealGDP':p.RealGDP,
-        'Employment':p.Employment,
-        'tradeBalance':p.tradeBalance,
-        'GDPPerCapita':p.GDPPerCapita,
-        'InterestRate':p.InterestRate,
-        'CurrentYear':time,
-        'Capital':p.Capital,
-        'GoodsProduction':p.GoodsProduction,
-        'GDP':p.GDP,
-        'GDPGrowth':p.GDPGrowth,
-        'game':gtemp,
-        'player':ptemp,
-        'wageGraph':'App/graphs/'+p.name+'wage.html',
-        'jobGraph':'App/graphs/'+p.name+'jobs.html',
-        'pricesGraph':'App/graphs/'+p.name+'prices.html',
-        'notifications': Notification.objects.filter(game=g, year__gt=other)[::-1],
-        'GraphInterface': mi,
-        'capital':capital,
-        'labels':labels,
-        'GoodsProduction':GoodsProduction,
-        'GDP':GDP,
-        'growth':growth
-    }
-    gamegraph(gtemp, ptemp, context, t, g)
-    reset_queries()
-    return render(request, 'App/graphs.html', context)
-
-def gamegraph(g, p, context, graphmode, game):
-    def create_compare_graph(attribute,title,trade,countries,start,  graph_dict={}, game=None, econattr=True):
-        data = {'Country': [],
-        title: [],
-        'Year':[]
-        }
-        graph_dict['data'].append([])
-        graph_dict['colors'].append([])
-        graph_dict['line_titles'].append([])
-        last_index = len(graph_dict['data']) - 1
-        for j in range(0, len(trade.exchangeRateArr)):
-            if hasattr(countries[j], attribute) and isinstance(getattr(countries[j], attribute), list):
-                arr = getattr(countries[j], attribute)[start:]
-            else:
-                #import pdb; pdb.set_trace()
-                if j == 14:
-                    arr = getattr(game, attribute)[j][start + 8:]
-                else:
-                    arr = getattr(game, attribute)[j][start + 5:]
-
-                if len(arr) == 0:
-                    continue
-            for i in range(1,len(arr)):
-                if math.isnan(arr[i]):
-                    arr[i] = arr[i-1]
-            data[title] += arr
-            data['Year'] += [i for i in range(0,len(arr))]
-            data['Country'] += [trade.CountryName[j] for i in range(0,len(arr))]
-            graph_dict['data'][last_index].append(arr)
-        graph_dict['line_titles'][last_index] = [trade.CountryName[i] for i in range(0,len(trade.CountryName))]
-        graph_dict['colors'][last_index] = ['rgb('+str(color1)+','+str(color1*50 % 255)+','+str(255 - color1)+')' for color1 in range(0,255,int(255/len(countries)))]
-        if econattr:
-            #fig = px.line(data,x='Year', y=title,title=title, color="Country")
-            #fig.update_xaxes(title="Year")
-            #fig.update_yaxes(title=title)
-            graph_dict['title'].append(title)
-        else:
-            graph_dict['title'].append("Budget:_"+str(attribute))
-        #if econattr:
-        #fig.write_html("templates/App/"+title+".html")
-    graph_dict = {
-    'title':[],
-    'data':[],
-    'colors':[],
-    'line_titles':[]
-    }
-    gtemp = g
-    ptemp = p
-    g = Game.objects.filter(name=g)[0]
-    p = Player.objects.filter(name=p)[0]
-    create_compare_graph("ScienceArr", "Science", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("UnemploymentArr", "Unemployment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("EducationArr2", "Education", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("InfrastructureArr", "Infrastructure", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("PopulationArr", "Population", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("GDPPerCapita", "Real_GDP_Per_Capita_in_$US", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("CapitalArr", "Capital", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("CapitalPerPerson", "Capital_Per_Person", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("GoodsPerCapita", "GoodsPerCapita", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("InflationTracker", "Inflation", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("ResentmentArr", "Resentment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("EmploymentRate", "Employment", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("GoodsBalance", "TradeBalance", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("InterestRate", "Interest_Rate", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("ConsumptionArr2", "Consumption_Per_Capita", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    create_compare_graph("Finance", "New_Loanable_Funds", g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict)
-    #import pdb; pdb.set_trace()
-    create_compare_graph(graphmode.mode, graphmode.get_mode_display(), g.GameEngine.TradeEngine, g.GameEngine.TradeEngine.CountryList, 17,graph_dict, game.GameEngine, False)
-    
-    context.update({
-        'GoodsPerCapita':g.GoodsPerCapita,
-        'Inflation':g.Inflation,
-        'Resentment':g.Resentment,
-        'Employment':g.Employment,
-        'GoodsBalance':g.GoodsBalance,
-        'InterestRate':g.InterestRate,
-        'Consumption':g.Consumption,
-        'game':gtemp,
-        'player':ptemp,
-        'notifications': Notification.objects.filter(game=g, year__gt=p.get_country().time - 23)[::-1],
-        'budgetGraph': 'templates/App/budget2.html',
-        'graphs': graph_dict['title'],
-        'graph_dict': graph_dict,
-    })
-    #return render(request, 'App/gamegraphs.html', context)
 
 def trade(request, g, p):
     reset_queries()
@@ -866,44 +650,12 @@ def trade(request, g, p):
     tar = Tariff.objects.filter(game=g, curr_player=player)[0]
     k = IndTariff.objects.filter(controller=tar)
     IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
-    def create_exchange_rate_graph(trade, start):
-        data = {'Country': [],
-        'Exchange Rate': [],
-        'Year':[]
-        }
-        for j in range(0, len(trade.exchangeRateArr)):
-            data['Exchange Rate'] += trade.exchangeRateArr[j][start:]
-            data['Year'] += [i for i in range(0,len(trade.exchangeRateArr[j][start:]))]
-            data['Country'] += [trade.CountryName[j] for i in range(0,len(trade.exchangeRateArr[j][start:]))]
-        fig = px.line(data, x='Year', y='Exchange Rate',title="Exchange Rates", color="Country")
-        fig.update_xaxes(title="Year")
-        fig.update_yaxes(title="Amount")
-        fig.write_html("templates/App/exchange.html")
-    def create_foreign_investment_pie(index, trade, title, data3):
-        #matplotlib.rcParams.update({'font.size': 8})
-        data = {'investment':trade.foreign_investment[index],
-        'countries':trade.CountryName}
-        fig = px.pie(data,values='investment',names='countries', title="Foreign Investment Abroad")
-        fig.write_html("templates/App/foreign_investment.html")
-
-        arr = []
-        for i in range(0,len(trade.foreign_investment)):
-            arr.append(trade.foreign_investment[i][index])
-        data2 = {'investment':arr,
-        'countries':trade.CountryName} 
-        fig = px.pie(data2,values='investment',names='countries', title="Foreign Investment Domestically")
-        fig.write_html("templates/App/foreign_investment_domestic.html")
-        title.append("Foreign investment as % of GDP: "+str((sum(trade.foreign_investment[index])/trade.CountryList[index].money[8])*100))
-        title.append("Foreign Inflows as % of GDP: "+str((trade.sum_foreign_investment(index, trade.foreign_investment)/trade.CountryList[index].money[8])*100))
-        title.append("Domestic foreign investment as % of GDP: "+str((sum(arr)/trade.CountryList[index].money[8])*100))
-        title.append("Domestic outflows due to foreign investment as % of GDP: "+str(((sum(arr)*trade.CountryList[index].interest_rate)/trade.CountryList[index].money[8])*100))
     def create_trade_rate_graph(game, attribute, title2, country, start):
         data = {'Country': [],
         'Rate': [],
         'Year':[]
         }
         variable = getattr(game, attribute)
-        #import pdb; pdb.set_trace();
         for j in game.nameList:
             data['Rate'] += variable[country][j][start:]
             data['Year'] += [i for i in range(0,len(variable[country][j][start:]))]
@@ -913,16 +665,13 @@ def trade(request, g, p):
         fig.update_yaxes(title=title2+" Amount")
         fig.write_html("templates/App/graphs/"+p.name+attribute+".html")
     t = GraphCountryInterface.objects.filter(game=g,controller=p)[0]
-    create_exchange_rate_graph(g.GameEngine.TradeEngine,4)
     data3 = []
     titles = []
-    create_foreign_investment_pie(g.GameEngine.TradeEngine.CountryName.index(p.country.name), g.GameEngine.TradeEngine, titles, data3)
     create_trade_rate_graph(g.GameEngine,"TarriffsArr","Tarriffs",t.country.name,24)
     create_trade_rate_graph(g.GameEngine,"SanctionsArr","Sanctions",t.country.name,24)
     create_trade_rate_graph(g.GameEngine,"ForeignAid","Foreign Aid",t.country.name,24)
     create_trade_rate_graph(g.GameEngine,"MilitaryAid","Military Aid",t.country.name,24)
     other_player = Player.objects.filter(country=t.country)[0]
-    budget_graph(other_player.get_country(), 17, "templates/App/graphs/"+p.name+"tradebudgetgraph.html")
     if request.method == 'POST':
         if 'form-0-tariffAm' in request.POST:
             #Submits the Tariff formset
@@ -948,6 +697,7 @@ def trade(request, g, p):
             tariff_titles[count] = f.key.country.name+": "+f.key.name
             count += 1
         IFS = IndFormSet(queryset=IndTariff.objects.filter(controller=tar))
+    year = g.year
     context = {
         'indForms': IFS,
         'country': p.country,
@@ -955,12 +705,11 @@ def trade(request, g, p):
         'Sanctionsgraph':"App/graphs/"+p.name+"SanctionsArr.html",
         'ForeignAidgraph':"App/graphs/"+p.name+"ForeignAid.html",
         'MilitaryAidgraph':"App/graphs/"+p.name+"MilitaryAid.html",
-        'Budgetgraph':"App/graphs/"+p.name+"tradebudgetgraph.html",
         'goodsBalance':g.GoodsBalance,
         'tradeBalance':p.tradeBalance,
         'game':gtemp,
         'player':ptemp,
-        'notifications': Notification.objects.filter(game=g, year__gt=player.get_country().time - 23)[::-1],
+        'notifications': Notification.objects.filter(game=g, year__gt=year)[::-1],
         'GraphInterface': mi,
         'data':data3,
         'tariff_titles':tariff_titles,
@@ -968,7 +717,6 @@ def trade(request, g, p):
     }
     reset_queries()
     return render(request, 'App/tradegraphs.html', context)
-    #return render(request, 'App/trade.html')
 
 def policies(request, g, p):
     gtemp = g
@@ -1012,7 +760,6 @@ def policies(request, g, p):
         group_titles[counter] = pg.name
         k = Policy.objects.filter(policy_group=pg)
         for f in k:
-            #v = IndTariffForm(instance=f)
             ef_list = {}
             t[count] = f.name
             ef[count] = ef_list
