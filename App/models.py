@@ -199,10 +199,13 @@ class Building(models.Model):
 	#Adds the resource production to the player's resources and subtracts maintenance cost
 	def addResources(self):
 		player = self.player_controller
-		buildingDict = {'CoalMine':['coal',1], 'IronMine':['iron',1], 'OilWell':['oil',1], 'Farm':['wheat',1],'Military':['MilitaryAm',1], 'Commercial':['money', 1]}
+		buildingDict = {'CoalMine':['coal',1,'oil',1], 'IronMine':['iron',1,'oil',1], 'OilWell':['oil',1,'money',1], 'Farm':['wheat',1,'money',1],'Military':['MilitaryAm',1,'wheat',1], 'Commercial':['money', 1,'wheat',1]}
 		modify = buildingDict[self.building_type]
 		curr_am = getattr(player, modify[0])
-		setattr(player, modify[0], curr_am + modify[1])
+		curr_am_maintenance = getattr(player, modify[2])
+		if curr_am_maintenance - modify[3] >= 0:
+			setattr(player, modify[2], curr_am_maintenance - modify[3])
+			setattr(player, modify[0], curr_am + modify[1])
 		player.save()
 
 	#Applies the cost of the building towards the player
@@ -218,6 +221,11 @@ class Building(models.Model):
 			setattr(player, modify[0], curr_am - modify[1])
 			player.save()
 			return True
+	#Returns the building's symbol for display
+	def getSymbol(self):
+		buildingDict = {'CoalMine':['🔗'], 'IronMine':['⛏️'], 'OilWell':['🛢️'], 'Farm':['🚜'],'Military':['🎖️'], 'Commercial':['🏬'], 'Infrastructure':['🛣️']}
+		emoji = buildingDict[self.building_type][0]
+		return emoji
 
 class Army(models.Model):
 	game = models.ForeignKey("Game", on_delete=models.CASCADE)

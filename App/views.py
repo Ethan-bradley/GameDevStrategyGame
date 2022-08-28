@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.forms import formset_factory, modelformset_factory
 from .Game import GameEngine
 from .models import Post
-from .models import Game, Player, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, GraphCountryInterface
+from .models import Game, Player, Building, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, GraphCountryInterface
 from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm, GraphCountryInterfaceForm, BuildingForm
 from django.views.generic.edit import CreateView
 from django.apps import apps
@@ -195,11 +195,14 @@ def joinGame(request, g):
     if len(p) > 0:
         if len(p) > 1:
             p = Player.objects.filter(user=request.user, game=temp, robot=False)
-            return redirect('app-game', g=temp.name, player=temp.name)
+            return redirect('map', temp.name, temp.name, 'null', 'null')
+            #return redirect('app-game', g=temp.name, player=temp.name)
         if temp.num_players == 1: 
-            return redirect('app-game', g=temp.name, player=temp.name)
+            return redirect('map', temp.name, temp.name, 'null', 'null')
+            #return redirect('app-game', g=temp.name, player=temp.name)
         else:
-            return redirect('app-game', g=temp.name, player=p[0].name)
+            return redirect('map', temp.name, temp.name, 'null', 'null')
+            #return redirect('app-game', g=temp.name, player=p[0].name)
     if request.method == 'POST':
         form = JoinGameForm(request.POST)
         if form.is_valid():
@@ -281,7 +284,8 @@ def joinGame(request, g):
                 temp.GameEngine.start_capital(temp)
                 temp.GameEngine.run_start_trade(temp)
             messages.success(request, f'Successfully Joined a Game!')
-            return redirect('app-game', g=temp.name, player=curr_player.name)
+            return redirect('map', temp.name, temp.name, 'null', 'null')
+            #return redirect('app-game', g=temp.name, player=curr_player.name)
     else:
         form = JoinGameForm(instance=request.user)
     return render(request, 'App/join_game.html', {'form': form})
@@ -422,7 +426,6 @@ def map(request, g, p, l, lprev):
     for army in total_armies:
         total_size += army.size
     #Loads the army form on post
-    #import pdb; pdb.set_trace()
     t = MapInterface.objects.filter(game=g,controller=p)[0]
     if request.method == 'POST':
         if 'mode' in request.POST:
@@ -431,6 +434,30 @@ def map(request, g, p, l, lprev):
                 mi2.save()
                 return redirect('map', gtemp, ptemp, 'null', 'null')
         else:
+             #Runs ready form for whether ready for moving onto next turn
+            ready = NextTurn(request.POST, instance=player)
+            if ready.is_valid():
+                ready.save()
+            messages.success(request, f'Turn succesfully submitted!')
+            #Runs game run_engine function if player is host and all players are ready
+            if player.host:
+                all_players = Player.objects.filter(game=g)
+                ready_next_round = True
+                if g.num_players > 1 and g.num_players < 6:
+                    for p in all_players:
+                        if not p.ready:
+                            ready_next_round = False
+                else:
+                    if not player.ready:
+                        ready_next_round = False
+                if ready_next_round:
+                    for i in range(0,g.years_per_turn - 1):
+                        g.GameEngine.run_engine(g, False)
+                    temp = g.GameEngine.run_engine(g)
+                    g.save()
+                    messages.success(request, f'Turn succesfully run!')
+                    return redirect('map', gtemp, ptemp, 'null', 'null')
+            #Processes building form
             if 'building_type' in request.POST:
                 buildingForm = BuildingForm(request.POST)
                 if buildingForm.is_valid():
@@ -473,7 +500,6 @@ def map(request, g, p, l, lprev):
                     return redirect('map', gtemp, ptemp, 'null', 'null')
                 if lprev == 'null':
                     if len(v) == 0:
-                        #country = p.get_country()
                         if total_size + s > 1000000:
                             messages.warning(request, f'The total size of all your armies combined cannnot be more than 1m!')
                             return redirect('map', gtemp, ptemp, 'null', 'null')
@@ -520,8 +546,13 @@ def map(request, g, p, l, lprev):
     for hC in hexColor:
         col[row].append(hC.color)
         a = Army.objects.filter(game=g, location=hC)
+        buildings = Building.objects.filter(game=g, location=hC)
         army_size = ""
         army_name = ""
+        #Adds the building's symbol to the hex display text.
+        for building in buildings:
+            army_name += building.getSymbol() + ' '
+        #Adds the armies name and size to the hex display text.
         if not a:
             a = ""
             army_size = "---"
@@ -590,9 +621,12 @@ def map(request, g, p, l, lprev):
         #If a tiles has been selected, load that particular army if an army is on it, 
         #if not then load a basic Army form with that location defaulted into the form.
         h = Hexes.objects.filter(game=g, hexNum=l)[0]
-        v = Army.objects.filter(game=g,location=h)
+        v = Army.objects.filter(game=g,location=h, controller=player)
         buildingForm = BuildingForm(initial={'location':h})
         if not v:
+            if h.controller != player:
+                messages.warning(request, f'You cannot build an army in another players territory!')
+                return redirect('map', gtemp, ptemp, 'null', 'null')
             f = ArmyForm(initial={'location':h})
         else:
             v = v[0]
@@ -602,10 +636,12 @@ def map(request, g, p, l, lprev):
                 messages.warning(request, f'You cannot move another players army!')
                 f = ArmyForm()
                 return redirect('map', gtemp, ptemp, 'null', 'null')
+    next_turn = NextTurn(instance=player)
     militaryAm = player.MilitaryAm
     year = g.year
     context = {
         'country': player.country,
+        'readyForm':next_turn,
         'money': player.money,
         'coal': player.coal,
         'iron': player.iron,
@@ -847,12 +883,3 @@ from django.template.defaulttags import register
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
-
-#Switches control of a hex between two players (doesn't work yet)
-def switch_hex(hex_num, player_to):
-    h = Hexes.objects.filter(hexNum=hex_num)[0]
-    f = HexForm(request.POST, instance=h)
-    if f.is_valid():
-        f.save(commit=False)
-        f.controller = player_to
-        f.color = player_to.color

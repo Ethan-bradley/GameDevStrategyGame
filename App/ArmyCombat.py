@@ -1,4 +1,4 @@
-from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, Notification
+from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, Notification, Building
 
 class ArmyCombat():
 	def __init__(self):
@@ -31,10 +31,10 @@ class ArmyCombat():
 	def doMaintenace(self,g):
 		army_list = Army.objects.filter(game=g)
 		for a in army_list:
-			if a.controller.get_country().Military - a.size*0.1 < 0:
+			if a.controller.MilitaryAm - a.size*0.5 < 0:
 				self.rebel(g,a)
 			else:
-				g.GameEngine.modify_country_by_name(a.controller.country.name, 'Military', a.controller.get_country().Military - a.size*0.5)
+				a.controller.MilitaryAm -= a.size*0.5
 				g.save()
 
 	def rebel(self,g,a):
@@ -137,7 +137,6 @@ class ArmyCombat():
 		temp = []
 		#import pdb; pdb.set_trace()
 		for h in hex_list:
-
 			if self.calculate_distance(h.xLocation, h.yLocation, curr_hex.xLocation, curr_hex.yLocation) < 2 and h != curr_army.location and h.controller == curr_army.controller:
 				a = Army.objects.filter(game=g, location=h)
 				if len(a) < 1:
@@ -145,11 +144,15 @@ class ArmyCombat():
 				temp.append(h)
 		return 'null'
 
-	#Switches control of a hex between two players (doesn't work yet)
+	#Switches control of a hex between two players
 	def switch_hex(self, h, player_to, g):
 		loser = h.controller
 		h.controller = player_to
 		h.color = player_to.country.color
+		buildings = Building.objects.filter(game=g, location=h)
+		for building in buildings:
+			building.player_controller = player_to
+			building.save()
 		h.save()
 		player_to.save()
 		loser.save()

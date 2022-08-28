@@ -61,12 +61,14 @@ class GameEngine():
 			pla = f.save(commit=False)
 			pla.ready = False
 			pla.save()
-		all_armies = Army.objects.filter(game=g)
-		for army in all_armies:
-			army.moved = False
 		all_buildings = Building.objects.filter(game=g)
 		for building in all_buildings:
 			building.addResources()
+		self.ArmyCombat.doCombat(g)
+		all_armies = Army.objects.filter(game=g)
+		for army in all_armies:
+			army.moved = False
+			army.save()
 		g.year += 1
 		g.save()
 		print('running engine')
@@ -219,5 +221,8 @@ class GameEngine():
 		h.controller = player_to
 		h.color = player_to.country.color
 		h.save()
+		for building in buildings:
+			building.controller = player_to
+			building.save()
 		player_to.save()
 		loser.save()
