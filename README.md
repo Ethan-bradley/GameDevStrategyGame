@@ -19,6 +19,7 @@ Once `pip` has finished downloading the dependencies, migrate the database:
 ```sh
 python manage.py makemigrations
 python manage.py migrate
+python manage.py loaddata 0008_Country.json
 ```
 Then run the server locally.
 

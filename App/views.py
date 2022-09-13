@@ -149,7 +149,8 @@ def new_game(request):
                 temp.GameEngine.run_start_trade(temp)
                 temp.save()
             messages.success(request, f'New Game created!')
-            return redirect('app-game', g=temp.name, player=curr_player.name)
+            return redirect('map', temp.name, temp.name, 'null', 'null')
+            #return redirect('app-game', g=temp.name, player=curr_player.name)
         else:
             messages.warning(request, f'Choose another name. An existing game already has this name.')
             return redirect('app-new_game')
@@ -290,114 +291,6 @@ def joinGame(request, g):
         form = JoinGameForm(instance=request.user)
     return render(request, 'App/join_game.html', {'form': form})
 
-@login_required
-def game(request, g, player):
-    reset_queries()
-    neutral_player2 = Player.objects.filter(name="Neutral")[0]
-    neutral_player2.ready = True
-    neutral_player2.save()
-    def create_revenue_pie(country, player):
-        data2 = {'Source':[country.money[0]*country.IncomeTax, country.money[4]*country.CorporateTax, country.TariffRevenue, country.Government_Savings*country.interest_rate],
-        'Categories':['Income Tax','Corporate Tax','Tariffs','Interest']} 
-        fig = px.pie(data2, values='Source', names='Categories', title="Revenues")
-        fig.write_html("templates/App/graphs/"+player.name+"revenue.html")
-    def create_expenditure_pie(country, player):
-        data2 = {'Expenditure':[country.money[5]*country.GovGoods*country.EducationSpend, country.money[5]*country.GovGoods*(1-country.EducationSpend), country.money[5]*country.GovWelfare, country.money[8]*player.ScienceInvest, country.money[8]*player.InfrastructureInvest, country.GovDebt*country.interest_rate],
-        'Categories':['Education','Military','Welfare','Science','Infrastructure','Interest']}
-        fig = px.pie(data2, values='Expenditure', names='Categories', title="Expenditures")
-        fig.write_html("templates/App/graphs/"+player.name+"expenditure.html")
-    context = {}
-    gtemp = g
-    ptemp = player
-    g = Game.objects.filter(name=g)[0]
-    player = Player.objects.filter(name=player)[0]
-    tar = Tariff.objects.filter(game=g, curr_player=player)[0]
-    k = IndTariff.objects.filter(controller=tar)
-    IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
-    context = {}
-    if request.method == 'POST':
-        if 'form-0-tariffAm' in request.POST:
-            #Submits the Tariff formset
-            IndFormSet = IndFormSet(request.POST, queryset=IndTariff.objects.filter(controller=tar))
-            for f in IndFormSet:
-                if f.is_valid():
-                    f.save()
-            messages.success(request, f'Tarriffs succesfully submitted!')
-            return redirect('app-game', g=g.name, player=str(player))
-        else:
-            #Government Spending Form
-            govForm2 = GovernmentSpendingForm(request.POST, instance=player)
-            if govForm2.is_valid():
-                govForm2.save()
-                player.projection_unloaded = False
-                player.save()
-            else:
-                messages.warning(request, f'Error in Government Form')
-                messages.warning(request, govForm2.errors['IncomeTax'])
-                return redirect('app-game', g=g.name, player=str(player))
-            #Runs ready form for whether ready for moving onto next turn
-            ready = NextTurn(request.POST, instance=player)
-            if ready.is_valid():
-                ready.save()
-            messages.success(request, f'Turn succesfully submitted!')
-            #Runs game run_engine function if player is host and all players are ready
-            if player.host:
-                all_players = Player.objects.filter(game=g)
-                ready_next_round = True
-                if g.num_players > 1 and g.num_players < 6:
-                    for p in all_players:
-                        if not p.ready:
-                            ready_next_round = False
-                else:
-                    if not player.ready:
-                        ready_next_round = False
-                if ready_next_round:
-                    for i in range(0,g.years_per_turn - 1):
-                        g.GameEngine.run_engine(g, False)
-                    temp = g.GameEngine.run_engine(g)
-                    g.save()
-                    messages.success(request, f'Turn succesfully run!')
-                    return redirect('app-game', g=g.name, player=str(player))
-    #Creates the tariff formset and titles for it.
-    IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
-    titles = {}
-    count = 1
-    for f in k:
-        titles[count] = f.key
-        count += 1
-    IFS = IndFormSet(queryset=IndTariff.objects.filter(controller=tar))
-    #create_revenue_pie(player.get_country(),player)
-    #create_expenditure_pie(player.get_country(),player)
-    #budget_graph(player.get_country(), 17, "templates/App/graphs/"+player.name+"budgetgraph.html")
-    govForm = GovernmentSpendingForm(instance=player)
-    next_turn = NextTurn(instance=player)
-    if player.projection_unloaded:
-        player.projection_unloaded = False
-        player.save()
-    govSavings = player.money
-    year = g.year
-    
-    context.update({
-        'country': player.country,
-        'indForms': IFS,
-        'titles': titles,
-        'test': {'a':'new', 'b':'new2'},
-        'readyForm':next_turn,
-        'game':gtemp,
-        'player':ptemp,
-        'govForm':govForm,
-        'GovMoney':0,
-        'GovSavings': govSavings,
-        'GovDebt':0,
-        'graph':player.GoodsPerCapita,
-        'govBudget':"App/graphs/"+player.name+"expenditure.html",
-        'govRevenue':"App/graphs/"+player.name+"revenue.html",
-        'BudgetGraph':"App/graphs/"+player.name+"budgetgraph.html",
-        'CurrentYear':year,
-        'govSpending':round((player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military)*100, 4),
-        'notifications': Notification.objects.filter(game=g, year__gt=year)[::-1],
-    })
-    return render(request, 'App/game.html', context)
 def runArmy(request, g):
     g = Game.objects.filter(name=g)[0]
     g.GameEngine.game_combat(g)
@@ -675,6 +568,116 @@ def create_map(hex_list):
         if i != last:
             message += ',\n'
     return message
+
+#Ignore functions below here
+@login_required
+def game(request, g, player):
+    reset_queries()
+    neutral_player2 = Player.objects.filter(name="Neutral")[0]
+    neutral_player2.ready = True
+    neutral_player2.save()
+    def create_revenue_pie(country, player):
+        data2 = {'Source':[country.money[0]*country.IncomeTax, country.money[4]*country.CorporateTax, country.TariffRevenue, country.Government_Savings*country.interest_rate],
+        'Categories':['Income Tax','Corporate Tax','Tariffs','Interest']} 
+        fig = px.pie(data2, values='Source', names='Categories', title="Revenues")
+        fig.write_html("templates/App/graphs/"+player.name+"revenue.html")
+    def create_expenditure_pie(country, player):
+        data2 = {'Expenditure':[country.money[5]*country.GovGoods*country.EducationSpend, country.money[5]*country.GovGoods*(1-country.EducationSpend), country.money[5]*country.GovWelfare, country.money[8]*player.ScienceInvest, country.money[8]*player.InfrastructureInvest, country.GovDebt*country.interest_rate],
+        'Categories':['Education','Military','Welfare','Science','Infrastructure','Interest']}
+        fig = px.pie(data2, values='Expenditure', names='Categories', title="Expenditures")
+        fig.write_html("templates/App/graphs/"+player.name+"expenditure.html")
+    context = {}
+    gtemp = g
+    ptemp = player
+    g = Game.objects.filter(name=g)[0]
+    player = Player.objects.filter(name=player)[0]
+    tar = Tariff.objects.filter(game=g, curr_player=player)[0]
+    k = IndTariff.objects.filter(controller=tar)
+    IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
+    context = {}
+    if request.method == 'POST':
+        if 'form-0-tariffAm' in request.POST:
+            #Submits the Tariff formset
+            IndFormSet = IndFormSet(request.POST, queryset=IndTariff.objects.filter(controller=tar))
+            for f in IndFormSet:
+                if f.is_valid():
+                    f.save()
+            messages.success(request, f'Tarriffs succesfully submitted!')
+            return redirect('app-game', g=g.name, player=str(player))
+        else:
+            #Government Spending Form
+            govForm2 = GovernmentSpendingForm(request.POST, instance=player)
+            if govForm2.is_valid():
+                govForm2.save()
+                player.projection_unloaded = False
+                player.save()
+            else:
+                messages.warning(request, f'Error in Government Form')
+                messages.warning(request, govForm2.errors['IncomeTax'])
+                return redirect('app-game', g=g.name, player=str(player))
+            #Runs ready form for whether ready for moving onto next turn
+            ready = NextTurn(request.POST, instance=player)
+            if ready.is_valid():
+                ready.save()
+            messages.success(request, f'Turn succesfully submitted!')
+            #Runs game run_engine function if player is host and all players are ready
+            if player.host:
+                all_players = Player.objects.filter(game=g)
+                ready_next_round = True
+                if g.num_players > 1 and g.num_players < 6:
+                    for p in all_players:
+                        if not p.ready:
+                            ready_next_round = False
+                else:
+                    if not player.ready:
+                        ready_next_round = False
+                if ready_next_round:
+                    for i in range(0,g.years_per_turn - 1):
+                        g.GameEngine.run_engine(g, False)
+                    temp = g.GameEngine.run_engine(g)
+                    g.save()
+                    messages.success(request, f'Turn succesfully run!')
+                    return redirect('app-game', g=g.name, player=str(player))
+    #Creates the tariff formset and titles for it.
+    IndFormSet = modelformset_factory(IndTariff, fields=['tariffAm','sanctionAm','moneySend','militarySend','nationalization'], extra=0)
+    titles = {}
+    count = 1
+    for f in k:
+        titles[count] = f.key
+        count += 1
+    IFS = IndFormSet(queryset=IndTariff.objects.filter(controller=tar))
+    #create_revenue_pie(player.get_country(),player)
+    #create_expenditure_pie(player.get_country(),player)
+    #budget_graph(player.get_country(), 17, "templates/App/graphs/"+player.name+"budgetgraph.html")
+    govForm = GovernmentSpendingForm(instance=player)
+    next_turn = NextTurn(instance=player)
+    if player.projection_unloaded:
+        player.projection_unloaded = False
+        player.save()
+    govSavings = player.money
+    year = g.year
+    
+    context.update({
+        'country': player.country,
+        'indForms': IFS,
+        'titles': titles,
+        'test': {'a':'new', 'b':'new2'},
+        'readyForm':next_turn,
+        'game':gtemp,
+        'player':ptemp,
+        'govForm':govForm,
+        'GovMoney':0,
+        'GovSavings': govSavings,
+        'GovDebt':0,
+        'graph':player.GoodsPerCapita,
+        'govBudget':"App/graphs/"+player.name+"expenditure.html",
+        'govRevenue':"App/graphs/"+player.name+"revenue.html",
+        'BudgetGraph':"App/graphs/"+player.name+"budgetgraph.html",
+        'CurrentYear':year,
+        'govSpending':round((player.ScienceInvest + player.InfrastructureInvest + player.Welfare + player.AdditionalWelfare + player.Education + player.Military)*100, 4),
+        'notifications': Notification.objects.filter(game=g, year__gt=year)[::-1],
+    })
+    return render(request, 'App/game.html', context)
 
 def trade(request, g, p):
     reset_queries()

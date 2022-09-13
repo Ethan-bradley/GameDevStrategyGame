@@ -122,7 +122,13 @@ S(document).ready(function(){
 		'formatLabel': function(id,hex){
 			// "id" = unique ID of the hex
 			// "hex" = object containing the properties of the specific hex
-			return hex.n + "\n "+info[hex.r*{{ board_size }}+hex.q][3];
+			let hexString = hex.n + "\n "+info[hex.r*{{ board_size }}+hex.q][3];
+			if (hex.r*{{ board_size }}+hex.q == {{ prevNum }}) {
+				return hexString.bold()
+			}
+			else {
+				return hexString
+			}
 		}
 	});
 

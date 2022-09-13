@@ -3,9 +3,7 @@ gunicorn
 django-heroku
 flask
 pypi
-matplotlib==3.3.2
 django-picklefield
-scipy
 django-crispy-forms
 django-storages
 boto3

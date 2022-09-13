@@ -39,6 +39,7 @@ class JoinGameForm(ModelForm):
                 self._errors['country'] = self.error_class(['Choose another country. A player in this game has already claimed this country.'])
         return self.cleaned_data"""
 
+#Form for next turn
 class NextTurn(ModelForm):
     class Meta:
         model = Player
@@ -48,6 +49,25 @@ class ResetTurn(ModelForm):
     class Meta:
         model = Player
         fields = []
+
+#Form for creating an army
+class ArmyForm(ModelForm):
+    class Meta:
+        model = Army
+        fields = ['name','size','location','naval']
+
+    def clean(self):
+        super(ArmyForm, self).clean()
+        s = self.cleaned_data.get('size')
+        return self.cleaned_data
+
+#Form for creating a building
+class BuildingForm(ModelForm):
+    class Meta:
+        model = Building
+        fields = ['name','location','building_type']
+
+#Ignore remaining forms
 
 class AddIndTariffForm(ModelForm):
     class Meta:
@@ -122,34 +142,6 @@ class GraphCountryInterfaceForm(ModelForm):
             else:
                 valid_countries = Country.objects.filter(large=instance.large)
         self.fields['country'].queryset = valid_countries
-
-class ArmyForm(ModelForm):
-    class Meta:
-        model = Army
-        fields = ['name','size','location','naval']
-
-    def clean(self):
-        super(ArmyForm, self).clean()
-        s = self.cleaned_data.get('size')
-        return self.cleaned_data
-
-class BuildingForm(ModelForm):
-    class Meta:
-        model = Building
-        fields = ['name','location','building_type']
-
-    #Applies the cost of the building towards the player
-    def applyCost(self, player):
-        buildingDict = {'CoalMine':['iron',2], 'IronMine':['iron',3], 'OilWell':['money',3], 'Farm':['iron',1],'Military':['iron',2], 'Commercial':['wheat', 3]}
-        modify = buildingDict[self.cleaned_data.get('building_type')]
-        curr_am = getattr(player, modify[0])
-        #Return False if the player doesn't have enough the required resource
-        if curr_am - modify[1] < 0:
-            return False
-        else:
-            setattr(player, modify[0], curr_am - modify[1])
-            player.save()
-            return True
 
 
 class GovernmentSpendingForm(ModelForm):

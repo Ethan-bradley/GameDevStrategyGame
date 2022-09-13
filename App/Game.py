@@ -5,8 +5,6 @@ from .HexList import HexList
 from .ArmyCombat import ArmyCombat
 from django.db.models.fields import *
 import os
-import matplotlib.pyplot as plt
-import matplotlib
 import math
 
 class GameEngine():
