@@ -669,7 +669,6 @@ def game(request, g, player):
         'GovMoney':0,
         'GovSavings': govSavings,
         'GovDebt':0,
-        'graph':player.GoodsPerCapita,
         'govBudget':"App/graphs/"+player.name+"expenditure.html",
         'govRevenue':"App/graphs/"+player.name+"revenue.html",
         'BudgetGraph':"App/graphs/"+player.name+"budgetgraph.html",
