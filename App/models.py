@@ -73,21 +73,6 @@ class Player(models.Model):
 	#Restrictions
 	investment_restriction = models.FloatField(default=0.0)
 
-
-	#Graph Images
-	GoodsPerCapita = models.ImageField(default='default_graph.png', upload_to='graphs')
-	Inflation = models.ImageField(default='default_graph.png', upload_to='graphs')
-	RealGDP = models.ImageField(default='default_graph.png', upload_to='graphs')
-	Employment = models.ImageField(default='default_graph.png', upload_to='graphs')
-	GovBudget = models.ImageField(default='default_graph.png', upload_to='graphs')
-	tradeBalance = models.ImageField(default='default_graph.png', upload_to='graphs')
-	GDPPerCapita = models.ImageField(default='default_graph.png', upload_to='graphs')
-	InterestRate = models.ImageField(default='default_graph.png', upload_to='graphs')
-	Capital = models.ImageField(default='default_graph.png', upload_to='graphs')
-	GoodsProduction = models.ImageField(default='default_graph.png', upload_to='graphs')
-	GDP = models.ImageField(default='default_graph.png', upload_to='graphs')
-	GDPGrowth = models.ImageField(default='default_graph.png', upload_to='graphs')
-
 	def __str__(self):
 		return self.name
 

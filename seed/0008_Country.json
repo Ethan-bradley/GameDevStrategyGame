@@ -1,0 +1,56 @@
+[
+{
+    "model": "App.country",
+    "pk": 1,
+    "fields": {
+        "name": "UK",
+        "color": "#fc2403",
+        "large": false
+    }
+},
+{
+    "model": "App.country",
+    "pk": 2,
+    "fields": {
+        "name": "Spain",
+        "color": "#e8cf10",
+        "large": false
+    }
+},
+{
+    "model": "App.country",
+    "pk": 3,
+    "fields": {
+        "name": "Germany",
+        "color": "#808080",
+        "large": false
+    }
+},
+{
+    "model": "App.country",
+    "pk": 4,
+    "fields": {
+        "name": "Italy",
+        "color": "#15ad3",
+        "large": false
+    }
+},
+{
+    "model": "App.country",
+    "pk": 5,
+    "fields": {
+        "name": "France",
+        "color": "#ad3315",
+        "large": false
+    }
+},
+{
+    "model": "App.country",
+    "pk": 6,
+    "fields": {
+        "name": "Neutral",
+        "color": "#d2d6d5",
+        "large": false
+    }
+}
+]
