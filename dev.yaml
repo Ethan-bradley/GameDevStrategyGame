@@ -1,0 +1,9 @@
+name: Dev Worflow -  Only Test
+jobs:
+    steps:
+      - name: Run migrations
+        run: |
+          python manage.py migrate --noinput
+      - name: Seed database
+        run: |
+          python manage.py loaddata seed/0008_Country.json
