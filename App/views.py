@@ -743,8 +743,6 @@ def trade(request, g, p):
         'Sanctionsgraph':"App/graphs/"+p.name+"SanctionsArr.html",
         'ForeignAidgraph':"App/graphs/"+p.name+"ForeignAid.html",
         'MilitaryAidgraph':"App/graphs/"+p.name+"MilitaryAid.html",
-        'goodsBalance':g.GoodsBalance,
-        'tradeBalance':p.tradeBalance,
         'game':gtemp,
         'player':ptemp,
         'notifications': Notification.objects.filter(game=g, year__gt=year)[::-1],
