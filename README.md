@@ -19,7 +19,12 @@ Once `pip` has finished downloading the dependencies, migrate the database:
 ```sh
 python manage.py makemigrations
 python manage.py migrate
-python manage.py loaddata 0008_Country.json
+python manage.py loaddata seed/0008_Country.json
+```
+Then create a superuser (so you can access admin page). Enter the username and password used for login.
+
+```sh
+python manage.py createsuperuser
 ```
 Then run the server locally.
 
