@@ -6,7 +6,7 @@ from django.forms import formset_factory, modelformset_factory
 from .Game import GameEngine
 from .models import Post
 from .models import Game, Player, Building, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, GraphCountryInterface
-from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm, GraphCountryInterfaceForm, BuildingForm
+from .forms import BuildingForm, NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm, GraphCountryInterfaceForm
 from django.views.generic.edit import CreateView
 from django.apps import apps
 import json
@@ -196,13 +196,13 @@ def joinGame(request, g):
     if len(p) > 0:
         if len(p) > 1:
             p = Player.objects.filter(user=request.user, game=temp, robot=False)
-            return redirect('map', temp.name, temp.name, 'null', 'null')
+            return redirect('map', temp.name, p[0].name, 'null', 'null')
             #return redirect('app-game', g=temp.name, player=temp.name)
         if temp.num_players == 1: 
-            return redirect('map', temp.name, temp.name, 'null', 'null')
+            return redirect('map', temp.name, p[0].name, 'null', 'null')
             #return redirect('app-game', g=temp.name, player=temp.name)
         else:
-            return redirect('map', temp.name, temp.name, 'null', 'null')
+            return redirect('map', temp.name, p[0].name, 'null', 'null')
             #return redirect('app-game', g=temp.name, player=p[0].name)
     if request.method == 'POST':
         form = JoinGameForm(request.POST)
@@ -285,7 +285,7 @@ def joinGame(request, g):
                 temp.GameEngine.start_capital(temp)
                 temp.GameEngine.run_start_trade(temp)
             messages.success(request, f'Successfully Joined a Game!')
-            return redirect('map', temp.name, temp.name, 'null', 'null')
+            return redirect('map', temp.name, curr_player.name, 'null', 'null')
             #return redirect('app-game', g=temp.name, player=curr_player.name)
     else:
         form = JoinGameForm(instance=request.user)
@@ -336,9 +336,10 @@ def map(request, g, p, l, lprev):
             if player.host:
                 all_players = Player.objects.filter(game=g)
                 ready_next_round = True
+                #import pdb; pdb.set_trace();
                 if g.num_players > 1 and g.num_players < 6:
                     for p in all_players:
-                        if not p.ready:
+                        if p.robot == False and not p.ready:
                             ready_next_round = False
                 else:
                     if not player.ready:

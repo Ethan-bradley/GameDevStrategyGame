@@ -122,6 +122,9 @@ S(document).ready(function(){
 		'formatLabel': function(id,hex){
 			// "id" = unique ID of the hex
 			// "hex" = object containing the properties of the specific hex
+			//const img = document.createElement("img");
+			//img.src = "https://picsum.photos/200/301";
+			//return img
 			let hexString = hex.n + "\n "+info[hex.r*{{ board_size }}+hex.q][3];
 			if (hex.r*{{ board_size }}+hex.q == {{ prevNum }}) {
 				return hexString.bold()
