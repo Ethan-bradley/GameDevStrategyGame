@@ -204,6 +204,79 @@ class Building(models.Model):
 		emoji = buildingDict[self.building_type][0]
 		return emoji
 
+#adding the ships class
+class Ship(models.Model):
+	#intializer for returning a ship
+	def __str__():
+		return self.name
+
+	#add ship qualities(formatting to make them work on the game board)
+	game = models.ForeignKey("Game", on_delete=models.CASCADE)
+	location = models.ForeignKey("Hexes", on_delete=models.CASCADE)
+	controller = models.ForeignKey("Player", on_delete=models.CASCADE)
+	name = models.CharField(max_length=100)
+
+	#add ship attributes
+	max_health = models.IntegerField(default=0)
+	health = models.IntegerField(default=0)
+	damage = models.IntegerField(default=0)
+	cost = models.IntegerField(default=0)
+	movement = models.IntegerField(default=0)
+	troop_count = models.IntegerField(default=0)
+	troop_capacity = models.IntegerField(default=0)
+	cool_down = models.IntegerField(default=0)
+	reload_speed = models.FloatField(default=1.0)
+	range_attack = models.FloatField(default=1.0)
+	range_visibility = models.FloatField(default=1.0)
+
+	#add ship_types
+	MERCHANT = "Merchant Ship"
+	COLONIZER = "Colonizer"
+	SMALLWARSHIP = "Small Warship"
+	MEDIUMWARSHIP = "Medium Warship"
+	BIGWARSHIP = "Big Warship"
+
+	MODES = [
+	(MERCHANT, 'Merchant Ship'),
+	(COLONIZER, 'Colonizer'),
+	(SMALLWARSHIP, 'Small Warship'),
+	(MEDIUMWARSHIP, "Medium Warship"),
+	(BIGWARSHIP, "Big Warship")
+	]
+
+	ship_type = models.CharField(max_length=20,choices=MODES,default=MERCHANT)
+
+	#add ship construction methods
+	def create_ship(ship_type):
+		#check that ship_type is a string
+		if(not isinstance(ship_type,str)):
+			#error out
+			pass
+		#separate into different ship_types and then specific ship_class
+		#big ship
+		if(true):
+			pass
+		elif(true):
+			pass
+		elif(true):
+			pass
+		else:
+			#error out
+			pass
+	
+
+	def addResources(self):
+		"""
+		Enables a ship to harvest resources from a given Hex
+		Function not complete - 10/17/22
+		"""
+		"""
+		Not implemented yet
+		"""
+		return self.name
+
+
+
 class Army(models.Model):
 	game = models.ForeignKey("Game", on_delete=models.CASCADE)
 	size = models.IntegerField()
