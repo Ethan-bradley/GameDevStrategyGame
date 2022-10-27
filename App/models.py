@@ -320,3 +320,7 @@ class Notification(models.Model):
 	game = models.ForeignKey("Game", on_delete=models.CASCADE)
 	message = models.TextField()
 	year = models.IntegerField(default=0)
+
+"""
+Here begins the code for Ship Implementations
+"""
