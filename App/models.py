@@ -52,6 +52,12 @@ class Player(models.Model):
 	iron = models.IntegerField(default=0)
 	wheat = models.IntegerField(default=0)
 	oil = models.IntegerField(default=0)
+	food = models.IntegerField(default=0)
+	wood = models.IntegerField(default=0)
+	metal = models.IntegerField(default=0)
+	sugar = models.IntegerField(default=0)
+	gold = models.IntegerField(default=0)
+	ammunition = models.IntegerField(default=0)
 	#Country = PickledObjectField()
 	#Government Variables:
 	IncomeTax = models.FloatField(default=0.2)
@@ -134,6 +140,12 @@ class Hexes(models.Model):
 	iron = models.IntegerField(default=0)
 	coal = models.IntegerField(default=0)
 	wheat = models.IntegerField(default=0)
+	food = models.IntegerField(default=0)
+	wood = models.IntegerField(default=0)
+	metal = models.IntegerField(default=0)
+	sugar = models.IntegerField(default=0)
+	gold = models.IntegerField(default=0)
+	ammunition = models.IntegerField(default=0)
 	def __str__(self):
 		return self.name
 
