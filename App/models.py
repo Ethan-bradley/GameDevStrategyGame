@@ -321,6 +321,47 @@ class Notification(models.Model):
 	message = models.TextField()
 	year = models.IntegerField(default=0)
 
-"""
-Here begins the code for Ship Implementations
-"""
+#Ship Implementation
+class Ship(models.Model):
+    """
+    This class defines the various types of ships
+    """
+    game = models.ForeignKey("Game", on_delete=models.CASCADE)
+    location = models.ForeignKey("Hexes", on_delete=models.CASCADE)
+    player_controller = models.ForeignKey("Player", on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    MERCHANT = "Merchant Ship"
+    COLONIZER = "Colonizer"
+    SMALLWARSHIP = "Small Warship"
+    MEDIUMWARSHIP = "Medium Warship"
+    BIGWARSHIP = "Big Warship"
+
+    MODES = [
+    (MERCHANT, 'Merchant Ship'),
+    (COLONIZER, 'Colonizer'),
+    (SMALLWARSHIP, 'Small Warship'),
+    (MEDIUMWARSHIP, "Medium Warship"),
+    (BIGWARSHIP, "Big Warship")
+    ]
+    
+    ship_type = models.CharField(max_length=20,choices=MODES,default=MERCHANT)
+
+    def addResources(self):
+        """
+        Enables a ship to harvest resources from a given Hex
+        Function not complete - 10/17/22
+        """
+        player = self.player_controller
+
+        """
+        Not implemented yet
+        """
+        resourceDict = {'CoalMine':['coal',1,'oil',1], 'IronMine':['iron',1,'oil',1], 'OilWell':['oil',1,'money',1]}
+        modify = resourceDict['CoalMine']
+
+        curr_am = getattr(player, modify[0])
+        curr_am_maintenance = getattr(player, modify[2])
+        if curr_am_maintenance - modify[3] >= 0:
+            setattr(player, modify[2], curr_am_maintenance - modify[3])
+            setattr(player, modify[0], curr_am + modify[1])
+        player.save()
