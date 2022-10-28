@@ -188,7 +188,7 @@ class Building(models.Model):
 	#Adds the resource production to the player's resources and subtracts maintenance cost
 	def addResources(self):
 		player = self.player_controller
-		buildingDict = {'CoalMine':['coal',1,'oil',1], 'IronMine':['iron',1,'oil',1], 'OilWell':['oil',1,'money',1], 'Farm':['wheat',1,'money',1],'Military':['MilitaryAm',1,'wheat',1], 'Commercial':['money', 1,'wheat',1]}
+		buildingDict = {'IronMine':['iron',1, 'money',1],'Farm':['food',1,'money',0],'Military':['MilitaryAm',1,'food',1], 'Commercial':['money', 1,'food',1]}
 		modify = buildingDict[self.building_type]
 		curr_am = getattr(player, modify[0])
 		curr_am_maintenance = getattr(player, modify[2])
@@ -200,7 +200,7 @@ class Building(models.Model):
 	#Applies the cost of the building towards the player
 	def applyCost(self):
 		player = self.player_controller
-		buildingDict = {'CoalMine':['iron',2], 'IronMine':['iron',3], 'OilWell':['money',3], 'Farm':['iron',1],'Military':['iron',2], 'Commercial':['wheat', 3]}
+		buildingDict = {'IronMine':['metal',1],'Farm':['metal',2],'Military':['food',2], 'Commercial':['gold', 2]}
 		modify = buildingDict[self.building_type]
 		curr_am = getattr(player, modify[0])
 		#Return False if the player doesn't have enough the required resource

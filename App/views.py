@@ -79,6 +79,11 @@ def new_game(request):
             pf.user = request.user
             pf.game = temp
             pf.color = pf.country.color
+            pf.wood = 2
+            pf.gold = 2
+            pf.metal =2
+            pf.MilitaryAm = 2
+            pf.food =2
             pf.save()
             curr_player = Player.objects.filter(name=pf.name, game=temp)[0]
             #Creates Map Interface
@@ -228,6 +233,11 @@ def joinGame(request, g):
             f.user = request.user
             f.game = temp
             f.color = f.country.color
+            f.wood = 2
+            f.gold = 2
+            f.MilitaryAm = 2
+            f.metal = 2
+            f.food =2
             f.save()
             curr_player = Player.objects.filter(name=f.name, game=temp)[0]
             #Creates Map Interface
@@ -383,7 +393,8 @@ def map(request, g, p, l, lprev):
                 if s < 0:
                     messages.warning(request, f'You cannot have an army with negative size!')
                     return redirect('map', gtemp, ptemp, 'null', 'null')
-                if f.location.controller != p:
+                #import pdb; pdb.set_trace()
+                if f.location.controller != player:
                     messages.warning(request, f'You cannot build an army in another Players territory!')
                     return redirect('map', gtemp, ptemp, 'null', 'null')
                 if h == None:
@@ -462,11 +473,11 @@ def map(request, g, p, l, lprev):
                 army_name += "] \n "
         #import pdb; pdb.set_trace()
         if hC.color != '#3262a8' and t.mode == "RE":
-            color =  "#"+str(hex((10 + hC.iron*2 + hC.wheat*4)))[2]+str(hex((10 + hC.iron*2 + hC.wheat*4)))[2]+ str(hex(10+hC.wheat*4+hC.coal))[2] + str(hex(10+hC.wheat*4 + hC.coal))[2] + str(hex(10 + hC.coal*2 + hC.oil*2))[2] + str(hex(10 + hC.coal*2 + hC.oil*2))[2]
+            color =  "#"+str(hex((10 + hC.metal*2 + hC.food*4)))[2]+str(hex((10 + hC.metal*2 + hC.food*4)))[2]+ str(hex(10+hC.food*4+hC.wood))[2] + str(hex(10+hC.food*4 + hC.wood))[2] + str(hex(10 + hC.wood*2 + hC.gold*2))[2] + str(hex(10 + hC.wood*2 + hC.gold*2))[2]
             print(color)
         else:
             color = hC.color
-        info[hC.xLocation+hC.yLocation*g.board_size] = [str(hC.population)+'k', hC.capital, hC.controller.name, army_name, army_size, color, hC.iron, hC.wheat, hC.coal, hC.oil]
+        info[hC.xLocation+hC.yLocation*g.board_size] = [str(hC.population)+'k', hC.gold, hC.controller.name, army_name, army_size, color, hC.metal, hC.food, hC.wood, hC.oil]
         count += 1
         if count >= size:
             count = 0
@@ -536,11 +547,10 @@ def map(request, g, p, l, lprev):
     context = {
         'country': player.country,
         'readyForm':next_turn,
-        'money': player.money,
-        'coal': player.coal,
-        'iron': player.iron,
-        'wheat': player.wheat,
-        'oil':player.oil,
+        'gold': player.gold,
+        'wood': player.wood,
+        'metal': player.metal,
+        'food': player.food,
         'MilitaryAm':militaryAm,
         'ColorMap':json_list,
         'hi':'hello',
