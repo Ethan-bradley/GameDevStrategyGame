@@ -246,12 +246,7 @@ class Ship(models.Model):
 
 	ship_type = models.CharField(max_length=20,choices=MODES,default=MERCHANT)
 
-	#add ship construction methods
-	def create_ship(ship_type):
-		#check that ship_type is a string
-		if(not isinstance(ship_type,str)):
-			#error out
-			pass
+	def initialize_ship(self, ship_type):
 		#separate into different ship_types and then specific ship_class
 		#big ship
 		if(true):
@@ -263,7 +258,18 @@ class Ship(models.Model):
 		else:
 			#error out
 			pass
+
+	#add ship construction methods
+	def create_ship(ship_type):
+		#check that ship_type is a string
+		if(not isinstance(ship_type,str)):
+			#error out
+			pass
+
+		#create the ship object
+		initialize_ship(self,ship_type)
 	
+		#
 
 	def addResources(self):
 		"""
