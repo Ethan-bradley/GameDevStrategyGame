@@ -148,7 +148,8 @@ class ArmyCombat():
 	def switch_hex(self, h, player_to, g):
 		loser = h.controller
 		h.controller = player_to
-		h.color = player_to.country.color
+		if h.water == False:
+			h.color = player_to.country.color
 		buildings = Building.objects.filter(game=g, location=h)
 		for building in buildings:
 			building.player_controller = player_to
