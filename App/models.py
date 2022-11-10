@@ -218,17 +218,14 @@ class Building(models.Model):
 
 #adding the ships class
 class Ship(models.Model):
-	#intializer for returning a ship
-	def __str__():
-		return self.name
-
 	#add ship qualities(formatting to make them work on the game board)
 	game = models.ForeignKey("Game", on_delete=models.CASCADE)
 	location = models.ForeignKey("Hexes", on_delete=models.CASCADE)
 	controller = models.ForeignKey("Player", on_delete=models.CASCADE)
 	name = models.CharField(max_length=100)
+	ship_type = models.CharField(max_length=20,choices=MODES,default=NEW)
 
-	#add ship attributes
+	#add ship attributes (keep in this order for proper initialization)
 	max_health = models.IntegerField(default=0)
 	health = models.IntegerField(default=0)
 	damage = models.IntegerField(default=0)
@@ -242,47 +239,46 @@ class Ship(models.Model):
 	range_visibility = models.FloatField(default=1.0)
 
 	#add ship_types
+	NEW = "Default"
 	MERCHANT = "Merchant Ship"
-	COLONIZER = "Colonizer"
+	COLONIZER = "Colonizer Ship"
 	SMALLWARSHIP = "Small Warship"
 	MEDIUMWARSHIP = "Medium Warship"
 	BIGWARSHIP = "Big Warship"
 
 	MODES = [
-	(MERCHANT, 'Merchant Ship'),
-	(COLONIZER, 'Colonizer'),
-	(SMALLWARSHIP, 'Small Warship'),
+	(MERCHANT, "Merchant Ship"),
+	(COLONIZER, "Colonizer Ship"),
+	(BUBA DOCTOR, "Doctor Ship"),
+	(TUGBOAT, "TugBoat Ship"),
+	(SMALLWARSHIP, "Small Warship"),
 	(MEDIUMWARSHIP, "Medium Warship"),
 	(BIGWARSHIP, "Big Warship")
 	]
 
-	ship_type = models.CharField(max_length=20,choices=MODES,default=MERCHANT)
-
-	def initialize_ship(self, ship_type):
+	#initializes a specific ship model
+	def initialize_ship(self):
 		#separate into different ship_types and then specific ship_class
-		#big ship
-		if(true):
-			pass
-		elif(true):
-			pass
-		elif(true):
-			pass
+		ship_dict = {"Merchant Ship": [23,],"Colonizer Ship": [],"Merchant Ship": [],"Merchant Ship": [],"Merchant Ship": [],"Merchant Ship": []}
+		fields = ["max_health","health", "damage", "cost","movement","troop_count", "troop_capacity", "cool_down", "reload_speed","range_attack","range_visibility"]
+		if(!check_funds()):
+			return
 		else:
-			#error out
-			pass
+			update_player_cost()
+		
+		#big ship
+		for i,field_val in enumerate(ship_dict[self.ship_type]):
+			 setattr(self, fields[i], field_val)
 
-	#add ship construction methods
-	def create_ship(ship_type):
-		#check that ship_type is a string
-		if(not isinstance(ship_type,str)):
-			#error out
-			pass
-
-		#create the ship object
-		initialize_ship(self,ship_type)
+	#return: bool ; checks if the player has sufficient funds
+	def check_funds(self):
+		#assume that money is the correct currency
+		#a check for initialized ship
+		if self.ship_type == "Default":
+			return False
+		return self.controller.money >= self.ship_type
 	
-		#
-
+	#updates resources collected by a merchant_ship only
 	def addResources(self):
 		"""
 		Enables a ship to harvest resources from a given Hex
@@ -292,6 +288,9 @@ class Ship(models.Model):
 		Not implemented yet
 		"""
 		return self.name
+
+	def attackShip(self,enemy_ship):
+		pass
 
 
 
