@@ -256,19 +256,23 @@ class Ship(models.Model):
 	(BIGWARSHIP, "Big Warship")
 	]
 
+	####init
 	#initializes a specific ship model
 	def initialize_ship(self):
+		player = self.controller
 		#separate into different ship_types and then specific ship_class
 		ship_dict = {"Merchant Ship": [23,],"Colonizer Ship": [],"Merchant Ship": [],"Merchant Ship": [],"Merchant Ship": [],"Merchant Ship": []}
-		fields = ["max_health","health", "damage", "cost","movement","troop_count", "troop_capacity", "cool_down", "reload_speed","range_attack","range_visibility"]
+		fields = ["max_health","health","damage","cost","movement","troop_count","troop_capacity","cool_down","reload_speed","range_attack","range_visibility"]
 		if(!check_funds()):
 			return
 		else:
-			update_player_cost()
-		
-		#big ship
-		for i,field_val in enumerate(ship_dict[self.ship_type]):
-			 setattr(self, fields[i], field_val)
+			#disregard any bugs for getting free ship
+			#set ship attributes based on ship_type
+			for i,field_val in enumerate(ship_dict[self.ship_type]):
+				setattr(self, fields[i], field_val)
+			#update the player_funds with the curr_val
+			player_funds = self.controller.money
+			setattr(self, , player_funds - self.cost)
 
 	#return: bool ; checks if the player has sufficient funds
 	def check_funds(self):
@@ -277,7 +281,18 @@ class Ship(models.Model):
 		if self.ship_type == "Default":
 			return False
 		return self.controller.money >= self.ship_type
-	
+
+	####ship_functionality
+
+	def attackShip(self,enemy_ship):
+		#ship will get destroyed
+		if(enemy_ship.damage >= self.health):
+
+		#take damage
+		else:
+			setattr(self,"health",self.health - enemy_ship.damage)
+
+	####specific ship methods
 	#updates resources collected by a merchant_ship only
 	def addResources(self):
 		"""
@@ -288,9 +303,6 @@ class Ship(models.Model):
 		Not implemented yet
 		"""
 		return self.name
-
-	def attackShip(self,enemy_ship):
-		pass
 
 
 
