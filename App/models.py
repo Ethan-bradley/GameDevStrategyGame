@@ -256,8 +256,8 @@ class Ship(models.Model):
 	(BIGWARSHIP, "Big Warship")
 	]
 
-	####init
-	#initializes a specific ship model
+	####init####
+	#return: void ; initializes a specific ship model
 	def initialize_ship(self):
 		player = self.controller
 		#separate into different ship_types and then specific ship_class
@@ -271,8 +271,8 @@ class Ship(models.Model):
 			for i,field_val in enumerate(ship_dict[self.ship_type]):
 				setattr(self, fields[i], field_val)
 			#update the player_funds with the curr_val
-			player_funds = self.controller.money
-			setattr(self, , player_funds - self.cost)
+			player_funds = self.controller.money - self.cost
+			#setattr(self, "controller", player_funds - self.cost)
 
 	#return: bool ; checks if the player has sufficient funds
 	def check_funds(self):
@@ -282,17 +282,23 @@ class Ship(models.Model):
 			return False
 		return self.controller.money >= self.ship_type
 
-	####ship_functionality
-
-	def attackShip(self,enemy_ship):
-		#ship will get destroyed
-		if(enemy_ship.damage >= self.health):
-
-		#take damage
+	####ship_functionality####
+	#return: void ; attack enemy_ship (called by upper-level)
+	def attack_ship(self, enemy_ship):
+		#enemy ship will get destroyed
+		if(self.damage >= enemy_ship.health):
+			enemy_ship.delete()
 		else:
-			setattr(self,"health",self.health - enemy_ship.damage)
+			#enemy ship takes damage damage
+			enemy_ship.take_damage(self.damage)
+			#setattr(enemy_ship,"health", enemy_ship.health - self.damage)
 
-	####specific ship methods
+	#return: void ; self ship takes damage_amount in damage (called by another ship)
+	def take_damage(self, damage_amount):
+		setattr(self,"health", self.health - damage_amount)
+
+
+	####specific ship methods####
 	#updates resources collected by a merchant_ship only
 	def addResources(self):
 		"""
