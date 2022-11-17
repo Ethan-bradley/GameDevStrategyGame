@@ -25,6 +25,10 @@ class GameEngine():
 		self.SanctionsArr = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
 		self.ForeignAid = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
 		self.MilitaryAid = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
+		self.endGame = False
+		self.conquerer_win = 7
+		self.gold_win = 20
+		self.dom_win = 5
 	def run_more_countries(self, num_players):
 		if num_players > 5:
 			for i in range(7,num_players):
@@ -41,6 +45,8 @@ class GameEngine():
 
 	def run_engine(self, g, graphs=True):
 		#Resetting model variables
+		if self.endGame:
+			return
 		all_players = Player.objects.filter(game=g)
 		if g.num_players > 1:
 			for p in all_players:
@@ -49,6 +55,7 @@ class GameEngine():
 				pla.ready = False
 				pla.projection_unloaded = True
 				pla.save()
+				
 			neutral_player2 = Player.objects.filter(name="Neutral")[0]
 			neutral_player2.ready = True
 			neutral_player2.save()
@@ -72,7 +79,16 @@ class GameEngine():
 		print('running engine')
 		for player in all_players:
 			self.add_resources(player)
+			self.check_win(player, g)
 		return
+	
+	def check_win(self, player, g):
+		hexlist = Hexes.objects.filter(controller=player, water=False)
+		if len(hexlist) >= self.conquerer_win or player.gold >= self.gold_win or player.NationsDefeated >= self.dom_win:
+			g.gameEnd = True
+			g.winner = player.name
+			g.save()
+
 	def add_resources(self, p):
 		hexlist = Hexes.objects.filter(controller=p)
 		for hex2 in hexlist:

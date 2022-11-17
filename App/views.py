@@ -328,6 +328,9 @@ def map(request, g, p, l, lprev):
     total_size = 0
     for army in total_armies:
         total_size += army.size
+    if g.gameEnd:
+        messages.success(request, f'Player ' + g.winner + ' has won!')
+        return redirect('app-lobby')
     #Loads the army form on post
     t = MapInterface.objects.filter(game=g,controller=p)[0]
     if request.method == 'POST':

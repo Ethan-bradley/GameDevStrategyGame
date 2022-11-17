@@ -32,6 +32,8 @@ class Game(models.Model):
 	years_per_turn = models.IntegerField(default=1)
 	year = models.IntegerField(default=0)
 	GameEngine = PickledObjectField(default="")
+	gameEnd = models.BooleanField(default = False)
+	winner = models.CharField(max_length = 100, default = '')
 
 
 class Player(models.Model):
@@ -69,6 +71,7 @@ class Player(models.Model):
 	Bonds = models.FloatField(default=0)
 	MoneyPrinting = models.IntegerField(default=200)
 	MilitaryAm = models.IntegerField(default=0)
+	NationsDefeated = models.IntegerField(default=0)
 	#Science Investment
 	InfrastructureInvest = models.FloatField(default=0.017)
 	ScienceInvest = models.FloatField(default=0.0)
