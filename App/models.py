@@ -302,12 +302,22 @@ class Ship(models.Model):
 	#updates resources collected by a merchant_ship only
 	def addResources(self):
 		"""
-		Enables a ship to harvest resources from a given Hex
-		Function not complete - 10/17/22
+		Enables a ship to harvest resources from a given Hex (does not require maintenance cost to harvest)
+		Function not complete - 11/9/22 -> buildingdict must reflect real resources! 
 		"""
-		"""
-		Not implemented yet
-		"""
+		player = self.player_controller
+		
+		#Change buildingDict to reflect natural resources on ocean tiles.
+		buildingDict = {'IronMine':['iron',1, 'money',1],'Farm':['food',1,'money',0],'Military':['MilitaryAm',1,'food',1], 'Commercial':['money', 1,'food',1]}
+		modify = buildingDict[self.building_type]
+		
+		#Check if the tile has a merchant ship, and if so, add to player attributes.
+		if self.ship_type == "Merchant Ship":
+			curr_am = getattr(player, modify[0])
+			setattr(player, modify[0], curr_am + modify[1])
+			
+		player.save()
+
 		return self.name
 
 
