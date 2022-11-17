@@ -97,17 +97,25 @@ class ArmyCombat():
 		if Army1.size < 0 and arm1_deleted:
 			deleted.append(Army1)
 			try:
+				army_list = Army.objects.filter(controller = Army1.controller)
 				Army1.delete()
+				if not army_list:
+					Army2.controller.NationsDefeated += 1
 			except:
 				print('No Army to delete.')
 			Army2.save()
+			Army2.controller.save()
 		if Army2.size < 0 and arm2_deleted:
 			deleted.append(Army2)
 			try:
+				army_list = Army.objects.filter(controller = Army2.controller)
 				Army2.delete()
+				if not army_list:
+					Army1.controller.NationsDefeated += 1
 			except:
 				print('No Army to delete.')
 			Army1.save()
+			Army1.controller.save()
 		if arm1_deleted:
 			Army1.save()
 		if arm2_deleted:
