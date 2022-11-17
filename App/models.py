@@ -165,55 +165,68 @@ class Building(models.Model):
 	location = models.ForeignKey("Hexes", on_delete=models.CASCADE)
 	player_controller = models.ForeignKey("Player", on_delete=models.CASCADE)
 	name = models.CharField(max_length=100)
-	COALMINE = 'CoalMine'
-	IRONMINE = 'IronMine'
-	OILWELL = 'OilWell'
+	# (a) Integers used for locating the required variable in the building dictionary
+	BUILD_RESOURCE = 0
+	BUILD_COST = 1
+	PROD_RESOURCE = 2
+	PROD_OUTPUT = 3
+	MAINTENANCE_RESOURCE = 4
+	MAINTENANCE_COST = 5
+	SYMBOL = 6
+	# (b) Variables dedicated to each building
+	CITY = "City"
+	FACTORY = "Factory"
 	FARM = "Farm"
-	SCIENCE = "Science"
-	INFRASTRUCTURE = "Infrastructure"
-	MILITARY = "Military"
-	COMMERCIAL = "Commercial"
+	MINE = "Mine"
+	LODGE = "Woodcutter's Lodge"
+	PORT = "Port"
 	MODES = [
-	(COALMINE, 'Coal Mine'),
-	(IRONMINE, 'Iron Mine'),
-	(OILWELL, 'Oil Well'),
-	(FARM, 'Farm'),
-	(SCIENCE, 'Science'),
-	(INFRASTRUCTURE, 'Road'),
-	(MILITARY, 'Recruitment Center'),
-	(COMMERCIAL, 'Commercial')
+		(CITY, 'City'),
+		(FACTORY, 'Factory'),
+		(FARM, 'Farm'),
+		(MINE, 'Mine'),
+		(LODGE, "Woodcutter's Lodge"),
+		(PORT, "Port")
 	]
+	# (c) The building dictionary. Contains the building's output, maintenance cost, and its representative symbol
+	# Refer to (a) for the function of each index value in the dictionary
+	buildingDict = {
+		'City': ['wood', 1, ['gold', 'wood', 'metal'], 1, 'wood', 1, '🏬'],
+		'Factory': ['metal', 1, ['metal'], 1, 'metal', 1, '🔗'],
+		'Farm': ['wood', 2, ['food'], 1, 'wood', 1, '🚜'],
+		'Mine': ['metal', 2, ['metal'], 1, 'metal', 1, '⛏️'],
+		'Lodge': ['wood', 3, ['wood'], 1, 'wood', 1, '🏠'],
+		'Port': ['wood', 4, ['gold'], 1, 'gold', 1, '🚢']
+	}
 	building_type = models.CharField(max_length=20,choices=MODES,default=FARM)
 
 	#Adds the resource production to the player's resources and subtracts maintenance cost
 	def addResources(self):
 		player = self.player_controller
-		buildingDict = {'IronMine':['iron',1, 'money',1],'Farm':['food',1,'money',0],'Military':['MilitaryAm',1,'food',1], 'Commercial':['money', 1,'food',1]}
-		modify = buildingDict[self.building_type]
-		curr_am = getattr(player, modify[0])
-		curr_am_maintenance = getattr(player, modify[2])
-		if curr_am_maintenance - modify[3] >= 0:
-			setattr(player, modify[2], curr_am_maintenance - modify[3])
-			setattr(player, modify[0], curr_am + modify[1])
+		modify = self.buildingDict[self.building_type]
+		curr_am_maintenance = getattr(player, modify[self.MAINTENANCE_RESOURCE])
+		for resource in modify[self.PROD_RESOURCE]:
+			curr_am = getattr(player, resource)
+			if curr_am_maintenance - modify[self.MAINTENANCE_COST] >= 0:
+				setattr(player, resource, curr_am + modify[self.PROD_OUTPUT])
+		setattr(player, modify[self.MAINTENANCE_RESOURCE], curr_am_maintenance - modify[self.MAINTENANCE_COST])
 		player.save()
 
 	#Applies the cost of the building towards the player
 	def applyCost(self):
 		player = self.player_controller
-		buildingDict = {'IronMine':['metal',1],'Farm':['metal',2],'Military':['food',2], 'Commercial':['gold', 2]}
-		modify = buildingDict[self.building_type]
-		curr_am = getattr(player, modify[0])
+		modify = self.buildingDict[self.building_type]
+		curr_am = getattr(player, modify[self.BUILD_RESOURCE])
 		#Return False if the player doesn't have enough the required resource
-		if curr_am - modify[1] < 0:
+		if curr_am - modify[self.BUILD_COST] < 0:
 			return False
 		else:
-			setattr(player, modify[0], curr_am - modify[1])
+			setattr(player, modify[self.BUILD_RESOURCE], curr_am - modify[self.BUILD_COST])
 			player.save()
 			return True
 	#Returns the building's symbol for display
 	def getSymbol(self):
-		buildingDict = {'CoalMine':['🔗'], 'IronMine':['⛏️'], 'OilWell':['🛢️'], 'Farm':['🚜'],'Military':['🎖️'], 'Commercial':['🏬'], 'Infrastructure':['🛣️']}
-		emoji = buildingDict[self.building_type][0]
+		emoji = self.buildingDict[self.building_type][self.SYMBOL]
 		return emoji
 
 #adding the ships class
