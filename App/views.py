@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.forms import formset_factory, modelformset_factory
 from .Game import GameEngine
 from .models import Post
-from .models import Game, Player, Building, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, GraphCountryInterface
-from .forms import BuildingForm, NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ArmyForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm, GraphCountryInterfaceForm
+from .models import Game, Player, Building, IndTariff, Tariff, Hexes, Army, Policy, PolicyGroup, Country, PlayerProduct, Product, MapInterface, Notification, GraphInterface, GraphCountryInterface, Ship
+from .forms import BuildingForm, NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, HexForm, ShipForm, GovernmentSpendingForm, PolicyForm, PolicyFormSet, AddProductForm, AddPlayerProductForm, MapInterfaceForm, GraphInterfaceForm, GraphCountryInterfaceForm, ShipForm
 from django.views.generic.edit import CreateView
 from django.apps import apps
 import json
@@ -79,11 +79,11 @@ def new_game(request):
             pf.user = request.user
             pf.game = temp
             pf.color = pf.country.color
-            pf.wood = 2
-            pf.gold = 2
-            pf.metal =2
-            pf.MilitaryAm = 2
-            pf.food =2
+            pf.wood = 10
+            pf.gold = 10
+            pf.metal =10
+            pf.MilitaryAm = 10
+            pf.food =10
             pf.save()
             curr_player = Player.objects.filter(name=pf.name, game=temp)[0]
             #Creates Map Interface
@@ -233,11 +233,11 @@ def joinGame(request, g):
             f.user = request.user
             f.game = temp
             f.color = f.country.color
-            f.wood = 2
-            f.gold = 2
-            f.MilitaryAm = 2
-            f.metal = 2
-            f.food =2
+            f.wood = 10
+            f.gold = 10
+            f.MilitaryAm = 10
+            f.metal = 10
+            f.food = 10
             f.save()
             curr_player = Player.objects.filter(name=f.name, game=temp)[0]
             #Creates Map Interface
@@ -328,6 +328,7 @@ def map(request, g, p, l, lprev):
     total_size = 0
     for army in total_armies:
         total_size += army.size
+    #import pdb; pdb.set_trace()
     if g.gameEnd:
         messages.success(request, f'Player ' + g.winner + ' has won!')
         return redirect('app-lobby')
@@ -379,73 +380,47 @@ def map(request, g, p, l, lprev):
                         return redirect('map', gtemp, ptemp, 'null', 'null')
             if l != 'null':
                 h = Hexes.objects.filter(game=g, hexNum=l)[0]
-                v = Army.objects.filter(game=g,location=h, controller=p)
+                v = Ship.objects.filter(game=g,location=h, controller=p)
                 if len(v) > 0:
-                    form = ArmyForm(request.POST, instance=v[0])
+                    form = ShipForm(request.POST, instance=v[0])
                 else:
-                    form = ArmyForm(request.POST)
+                    form = ShipForm(request.POST)
             else:
                 h = None
-                form = ArmyForm(request.POST)
+                form = ShipForm(request.POST)
             if form.is_valid():
                 f = form.save(commit=False)
-                v = Army.objects.filter(game=g,location=f.location, controller=p)
-                f.controller = p
+                v = Ship.objects.filter(game=g,location=f.location, controller=p)
+                f.controller = player
                 f.game = g
-                s = f.size
-                if s < 0:
-                    messages.warning(request, f'You cannot have an army with negative size!')
-                    return redirect('map', gtemp, ptemp, 'null', 'null')
                 #import pdb; pdb.set_trace()
                 if f.location.controller != player:
-                    messages.warning(request, f'You cannot build an army in another Players territory!')
+                    messages.warning(request, f'You cannot build a ship in another Players territory!')
                     return redirect('map', gtemp, ptemp, 'null', 'null')
                 if h == None:
-                    messages.warning(request, f'You have not specified a location for this army!')
+                    messages.warning(request, f'You have not specified a location for this ship!')
                     return redirect('map', gtemp, ptemp, 'null', 'null')
-                if f.naval and not h.water:
-                    messages.warning(request, f'A naval force cannot be built on land!')
-                    return redirect('map', gtemp, ptemp, 'null', 'null')
+                #if f.naval and not h.water:
+                #messages.warning(request, f'A naval force cannot be built on land!')
+                #return redirect('map', gtemp, ptemp, 'null', 'null')
                 if lprev == 'null':
                     if len(v) == 0:
-                        if total_size + s > 1000000:
-                            messages.warning(request, f'The total size of all your armies combined cannnot be more than 1m!')
+                        if not f.initialize_ship():
+                            messages.warning(request, f'You do not have enough wood to build this Ship!')
                             return redirect('map', gtemp, ptemp, 'null', 'null')
-                        if player.MilitaryAm - s >= 0:
-                            player.MilitaryAm -= s
-                            player.save()
-                        else:
-                             messages.warning(request, f'You do not have enough Military resources to build this Army!')
-                             return redirect('map', gtemp, ptemp, 'null', 'null')
-                        if player.MilitaryAm - s - (total_size + s)*0.1 < 0:
-                            messages.warning(request, f'Building this army does not leave enough remaining for army maintenace, which puts you at risk of army rebellion.')
-
+                        player.save()
                     else:
-                        if s == 0:
-                            v[0].delete()
-                            messages.success(request, f'Army succesfully disbanded!')
+                        if not v[0].initialize_ship():
+                            messages.warning(request, f'You do not have enough wood to build this Ship!')
                             return redirect('map', gtemp, ptemp, 'null', 'null')
-                        s = s - v[0].size
-                        if total_size + s > 1000000:
-                            messages.warning(request, f'The total size of all your armies combined cannnot be more than 1m!')
-                            return redirect('map', gtemp, ptemp, 'null', 'null')
-                        if player.MilitaryAm - s >= 0:
-                            player.MilitaryAm -= s
-                            player.save()
-                        else:
-                            f.size = v[0].size
-                            messages.warning(request, f'You do not have enough military resources to expand this Army!')
-                            return redirect('map', gtemp, ptemp, 'null', 'null')
-                        if player.MilitaryAm - s - (total_size + s)*0.1 < 0:
-                            messages.warning(request, f'Expanding this army does not leave enough remaining for army maintenace, which puts you at risk of army rebellion.')
+                        player.save()
                 else:
-                    player.MilitaryAm -= s
                     player.save()
                 f.moved = True
                 f.save()
     #Gets the different colors of the hexes and the stats of the hexes
     hexColor = Hexes.objects.filter(game=g)
-    armies = Army.objects.filter(game=g)
+    armies = Ship.objects.filter(game=g)
     count = 0
     col.append([])
     info = [0 for i in range(0,g.board_size*g.board_size)]
@@ -453,7 +428,7 @@ def map(request, g, p, l, lprev):
     #import pdb; pdb.set_trace()
     for hC in hexColor:
         col[row].append(hC.color)
-        a = Army.objects.filter(game=g, location=hC)
+        a = Ship.objects.filter(game=g, location=hC)
         buildings = Building.objects.filter(game=g, location=hC)
         army_size = ""
         army_name = ""
@@ -466,11 +441,12 @@ def map(request, g, p, l, lprev):
             army_size = "---"
         else:
             for army in a:
-                army_size += (army.name+": "+str(army.size))
-                if army.naval:
-                    army_name += "[ ⚓"+army.name
+                army_size += (army.name+": "+str(army.ship_type))
+                army_name += "[ ⚓"+str(army.ship_type)
+                """if army.naval:
+                
                 else:
-                    army_name += "[ ⚔️"+army.name
+                    army_name += "[ ⚔️"+army.name"""
                 if army.moved == False:
                     army_name += " ✅"
                 army_name += "] \n "
@@ -497,7 +473,7 @@ def map(request, g, p, l, lprev):
     #If lprev is not null an army is selected and it moves the army if it is a valid move.
     if lprev != 'null':
         h = Hexes.objects.filter(game=g, hexNum=lprev)[0]
-        v = Army.objects.filter(game=g,location=h)
+        v = Ship.objects.filter(game=g,location=h)
         
         h2 = Hexes.objects.filter(game=g, hexNum=l)[0]
         if len(v) == 0:
@@ -506,14 +482,11 @@ def map(request, g, p, l, lprev):
         if v.moved:
             messages.warning(request, f'This army has already been moved!')
             return redirect('map', gtemp, ptemp, 'null', 'null')
-        if v.naval and not h2.water:
-            messages.warning(request, f'A naval force cannot move on land!')
-            return redirect('map', gtemp, ptemp, lprev, 'null')
         #    return redirect('map', gtemp, ptemp, lprev, 'null')
-        if calculate_distance(h.xLocation, h.yLocation, h2.xLocation, h2.yLocation) > v.max_movement:
+        if calculate_distance(h.xLocation, h.yLocation, h2.xLocation, h2.yLocation) > v.movement:
             messages.warning(request, f'This army cannot move that far!')
             return redirect('map', gtemp, ptemp, lprev, 'null')
-        f = ArmyForm(instance=v)
+        f = ShipForm(instance=v)
         form = f.save(commit=False)
         form.location = h2
         if h2 != h:
@@ -523,26 +496,26 @@ def map(request, g, p, l, lprev):
         return redirect('map', gtemp, ptemp, 'null', 'null')
     #If a tiles hasn't been selected load regular army form
     if l == 'null':
-        f = ArmyForm()
+        f = ShipForm()
         buildingForm = BuildingForm()
     else:
         #If a tiles has been selected, load that particular army if an army is on it, 
         #if not then load a basic Army form with that location defaulted into the form.
         h = Hexes.objects.filter(game=g, hexNum=l)[0]
-        v = Army.objects.filter(game=g,location=h, controller=player)
+        v = Ship.objects.filter(game=g,location=h, controller=player)
         buildingForm = BuildingForm(initial={'location':h})
         if not v:
             if h.controller != player:
                 messages.warning(request, f'You cannot build an army in another players territory!')
                 return redirect('map', gtemp, ptemp, 'null', 'null')
-            f = ArmyForm(initial={'location':h})
+            f = ShipForm(initial={'location':h})
         else:
             v = v[0]
             print(v)
-            f = ArmyForm(instance=v)
+            f = ShipForm(instance=v)
             if v.controller != p:
                 messages.warning(request, f'You cannot move another players army!')
-                f = ArmyForm()
+                f = ShipForm()
                 return redirect('map', gtemp, ptemp, 'null', 'null')
     next_turn = NextTurn(instance=player)
     militaryAm = player.MilitaryAm

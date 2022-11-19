@@ -1,4 +1,4 @@
-from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, PlayerProduct, Product, Notification, Building
+from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, PlayerProduct, Product, Notification, Building, Ship
 from .forms import NewGameForm, IndTariffForm, JoinGameForm, AddIndTariffForm, AddTariffForm, NextTurn, ResetTurn
 from django.core.files import File
 from .HexList import HexList
@@ -70,7 +70,7 @@ class GameEngine():
 		for building in all_buildings:
 			building.addResources()
 		self.ArmyCombat.doCombat(g)
-		all_armies = Army.objects.filter(game=g)
+		all_armies = Ship.objects.filter(game=g)
 		for army in all_armies:
 			army.moved = False
 			army.save()
@@ -79,12 +79,14 @@ class GameEngine():
 		print('running engine')
 		for player in all_players:
 			self.add_resources(player)
-			self.check_win(player, g)
+			if player.name != "Neutral":
+				self.check_win(player, g)
 		return
 	
 	def check_win(self, player, g):
 		hexlist = Hexes.objects.filter(controller=player, water=False)
-		if len(hexlist) >= self.conquerer_win or player.gold >= self.gold_win or player.NationsDefeated >= self.dom_win:
+		#len(hexlist) >= self.conquerer_win
+		if player.gold >= self.gold_win or player.NationsDefeated >= self.dom_win:
 			g.gameEnd = True
 			g.winner = player.name
 			g.save()

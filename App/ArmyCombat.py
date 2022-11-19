@@ -1,32 +1,27 @@
-from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, Notification, Building
+from .models import Game, Player, IndTariff, Tariff, Army, Policy, PolicyGroup, Hexes, Notification, Building, Ship
 
 class ArmyCombat():
 	def __init__(self):
 		pass
 
 	def doCombat(self, g):
-		army_list = Army.objects.filter(game=g)
+		army_list = Ship.objects.filter(game=g)
 		bounce = {}
 		deleted = []
-		for a in army_list:
-			if a in deleted:
+		#import pdb; pdb.set_trace();
+		for ship1 in army_list:
+			if ship1 in deleted:
 				continue
-			a.moved = False
-			a.save()
+			ship1.moved = False
+			ship1.save()
 			fought = False
-			for j in army_list:
-				if a.controller.name != j.controller.name and a.location.hexNum == j.location.hexNum:
-					self.calculateCombat(g,a,j, deleted)
+			for ship2 in army_list:
+				if ship1.controller.name != ship2.controller.name and ship1.location.hexNum == ship2.location.hexNum:
+					self.calculateCombat(g,ship1,ship2, deleted)
 					fought = True
-			if not fought and a.controller != a.location.controller:
-				self.switch_hex(a.location, a.controller, g)
-		for j in army_list:
-			if j.size < 0:
-				try:
-					j.delete()
-				except:
-					print("No army to delete!")
-		self.doMaintenace(g)
+			if not fought and ship1.controller != ship1.location.controller:
+				self.switch_hex(ship1.location, ship1.controller, g)
+		#self.doMaintenace(g)
 
 	def doMaintenace(self,g):
 		army_list = Army.objects.filter(game=g)
@@ -44,9 +39,11 @@ class ArmyCombat():
 			print("Army deletion error.")
 
 	def calculateCombat(self, g, Army1, Army2, deleted):
-		diff = abs(Army1.size - Army2.size)
+		#diff = abs(Army1.size - Army2.size)
+		Army1.attack_ship(Army2)
+		#Army2.attack_ship(Army1)
 		#Destroy Army if it encounters a naval unit on water.
-		arm1_deleted = True
+		"""arm1_deleted = True
 		arm2_deleted = True
 		if Army1.location.water:
 			if Army1.naval and not Army2.naval:
@@ -66,16 +63,18 @@ class ArmyCombat():
 			army2_fortification = 2
 		Army1combat = Army1.size*army1_fortification
 		Army2combat = Army2.size*army2_fortification
-		turn = g.GameEngine.get_country_by_name("UK").time - 17
-		if Army1combat > Army2combat:
+		#turn = g.GameEngine.get_country_by_name("UK").time - 17"""
+		
+
+		"""if Army1combat > Army2combat:
 			message2 = "A battle occured in " + Army1.location.name + " with the victory of " + Army1.controller.name + "'s " + Army1.name + " of size " + str(
 				Army1.size) + " with casualties of " + str(max((int)(Army2.size * 0.05),
 								 1)) + " over " + Army2.controller.name + "'s " + Army2.name + " of size " + str(Army2.size) + " with casulties of " + str(max((int)(Army1.size * 0.1), 1))
 			Army1.size -= max((int) (Army2.size*0.05), 1)
 			Army2.size -= max((int) (Army1.size*0.1), 1)
-			self.switch_hex(Army1.location, Army1.controller, g)
+			
 			arm2_deleted = self.retreat_army(g, Army2, deleted)
-			Notification.objects.create(game=g, message=message2, year=turn)
+			#Notification.objects.create(game=g, message=message2, year=turn)
 		elif Army2combat > Army1combat:
 			message2 = "A battle occured in " + Army2.location.name + " with the victory of " + Army2.controller.name + "'s " + Army2.name + " of size " + str(
 				Army2.size) + " with casualties of " + \
@@ -83,18 +82,20 @@ class ArmyCombat():
 			" of size " + str(Army1.size) + " with casualties of " + str(max((int)(Army2.size * 0.1), 1))
 			Army1.size -= max((int) (Army2.size*0.1), 1)
 			Army2.size -= max((int) (Army1.size*0.05), 1)
+			Army1.attack_ship(Army2)
 			self.switch_hex(Army2.location, Army2.controller, g)
 			arm1_deleted = self.retreat_army(g, Army1, deleted)
-			Notification.objects.create(game=g, message=message2, year=turn)
+			#Notification.objects.create(game=g, message=message2, year=turn)
 		else:
-			Army1.size -= max((int) (Army2.size*0.05), 1)
-			Army2.size -= max((int) (Army1.size*0.05), 1)
+			Army1.attack_ship(Army2)
+			#Army1.size -= max((int) (Army2.size*0.05), 1)
+			#Army2.size -= max((int) (Army1.size*0.05), 1)
 			self.switch_hex(Army1.location, Army1.controller, g)
 			message2 = "A battle occured in "+Army1.location.name+" with the victory of "+Army1.controller.name+"'s "+Army1.name+" over "+Army2.controller.name+"'s "+Army2.name
-			Notification.objects.create(game=g, message=message2, year=turn)
-			arm2_deleted = self.retreat_army(g, Army2, deleted)
+			#Notification.objects.create(game=g, message=message2, year=turn)
+			arm2_deleted = self.retreat_army(g, Army2, deleted)"""
 		#import pdb; pdb.set_trace()
-		if Army1.size < 0 and arm1_deleted:
+		"""if Army1.size < 0 and arm1_deleted:
 			deleted.append(Army1)
 			try:
 				army_list = Army.objects.filter(controller = Army1.controller)
@@ -107,19 +108,13 @@ class ArmyCombat():
 			Army2.controller.save()
 		if Army2.size < 0 and arm2_deleted:
 			deleted.append(Army2)
-			try:
-				army_list = Army.objects.filter(controller = Army2.controller)
-				Army2.delete()
-				if not army_list:
-					Army1.controller.NationsDefeated += 1
-			except:
-				print('No Army to delete.')
+			
 			Army1.save()
 			Army1.controller.save()
 		if arm1_deleted:
 			Army1.save()
 		if arm2_deleted:
-			Army2.save()
+			Army2.save()"""
 
 	def retreat_army(self, g, curr_army, deleted):
 		h = self.find_retreat_hex(g, curr_army.location, curr_army)

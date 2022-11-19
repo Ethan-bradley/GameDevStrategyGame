@@ -194,17 +194,18 @@ class Building(models.Model):
 	# (c) The building dictionary. Contains the building's output, maintenance cost, and its representative symbol
 	# Refer to (a) for the function of each index value in the dictionary
 	buildingDict = {
-		'City': ['wood', 1, ['gold', 'wood', 'metal'], 1, 'wood', 1, '🏬'],
-		'Factory': ['metal', 1, ['metal'], 1, 'metal', 1, '🔗'],
-		'Farm': ['wood', 2, ['food'], 1, 'wood', 1, '🚜'],
-		'Mine': ['metal', 2, ['metal'], 1, 'metal', 1, '⛏️'],
-		'Lodge': ['wood', 3, ['wood'], 1, 'wood', 1, '🏠'],
-		'Port': ['wood', 4, ['gold'], 1, 'gold', 1, '🚢']
+		'City': ['food', 1, ['gold'], 2, 'metal', 2, '🏬'],
+		'Factory': ['wood', 1, ['metal'], 2, 'metal', 1, '🔗'],
+		'Farm': ['metal', 1, ['food'], 2, 'metal', 1, '🚜'],
+		'Mine': ['metal', 1, ['metal'], 2, 'metal', 1, '⛏️'],
+		"Woodcutter's Lodge": ['food', 1, ['wood'], 3, 'metal', 1, '🏠'],
+		'Port': ['metal', 4, ['gold'], 2, 'gold', 1, '🚢']
 	}
 	building_type = models.CharField(max_length=20,choices=MODES,default=FARM)
 
 	#Adds the resource production to the player's resources and subtracts maintenance cost
 	def addResources(self):
+		#import pdb; pdb.set_trace()
 		player = self.player_controller
 		modify = self.buildingDict[self.building_type]
 		curr_am_maintenance = getattr(player, modify[self.MAINTENANCE_RESOURCE])
@@ -212,8 +213,10 @@ class Building(models.Model):
 			curr_am = getattr(player, resource)
 			if curr_am_maintenance - modify[self.MAINTENANCE_COST] >= 0:
 				setattr(player, resource, curr_am + modify[self.PROD_OUTPUT])
-		setattr(player, modify[self.MAINTENANCE_RESOURCE], curr_am_maintenance - modify[self.MAINTENANCE_COST])
-		player.save()
+				player.save()
+				curr_am = getattr(player, resource)
+				setattr(player, modify[self.MAINTENANCE_RESOURCE], curr_am - modify[self.MAINTENANCE_COST])
+				player.save()
 
 	#Applies the cost of the building towards the player
 	def applyCost(self):
@@ -239,7 +242,7 @@ class Ship(models.Model):
 	location = models.ForeignKey("Hexes", on_delete=models.CASCADE)
 	controller = models.ForeignKey("Player", on_delete=models.CASCADE)
 	name = models.CharField(max_length=100)
-	ship_type = models.CharField(max_length=20,choices=MODES,default=NEW)
+	
 
 	#add ship attributes (keep in this order for proper initialization)
 	max_health = models.IntegerField(default=0)
@@ -253,41 +256,53 @@ class Ship(models.Model):
 	reload_speed = models.FloatField(default=1.0)
 	range_attack = models.FloatField(default=1.0)
 	range_visibility = models.FloatField(default=1.0)
+	moved = models.BooleanField(default=False)
 
 	#add ship_types
-	NEW = "Default"
 	MERCHANT = "Merchant Ship"
 	COLONIZER = "Colonizer Ship"
 	SMALLWARSHIP = "Small Warship"
 	MEDIUMWARSHIP = "Medium Warship"
 	BIGWARSHIP = "Big Warship"
+	BUBADOCTOR = "Doctor Ship"
+	TUGBOAT = "TugBoat Ship"
 
 	MODES = [
 	(MERCHANT, "Merchant Ship"),
 	(COLONIZER, "Colonizer Ship"),
-	(BUBA DOCTOR, "Doctor Ship"),
+	(BUBADOCTOR, "Doctor Ship"),
 	(TUGBOAT, "TugBoat Ship"),
 	(SMALLWARSHIP, "Small Warship"),
 	(MEDIUMWARSHIP, "Medium Warship"),
 	(BIGWARSHIP, "Big Warship")
 	]
 
+	ship_type = models.CharField(max_length=20,choices=MODES,default=SMALLWARSHIP)
+
 	####init####
 	#return: void ; initializes a specific ship model
 	def initialize_ship(self):
 		player = self.controller
 		#separate into different ship_types and then specific ship_class
-		ship_dict = {"Merchant Ship": [23,],"Colonizer Ship": [],"Merchant Ship": [],"Merchant Ship": [],"Merchant Ship": [],"Merchant Ship": []}
+		ship_dict = {"Merchant Ship": [10,10,0,1,2],"Colonizer Ship": [10,10,0,2,2],"Small Warship": [10,10,11,1,2],"Medium Warship": [20,20,20,2,2],"Big Warship": [20,20,30,3,2],"Doctor Ship": [10,10,0,2], "TugBoat Ship":[10,10,0,2]}
 		fields = ["max_health","health","damage","cost","movement","troop_count","troop_capacity","cool_down","reload_speed","range_attack","range_visibility"]
-		if(!check_funds()):
-			return
+		if(not self.check_funds()):
+			return False
 		else:
 			#disregard any bugs for getting free ship
 			#set ship attributes based on ship_type
+			
 			for i,field_val in enumerate(ship_dict[self.ship_type]):
 				setattr(self, fields[i], field_val)
 			#update the player_funds with the curr_val
-			player_funds = self.controller.money - self.cost
+			if self.check_funds():
+				self.controller.wood = self.controller.wood - self.cost
+				return True
+			else:
+				return False
+
+			
+
 			#setattr(self, "controller", player_funds - self.cost)
 
 	#return: bool ; checks if the player has sufficient funds
@@ -296,14 +311,22 @@ class Ship(models.Model):
 		#a check for initialized ship
 		if self.ship_type == "Default":
 			return False
-		return self.controller.money >= self.ship_type
+		return self.controller.wood >= self.cost
 
 	####ship_functionality####
 	#return: void ; attack enemy_ship (called by upper-level)
 	def attack_ship(self, enemy_ship):
 		#enemy ship will get destroyed
 		if(self.damage >= enemy_ship.health):
-			enemy_ship.delete()
+			try:
+				cont = enemy_ship.controller
+				enemy_ship.delete()
+				self.switch_hex(self.location, self.controller, self.game)
+				army_list = Ships.objects.filter(controller = cont)
+				if not army_list:
+					Army1.controller.NationsDefeated += 1
+			except:
+				print('No Ship to delete.')
 		else:
 			#enemy ship takes damage damage
 			enemy_ship.take_damage(self.damage)
@@ -335,6 +358,20 @@ class Ship(models.Model):
 		player.save()
 
 		return self.name
+
+	#Switches control of a hex between two players
+	def switch_hex(self, h, player_to, g):
+		loser = h.controller
+		h.controller = player_to
+		if h.water == False:
+			h.color = player_to.country.color
+		buildings = Building.objects.filter(game=g, location=h)
+		for building in buildings:
+			building.player_controller = player_to
+			building.save()
+		h.save()
+		player_to.save()
+		loser.save()
 
 
 

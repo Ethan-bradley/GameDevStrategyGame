@@ -1,5 +1,5 @@
 from django import forms
-from .models import Game, Building, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface, GraphCountryInterface, Country
+from .models import Game, Ship, Building, Tariff, Economic, IndTariff, Player, Hexes, Army, Policy, Faction, PlayerProduct, Product, MapInterface, GraphInterface, GraphCountryInterface, Country
 from django.forms import ModelForm
 from django.forms import formset_factory, BaseFormSet
 from django.core.exceptions import ValidationError
@@ -51,15 +51,21 @@ class ResetTurn(ModelForm):
         fields = []
 
 #Form for creating an army
-class ArmyForm(ModelForm):
+class ShipForm(ModelForm):
     class Meta:
         model = Army
         fields = ['name','size','location','naval']
 
     def clean(self):
-        super(ArmyForm, self).clean()
+        super(ShipForm, self).clean()
         s = self.cleaned_data.get('size')
         return self.cleaned_data
+
+#Form for creating an Ship
+class ShipForm(ModelForm):
+    class Meta:
+        model = Ship
+        fields = ['name','location', 'ship_type']
 
 #Form for creating a building
 class BuildingForm(ModelForm):

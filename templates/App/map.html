@@ -49,19 +49,19 @@
 </div>
 
 <div class="content-section">
-	<div class="media-body">
+	<!--div class="media-body">
 		<p class="text-secondary">Total Military Goods Available: {{ MilitaryAm }}</p>
 		<p class="text-secondary">Total Maintenance Cost Next Year: {{ maintenace }}</p>
-	</div>
+	</div-->
 
         <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Army <span style="float:right;" data-toggle="tooltip" title="You can create armies on the Army Map page, by clicking a province, and then below specifying how big the army should be and what its name should be. In blue here, you can  see that, the orange shows you how much equipment you have. Armies can only be created in yout land hexes, fleets only in sea hexes that are adjacent to your land hexes. Fleets can only move on water, but armies can move anywhere. If however an army encounters a fleet, the fleet always wins. Fleets however fight other fleets the same way that armies fight other armies. Armies can fight other armies both on land and on the sea, the same rules apply.">ℹ️ </span> </legend>
+                <legend class="border-bottom mb-4">Ships <span style="float:right;" data-toggle="tooltip" title="You can create armies on the Army Map page, by clicking a province, and then below specifying how big the army should be and what its name should be. In blue here, you can  see that, the orange shows you how much equipment you have. Armies can only be created in yout land hexes, fleets only in sea hexes that are adjacent to your land hexes. Fleets can only move on water, but armies can move anywhere. If however an army encounters a fleet, the fleet always wins. Fleets however fight other fleets the same way that armies fight other armies. Armies can fight other armies both on land and on the sea, the same rules apply.">ℹ️ </span> </legend>
                 {{ form|crispy }}
             </fieldset>
             <div class="form-group">
-                <button class="btn btn-outline-info" type="submit" id="ArmyCreate">Build Army</button>
+                <button class="btn btn-outline-info" type="submit" id="ArmyCreate">Build Ship</button>
             </div>
         </form>
 
@@ -85,6 +85,14 @@
                 <button class="btn btn-outline-info" type="submit" id="RunTurn">Run next Turn</button>
             </div>
         </form>
+         <legend class="border-bottom mb-4">Costs </legend>
+         <p class="text-secondary">City 🏬: Production: 2 💰  Costs: 🌾 1 Build Cost: 2 🔗 </p>
+         <p class="text-secondary">Factory 🔗: Production: 2 🔗  Costs: 🪵 1 Build Cost:  1 🔗</p>
+         <p class="text-secondary">Farm 🚜: Production: 2 🌾  Costs: 🔗 1 Build Cost:  1 🔗</p>
+         <p class="text-secondary">Mine ⛏️: Production: 2 🔗  Costs: 🔗 1 Build Cost:  1 🔗</p>
+         <p class="text-secondary">Lodge 🏠: Production: 3 🪵  Costs: 🌾 1 Build Cost:  1 🔗</p>
+          <p class="text-secondary">Port 🚢: Production: 2 💰  Costs: 💰 1 Build Cost:  4 🔗</p>
+
     </div>
 
 <style type="text/css">
