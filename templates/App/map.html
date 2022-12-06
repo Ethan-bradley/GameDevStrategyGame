@@ -2,7 +2,8 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <div class="content-section">
-<legend>💰 {{ gold }} | ⚔️ {{ MilitaryAm }} | 🔗 {{ metal }} | 🌾 {{ food }} |🪵{{ wood }}</legend>
+<legend>💰 {{ gold }} | <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"> {{ metal }} | <img src="https://i.ibb.co/FbPf3mF/Food.png" alt="Food" border="0"></a>{{ food }} |<img src="https://i.ibb.co/LpYFcnN/Wood.png" alt="Wood" border="0">{{ wood }}</legend>
+<legend>💰 {{ GoldAdd }} | <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0">{{ MetalAdd }} | <img src="https://i.ibb.co/FbPf3mF/Food.png" alt="Food" border="0"></a> {{ FoodAdd }} |<img src="https://i.ibb.co/LpYFcnN/Wood.png" alt="Wood" border="0">{{ WoodAdd }}</legend>
 </div>
 <br>
 <br>
@@ -86,12 +87,19 @@
             </div>
         </form>
          <legend class="border-bottom mb-4">Costs </legend>
-         <p class="text-secondary">City 🏬: Production: 2 💰  Costs: 🌾 1 Build Cost: 2 🔗 </p>
-         <p class="text-secondary">Factory 🔗: Production: 2 🔗  Costs: 🪵 1 Build Cost:  1 🔗</p>
-         <p class="text-secondary">Farm 🚜: Production: 2 🌾  Costs: 🔗 1 Build Cost:  1 🔗</p>
-         <p class="text-secondary">Mine ⛏️: Production: 2 🔗  Costs: 🔗 1 Build Cost:  1 🔗</p>
-         <p class="text-secondary">Lodge 🏠: Production: 3 🪵  Costs: 🌾 1 Build Cost:  1 🔗</p>
-          <p class="text-secondary">Port 🚢: Production: 2 💰  Costs: 💰 1 Build Cost:  4 🔗</p>
+         <p class="text-secondary">City 🏬: Production: 2 💰  Costs: <img src="https://i.ibb.co/FbPf3mF/Food.png" alt="Food" border="0"> 1 Build Cost: 2 <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"> </p>
+         <p class="text-secondary">Factory 🔗: Production: 2 <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0">  Costs: <img src="https://i.ibb.co/LpYFcnN/Wood.png" alt="Wood" border="0"> 1 Build Cost:  1 <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"></p>
+         <p class="text-secondary">Farm 🚜: Production: 2 <img src="https://i.ibb.co/FbPf3mF/Food.png" alt="Food" border="0">  Costs: <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"> 1 Build Cost:  1 <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"></p>
+         <p class="text-secondary">Mine ⛏️: Production: 2 <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0">  Costs: <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"> 1 Build Cost:  1 <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"></p>
+         <p class="text-secondary">Lodge 🏠: Production: 3 <img src="https://i.ibb.co/LpYFcnN/Wood.png" alt="Wood" border="0">  Costs: <img src="https://i.ibb.co/FbPf3mF/Food.png" alt="Food" border="0"> 1 Build Cost:  1 <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"></p>
+          <p class="text-secondary">Port 🚢: Production: 2 💰  Costs: 💰 1 Build Cost:  4 <img src="https://i.ibb.co/0Y51hq4/Metal.png" alt="Metal" border="0"></p>
+          <img src="https://i.ibb.co/Gx7qSLF/medium-ship.png" alt="medium-ship" border="0" class='shipimage2'><p class="text-secondary">Small Ship: Costs: 1 <img src="https://i.ibb.co/LpYFcnN/Wood.png" alt="Wood" border="0"></p>
+          <img src="https://i.ibb.co/4JYBvnq/heavy-ship-SW.png" alt="medium-ship"  class='shipimage2' border="0"><p class="text-secondary">Medium Ship: Costs: 2 <img src="https://i.ibb.co/LpYFcnN/Wood.png" alt="Wood" border="0"></p>
+		<img src="https://i.ibb.co/nsztwtC/heavy-ship-south.png" alt="heavy-ship-south" border="0" class='shipimage2'><p class="text-secondary">Heavy Ship: Costs: 3 <img src="https://i.ibb.co/LpYFcnN/Wood.png" alt="Wood" border="0"></p>
+		<legend class="border-bottom mb-4">Win Conditions </legend>
+		<p class="text-secondary">Have 40💰<p>
+		<p class="text-secondary">Control 7 islands <p>
+			<p class="text-secondary">Defeat 5 players <p>
 
     </div>
 
@@ -118,13 +126,22 @@
 	}
 	.centered {
   position: absolute;
-  top: 50%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
 	}
 
 	.shipimage {
+	margin-top:30%;
   	width: 60%;
+  	height: auto;
+	}
+	.shipimage2 {
+  	width: 10%;
+  	height: auto;
+	}
+	.largeshipimage {
+  	width: 50%;
   	height: auto;
 	}
 </style>
@@ -146,7 +163,19 @@ S(document).ready(function(){
 			//return img
 			let hexString = hex.n + "\n "+info[hex.r*{{ board_size }}+hex.q][3];
 			hexString = "<div class='centered'> "+hexString+" </div>"
-			let hexString2 = "<img src='https://i.ibb.co/4JYBvnq/heavy-ship-SW.png' class='shipimage'/>";
+			//let hexString2 = "<img src='https://i.ibb.co/Gx7qSLF/medium-ship.png' class='shipimage'/>";
+			//.includes("Small")
+			let hexString2 = "";
+			let result = info[hex.r*{{ board_size }}+hex.q][4].includes("Big")
+			let result2 = info[hex.r*{{ board_size }}+hex.q][4].includes("Medium")
+			//info[hex.r*{{ board_size }}+hex.q][4] == "Small Warship: 10"
+			if (result) {
+				hexString2 = "<img src='https://i.ibb.co/nsztwtC/heavy-ship-south.png' class='largeshipimage'/>";
+			} else if (result2) {
+				hexString2 = "<img src='https://i.ibb.co/4JYBvnq/heavy-ship-SW.png' class='shipimage'/>";
+			} else {
+				hexString2 = "<img src='https://i.ibb.co/Gx7qSLF/medium-ship.png' class='shipimage'/>";
+			}
 
 			if (info[hex.r*{{ board_size }}+hex.q][4] != "---") {
 				if (hex.r*{{ board_size }}+hex.q == {{ prevNum }}) {
@@ -180,7 +209,7 @@ S(document).ready(function(){
 	
 	hexmap.on('mouseover',function(e){
 
-		S('#message-6').html('👥 '+info[e.i][0]+' |💰 '+info[e.i][1]+' | 👑 '+info[e.i][2]+' | ⚔️ '+info[e.i][4]+' | 🔗 '+info[e.i][6] + ' | 🌾 '+info[e.i][7] + ' |🪵'+info[e.i][8])
+		S('#message-6').html('💰 '+info[e.i][1]+' | 👑 '+info[e.i][2]+' | ⚔️ '+info[e.i][4]+' | 🔗 '+info[e.i][6] + ' | 🌾 '+info[e.i][7] + ' |🪵'+info[e.i][8])
 
 	}).on('click',function(e) {
 		S('#message-6').html('You have clicked hex '+e.i+' ('+e.hex.id+')')

@@ -99,11 +99,8 @@ def new_game(request):
             else:
                 h = HexList2()
             h.apply(temp, curr_player)
-            hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
+            #hex_list = Hexes.objects.filter(game=temp, start_country=curr_player.country)
 
-            for i in hex_list:
-                i.controller = curr_player
-                i.save()
             #Creates Policies
             p2 = PolicyList()
             p2.add_policies(curr_player, temp, request)
@@ -147,7 +144,16 @@ def new_game(request):
                 add_players(temp, False)
                 #add_neutral(temp)
             #else:
-            add_neutral(temp)
+            #import pdb; pdb.set_trace()
+            neutral_player = add_neutral(temp)
+            hex_list = Hexes.objects.filter(game=temp)
+            for i in hex_list:
+                i.controller = neutral_player
+                i.save()
+            hex_list2 = Hexes.objects.filter(game=temp, start_country=curr_player.country)
+            for i in hex_list2:
+                i.controller = curr_player
+                i.save()
             #import pdb; pdb.set_trace();
             if temp.num_players == temp.curr_num_players and temp.num_players < 5 and temp.num_players != -1:
                 temp.GameEngine.start_capital(temp)
@@ -372,6 +378,13 @@ def map(request, g, p, l, lprev):
                     buildingFormTemp = buildingForm.save(commit=False)
                     buildingFormTemp.game = g
                     buildingFormTemp.player_controller = player
+                    if buildingFormTemp.location.water:
+                        messages.warning(request, f'You cannot construct buildings on water!')
+                        return redirect('map', gtemp, ptemp, 'null', 'null')
+                    h = Building.objects.filter(game=g, location=buildingFormTemp.location)
+                    if len(h) > 4:
+                        messages.warning(request, f'You cannot construct any more buildings here!')
+                        return redirect('map', gtemp, ptemp, 'null', 'null')
                     if buildingFormTemp.applyCost():
                         buildingFormTemp.save()
                         return redirect('map', gtemp, ptemp, 'null', 'null')
@@ -396,6 +409,9 @@ def map(request, g, p, l, lprev):
                 #import pdb; pdb.set_trace()
                 if f.location.controller != player:
                     messages.warning(request, f'You cannot build a ship in another Players territory!')
+                    return redirect('map', gtemp, ptemp, 'null', 'null')
+                if f.location.water == True:
+                    messages.warning(request, f'You cannot build a ship in water!')
                     return redirect('map', gtemp, ptemp, 'null', 'null')
                 if h == None:
                     messages.warning(request, f'You have not specified a location for this ship!')
@@ -441,15 +457,15 @@ def map(request, g, p, l, lprev):
             army_size = "---"
         else:
             for army in a:
-                army_size += (army.name+": "+str(army.ship_type))
-                army_name += "[ ⚓"+str(army.ship_type)
+                army_size += (str(army.ship_type)+": "+str(army.health))
+                army_name += ""#"[ "+ str(army.ship_type)
                 """if army.naval:
                 
                 else:
                     army_name += "[ ⚔️"+army.name"""
                 if army.moved == False:
                     army_name += " ✅"
-                army_name += "] \n "
+                #army_name += "] \n "
         #import pdb; pdb.set_trace()
         if hC.color != '#3262a8' and t.mode == "RE":
             color =  "#"+str(hex((10 + hC.metal*2 + hC.food*4)))[2]+str(hex((10 + hC.metal*2 + hC.food*4)))[2]+ str(hex(10+hC.food*4+hC.wood))[2] + str(hex(10+hC.food*4 + hC.wood))[2] + str(hex(10 + hC.wood*2 + hC.gold*2))[2] + str(hex(10 + hC.wood*2 + hC.gold*2))[2]
@@ -520,6 +536,15 @@ def map(request, g, p, l, lprev):
     next_turn = NextTurn(instance=player)
     militaryAm = player.MilitaryAm
     year = g.year
+
+    buildings = Building.objects.filter(game=g, player_controller=player)
+    ProductionDict = {'gold':0,'metal':0, 'food':0, 'wood':0}
+    #import pdb; pdb.set_trace()
+    for building in buildings:
+        array = building.getProductionAmount()
+        ProductionDict[array[0]] += array[1]
+        ProductionDict[array[2]] -= array[3]
+
     context = {
         'country': player.country,
         'readyForm':next_turn,
@@ -542,7 +567,11 @@ def map(request, g, p, l, lprev):
         'resources':t.mode == "RE",
         'notifications': Notification.objects.filter(game=g, year__gt=year)[::-1],
         'board_size':g.board_size,
-        'building_form':buildingForm
+        'building_form':buildingForm,
+        'GoldAdd':ProductionDict['gold'],
+        'MetalAdd':ProductionDict['metal'],
+        'FoodAdd':ProductionDict['food'],
+        'WoodAdd':ProductionDict['wood']
     }
     return render(request, 'App/map.html', context)
 

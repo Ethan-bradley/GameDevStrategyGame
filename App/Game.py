@@ -27,7 +27,7 @@ class GameEngine():
 		self.MilitaryAid = {i:{k:[0 for i in range(0,20)] for k in countries} for i in countries}
 		self.endGame = False
 		self.conquerer_win = 7
-		self.gold_win = 20
+		self.gold_win = 40
 		self.dom_win = 5
 	def run_more_countries(self, num_players):
 		if num_players > 5:
@@ -69,6 +69,7 @@ class GameEngine():
 		all_buildings = Building.objects.filter(game=g)
 		for building in all_buildings:
 			building.addResources()
+			building.player_controller.save()
 		self.ArmyCombat.doCombat(g)
 		all_armies = Ship.objects.filter(game=g)
 		for army in all_armies:
@@ -78,15 +79,14 @@ class GameEngine():
 		g.save()
 		print('running engine')
 		for player in all_players:
-			self.add_resources(player)
+			#self.add_resources(player)
 			if player.name != "Neutral":
 				self.check_win(player, g)
 		return
 	
 	def check_win(self, player, g):
 		hexlist = Hexes.objects.filter(controller=player, water=False)
-		#len(hexlist) >= self.conquerer_win
-		if player.gold >= self.gold_win or player.NationsDefeated >= self.dom_win:
+		if len(hexlist) >= self.conquerer_win or player.gold >= self.gold_win or player.NationsDefeated >= self.dom_win:
 			g.gameEnd = True
 			g.winner = player.name
 			g.save()
