@@ -194,11 +194,11 @@ class Building(models.Model):
 	# (c) The building dictionary. Contains the building's output, maintenance cost, and its representative symbol
 	# Refer to (a) for the function of each index value in the dictionary
 	buildingDict = {
-		'City': ['food', 1, ['gold'], 2, 'metal', 2, '🏬'],
-		'Factory': ['wood', 1, ['metal'], 2, 'metal', 1, '🔗'],
+		'City': ['metal', 2, ['gold'], 2, 'food', 1, '🏬'],
+		'Factory': ['metal', 1, ['metal'], 2, 'wood', 1, '🔗'],
 		'Farm': ['metal', 1, ['food'], 2, 'metal', 1, '🚜'],
 		'Mine': ['metal', 1, ['metal'], 2, 'metal', 1, '⛏️'],
-		"Woodcutter's Lodge": ['food', 1, ['wood'], 3, 'metal', 1, '🏠'],
+		"Woodcutter's Lodge": ['metal', 1, ['wood'], 3, 'food', 1, '🏠'],
 		'Port': ['metal', 4, ['gold'], 2, 'gold', 1, '🚢']
 	}
 	building_type = models.CharField(max_length=20,choices=MODES,default=FARM)
@@ -215,7 +215,7 @@ class Building(models.Model):
 				setattr(player, resource, curr_am + modify[self.PROD_OUTPUT])
 				player.save()
 				curr_am = getattr(player, resource)
-				setattr(player, modify[self.MAINTENANCE_RESOURCE], curr_am - modify[self.MAINTENANCE_COST])
+				setattr(player, modify[self.MAINTENANCE_RESOURCE], curr_am_maintenance - modify[self.MAINTENANCE_COST])
 				player.save()
 
 	#Applies the cost of the building towards the player
@@ -230,6 +230,11 @@ class Building(models.Model):
 			setattr(player, modify[self.BUILD_RESOURCE], curr_am - modify[self.BUILD_COST])
 			player.save()
 			return True
+	def getProductionAmount(self):
+		modify = self.buildingDict[self.building_type]
+		player = self.player_controller
+		return [modify[self.PROD_RESOURCE][0], modify[self.PROD_OUTPUT], modify[self.MAINTENANCE_RESOURCE], modify[self.MAINTENANCE_COST]]
+
 	#Returns the building's symbol for display
 	def getSymbol(self):
 		emoji = self.buildingDict[self.building_type][self.SYMBOL]

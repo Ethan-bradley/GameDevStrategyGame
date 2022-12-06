@@ -157,5 +157,6 @@ def add_neutral(temp):
         itf.name = product
         itf.save()
     temp.save()
+    return curr_player
     #Remove this if game isn't 2 player
     #temp.GameEngine.start_capital(temp)
